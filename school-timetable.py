@@ -536,7 +536,7 @@ def create_graph_tuple(nodes, edges):
     return G
 
 def save_csv(data, nome_csv):
-    data_points = pd.DataFrame(data, columns=['Expected Value', 'p'])
+    data_points = pd.DataFrame(data, columns=['p', 'Beta0/Gamma/Beta', 'Expected Value'])
     data_points.to_csv(nome_csv, mode='a', header=False)
 
     return
@@ -650,9 +650,9 @@ def main():
     print("\nInitial coloring", coloring)
 
     p = 1
-    Mp1_sampled = []
     archive_name = "results/p1.csv"
-    for iteration in range(2):
+    for iteration in range(1):
+        Mp1_sampled = []
         gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
         beta0 =  [random.uniform(0, np.pi)]
         beta  = [random.uniform(0, np.pi) for _ in range(p)]
@@ -661,9 +661,9 @@ def main():
         print("Minimizing function")
         res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
                 options={'maxiter': 1, 'xatol': 0.1, 'fatol': 0.01, 'disp': True, 'adaptive':True})
-        Mp1_sampled.append([res['fun'], p])
+        print(res)
+        Mp1_sampled.append([p, res['x'], res['fun']])
         save_csv(Mp1_sampled, archive_name)
-    print(Mp1_sampled)
 
 if __name__ == '__main__':
     main()
