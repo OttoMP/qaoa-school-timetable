@@ -6,6 +6,8 @@ import networkx as nx
 
 # Import miscellaneous tools
 import pprint as pp
+import time
+import progressbar
 
 # We import plotting tools
 import pandas as pd
@@ -26,81 +28,6 @@ def show_figure(fig):
     fig.set_canvas(new_mngr.canvas)
     plt.show(fig)
 
-class QAOAMaxkColorability:
-
-    def __init__(self, graph, num_colors):
-        self.num_colors = num_colors
-        self.graph = graph
-
-        # Number of vertices in the graph
-        self.num_nodes = len(graph)
-
-        self.circuit = QuantumCircuit((self.num_nodes*self.num_colors),
-                (self.num_nodes*self.num_colors))
-
-    def initial_state(self, coloring):
-        for i, color in enumerate(coloring):
-            self.circuit.x((i*self.num_colors)+color)
-        return
-
-    def w3_state_generation(self):
-        for i in range(self.num_nodes):
-            self.circuit.ry(np.pi/4, i*self.num_colors+1)
-            self.circuit.ry(np.arccos(-1/3), i*self.num_colors+2)
-            self.circuit.rz(-np.pi/2, i*self.num_colors+2)
-            self.circuit.cx(i*self.num_colors+2, i*self.num_colors+1)
-            self.circuit.ry(-np.pi/4, i*self.num_colors+1)
-            self.circuit.rz(np.pi/2, i*self.num_colors+1)
-            self.circuit.cx(i*self.num_colors+2, i*self.num_colors+1)
-            self.circuit.rz(np.pi/2, i*self.num_colors+1)
-            self.circuit.cx(i*self.num_colors+1, i*self.num_colors)
-            self.circuit.cx(i*self.num_colors+2, i*self.num_colors+1)
-            self.circuit.rx(np.pi, i*self.num_colors+2)
-        return
-
-    def w2_state_generation(self):
-        for i in range(self.num_nodes):
-            self.circuit.h(i*self.num_colors)
-            self.circuit.x(i*self.num_colors+1)
-            self.circuit.cx(i*self.num_colors, i*self.num_colors+1)
-        return
-
-    def phase_separator(self, gamma):
-        for edge in self.graph.edges():
-            for k in range(self.num_colors):
-                self.circuit.cx(int(edge[0])*self.num_colors+k,int(edge[1])*self.num_colors+k)
-                self.circuit.rz(2*gamma, int(edge[1])*self.num_colors+k)
-                self.circuit.cx(int(edge[0])*self.num_colors+k,int(edge[1])*self.num_colors+k)
-
-    def partial_mixer(self, neighbour, target, beta):
-        pass
-
-    def mixer(self, beta):
-        for node in self.graph.nodes():
-            for j in range(self.num_colors-1):
-                # Rxx
-                self.circuit.h(int(node)*self.num_colors+j)
-                self.circuit.h(int(node)*self.num_colors+j+1)
-                self.circuit.cx(int(node)*self.num_colors+j,int(node)*self.num_colors+j+1)
-                self.circuit.rz(2*beta, int(node)*self.num_colors+j+1)
-                self.circuit.cx(int(node)*self.num_colors+j,int(node)*self.num_colors+j+1)
-                self.circuit.h(int(node)*self.num_colors+j)
-                self.circuit.h(int(node)*self.num_colors+j+1)
-
-                # Ryy
-                self.circuit.rx(-np.pi/2,int(node)*self.num_colors+j)
-                self.circuit.rx(-np.pi/2,int(node)*self.num_colors+j+1)
-                self.circuit.cx(int(node)*self.num_colors+j,int(node)*self.num_colors+j+1)
-                self.circuit.rz(2*beta, int(node)*self.num_colors+j+1)
-                self.circuit.cx(int(node)*self.num_colors+j,int(node)*self.num_colors+j+1)
-                self.circuit.rx(np.pi/2,int(node)*self.num_colors+j)
-                self.circuit.rx(np.pi/2,int(node)*self.num_colors+j+1)
-
-    def measurement(self):
-        qubits = [num for num in range(self.num_nodes*self.num_colors)]
-        self.circuit.measure(qubits, qubits)
-        return
-
 # Compute the value of the cost function
 def cost_function_C(x,G,num_colors):
     C = 0
@@ -113,50 +40,6 @@ def cost_function_C(x,G,num_colors):
         C += color_used
 
     return C
-
-def QAOA(par, p, G):
-    # QAOA parameters
-    middle = int(len(par)/2)
-    gamma = par[:middle]
-    beta = par[middle:]
-
-    # Graph
-    num_colors = 3
-
-    QAOA_circ = QAOAMaxkColorability(G, num_colors)
-
-    #QAOA_circ.w2_state_generation()
-    QAOA_circ.w3_state_generation()
-    for step in range(p):
-        QAOA_circ.phase_separator(gamma[step])
-        QAOA_circ.mixer(beta[step])
-    QAOA_circ.measurement()
-
-    # Execute the circuit on the selected backend
-    backend = Aer.get_backend('qasm_simulator')
-    shots = 1000
-    optimized_3 = transpile(QAOA_circ.circuit, backend=backend, seed_transpiler=11, optimization_level=3)
-
-    job = execute(optimized_3, backend, shots=shots, method="statevector_gpu")
-
-    # Grab results from the job
-    result = job.result()
-
-    # Evaluate the data from the simulator
-    counts = result.get_counts()
-
-    avr_C       = 0
-    for sample in list(counts.keys()):
-        # use sampled bit string x to compute C(x)
-        x         = [int(num) for num in list(sample)]
-        tmp_eng   = cost_function_C(x,G,num_colors)
-
-        # compute the expectation value and energy distribution
-        avr_C     = avr_C    + counts[sample]*tmp_eng
-
-    Mp_sampled   = avr_C/shots
-
-    return Mp_sampled
 
 def save_csv(data, nome_csv):
     data_points = pd.DataFrame(data, columns=['Expected Value', 'p', 'Graph Number'])
@@ -255,27 +138,24 @@ def cRz(qc, qubits, gamma):
         gray_list = list(a.generate_gray())[1:]
 
         # Add the necessary gates following the Gray Code
-        rz(gamma/exp, qc[qubits[0]])
-        with control(qc[qubits[0]]):
-            x(qc[qubits[1]])
+        u1(gamma/exp, qc[qubits[0]])
+        ctrl(qc[qubits[0]], x, qc[qubits[1]])
         counter = 1
         for i, node in enumerate(qubits_t):
             for j in range(np.power(2, i+1)-1):
-                rz(np.power(-1, counter)*gamma/exp, qc[node])
+                u1(np.power(-1, counter)*gamma/exp, qc[node])
                 counter += 1
                 codes = zip(gray_list[counter-1][::-1], gray_list[counter][::-1])
                 enumerator = 0
                 for u,v in codes:
                     if u != v:
-                        with control(qc[qubits[enumerator]]):
-                            x(qc[node])
+                        ctrl(qc[qubits[enumerator]], x, qc[node])
                     enumerator += 1
             if i < len(qubits_t)-1:
-                rz(np.power(-1, counter)*gamma/exp, qc[node])
+                u1(np.power(-1, counter)*gamma/exp, qc[node])
                 counter += 1
-                with control(qc[node]):
-                    x(qc[qubits_t[i+1]])
-        rz(np.power(-1, counter)*gamma/exp, qc[qubits_t[-1]])
+                ctrl(qc[node], x, qc[qubits_t[i+1]])
+        u1(np.power(-1, counter)*gamma/exp, qc[qubits_t[-1]])
 
 def toffoli(qc, controls, target):
         all_qubits = controls+[target]
@@ -294,27 +174,23 @@ def partial_mixer(qc, neighbour, ancilla, target, beta):
                 x(qc[node])
 
         ## Phase correction
-        #rz(-beta, qc[ancilla])
+        #u1(-beta, qc[ancilla])
 
         # Controlled Rxx
         h(qc[target[0]])
         h(qc[target[1]])
-        with control(qc[target[0]]):
-            x(qc[target[1]])
+        ctrl(qc[target[0]], x, qc[target[1]])
         cRz(qc, [ancilla]+[target[1]], 2*beta)
-        with control(qc[target[0]]):
-            x(qc[target[1]])
+        ctrl(qc[target[0]], x, qc[target[1]])
         h(qc[target[0]])
         h(qc[target[1]])
 
         # Controlled Ryy
         rx(-np.pi/2,qc[target[0]])
         rx(-np.pi/2,qc[target[1]])
-        with control(qc[target[0]]):
-            x(qc[target[1]])
+        ctrl(qc[target[0]], x, qc[target[1]])
         cRz(qc, [ancilla]+[target[1]], 2*beta)
-        with control(qc[target[0]]):
-            x(qc[target[1]])
+        ctrl(qc[target[0]], x, qc[target[1]])
         rx(np.pi/2,qc[target[0]])
         rx(np.pi/2,qc[target[1]])
 
@@ -436,10 +312,10 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     for step in range(p):
         #phase_separator(qc, G, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
-
     #print(report())
     # Measurement
     result = measure(qc).get()
+    #result = dump(qc)
     return result
 
 def main():
@@ -483,11 +359,14 @@ def main():
     print("Beta:", beta)
     print("\n")
 
-    shots = 1
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    print("==Result==")
+    #print(result.show())
+    shots = 100
     counts = {}
 
     # run on local simulator
-    for _ in range(shots):
+    for _ in progressbar.progressbar(range(shots)):
         result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
         binary = np.binary_repr(result, width=(num_nodes*num_colors)+num_nodes)
         if binary in counts:
@@ -531,7 +410,6 @@ def main():
     for i in range(len(G)):
         print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
 
-    '''
     #print('\nThe approximate solution is x* = %s with C(x*) = %d' % (min_C[0],min_C[1]))
     #print('The number of times this solution showed was: %d \n' %(counts[min_C[0]]))
     #print('The sampled mean value is Mp_sampled = %.02f' % (M1_sampled))
@@ -547,6 +425,6 @@ def main():
 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nFinal coloring", final_coloring)
-    '''
+
 if __name__ == '__main__':
     main()
