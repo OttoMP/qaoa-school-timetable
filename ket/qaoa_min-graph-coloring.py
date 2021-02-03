@@ -18,8 +18,7 @@ from   matplotlib.ticker import LinearLocator, FormatStrFormatter
 # Import tools for running QAOA
 import random
 from scipy.optimize import minimize, fmin, Bounds
-from sympy.combinatorics.graycode import GrayCode
-from ket.lib import swap
+from ket.lib import swap, within
 
 def show_figure(fig):
     new_fig = plt.figure()
@@ -130,78 +129,21 @@ def create_graph_tuple(nodes, edges):
 
     return G
 
-def cRz(qc, qubits, gamma):
-        num_qubits = len(qubits)
-        qubits_t = qubits[1:]
-        exp = np.power(2, num_qubits-1)
-        a = GrayCode(num_qubits)
-        gray_list = list(a.generate_gray())[1:]
-
-        # Add the necessary gates following the Gray Code
-        u1(gamma/exp, qc[qubits[0]])
-        ctrl(qc[qubits[0]], x, qc[qubits[1]])
-        counter = 1
-        for i, node in enumerate(qubits_t):
-            for j in range(np.power(2, i+1)-1):
-                u1(np.power(-1, counter)*gamma/exp, qc[node])
-                counter += 1
-                codes = zip(gray_list[counter-1][::-1], gray_list[counter][::-1])
-                enumerator = 0
-                for u,v in codes:
-                    if u != v:
-                        ctrl(qc[qubits[enumerator]], x, qc[node])
-                    enumerator += 1
-            if i < len(qubits_t)-1:
-                u1(np.power(-1, counter)*gamma/exp, qc[node])
-                counter += 1
-                ctrl(qc[node], x, qc[qubits_t[i+1]])
-        u1(np.power(-1, counter)*gamma/exp, qc[qubits_t[-1]])
-
-def toffoli(qc, controls, target):
-        all_qubits = controls+[target]
-        h(qc[target])
-        cRz(qc, all_qubits, np.pi)
-        h(qc[target])
-
 def partial_mixer(qc, neighbour, ancilla, target, beta):
-        if neighbour == []:
-            x(qc[ancilla])
+    def outer():
+        if neighbour == None:
+            x(ancilla)
         else:
-            for node in neighbour:
-                x(qc[node])
-            toffoli(qc, neighbour, ancilla)
-            for node in neighbour:
-                x(qc[node])
+            within(lambda : x(neighbour),
+                    lambda : ctrl(neighbour, x, ancilla))
 
-        ## Phase correction
-        #u1(-beta, qc[ancilla])
-
-        # Controlled Rxx
-        h(qc[target[0]])
-        h(qc[target[1]])
-        ctrl(qc[target[0]], x, qc[target[1]])
-        cRz(qc, [ancilla]+[target[1]], 2*beta)
-        ctrl(qc[target[0]], x, qc[target[1]])
-        h(qc[target[0]])
-        h(qc[target[1]])
-
-        # Controlled Ryy
-        rx(-np.pi/2,qc[target[0]])
-        rx(-np.pi/2,qc[target[1]])
-        ctrl(qc[target[0]], x, qc[target[1]])
-        cRz(qc, [ancilla]+[target[1]], 2*beta)
-        ctrl(qc[target[0]], x, qc[target[1]])
-        rx(np.pi/2,qc[target[0]])
-        rx(np.pi/2,qc[target[1]])
-
-        if neighbour == []:
-            x(qc[ancilla])
-        else:
-            for node in neighbour:
-                x(qc[node])
-            toffoli(qc, neighbour, ancilla)
-            for node in neighbour:
-                x(qc[node])
+    within(lambda : outer(),
+            lambda : [within(lambda :[h(target),
+                                        ctrl(target[0], x, target[1])],
+                            lambda : ctrl(ancilla, rz, 2*beta, target[1])),
+                        within(lambda :[rx(-np.pi/2, target),
+                                        ctrl(target[0], x, target[1])],
+                            lambda : ctrl(ancilla, rz, 2*beta, target[1]))])
 
 def neighbourhood(G, num_colors, node, color):
     neighbour = G[node]
@@ -218,11 +160,18 @@ def mixer(qc, G, beta, num_nodes, num_colors):
                 if i < j:
                     neighbours_j = neighbourhood(G, num_colors, u, j)
                     neighbours = neighbours_i+neighbours_j
+
+                    if neighbours == []:
+                        q_neighbours = None
+                    else:
+                        q_neighbours = qc[neighbours[0]]
+                        for node in neighbours[1:]:
+                            q_neighbours = q_neighbours | qc[node]
                     partial_mixer(
                             qc,
-                            neighbours,
-                            num_nodes*num_colors+u,
-                            [i+(num_colors*u), j+(num_colors*u)],
+                            q_neighbours,
+                            qc[num_nodes*num_colors+u],
+                            qc[i+(num_colors*u)]|qc[j+(num_colors*u)],
                             beta)
 
 def find_sequence(pos_b, start):
@@ -293,7 +242,12 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
         x(qc[node])
     for k in range(num_colors):
         qubits = [k*num_nodes+node for node in range(num_nodes)]
-        cRz(qc, qubits, 2*gamma)
+        control = qc[qubits[0]]
+        for qub in qubits[1:-1]:
+            control = control | qc[qub]
+        target = qc[qubits[-1]]
+        ctrl(control, rz, 2*gamma, target)
+        #cRz(qc, qubits, 2*gamma)
     for node in range(num_colors*num_nodes):
         x(qc[node])
     color2qubits(qc, num_nodes, num_colors)
@@ -308,9 +262,9 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
         x(qc[(i*num_colors)+color])
 
     # Alternate application of operators
-    #mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
+    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
     for step in range(p):
-        #phase_separator(qc, G, gamma[step], num_nodes, num_colors)
+        phase_separator(qc, G, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
     #print(report())
     # Measurement
@@ -359,7 +313,6 @@ def main():
     print("Beta:", beta)
     print("\n")
 
-    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
     print("==Result==")
     #print(result.show())
     shots = 100
