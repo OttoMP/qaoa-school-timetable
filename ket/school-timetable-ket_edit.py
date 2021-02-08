@@ -286,26 +286,6 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     num_nodes = G.number_of_nodes()
     qc = quant((num_nodes*num_colors) + num_nodes)
 
-    # Initial state preparation
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
-    for i, color in enumerate(coloring):
-        x(qc[(i*num_colors)+color])
-
-    # Alternate application of operators
-    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
-    for step in range(p):
-        phase_separator(qc, G, gamma[step], num_nodes, num_colors)
-        mixer(qc, G, beta[step], num_nodes, num_colors)
-    #print(report())
-    # Measurement
-    result = measure(qc).get()
-    #result = dump(qc)
-    return result
-
-def qaoa_min_graph_coloring_dump(p, G, num_colors, gamma, beta0, beta):
-    num_nodes = G.number_of_nodes()
-    qc = quant((num_nodes*num_colors) + num_nodes)
-
     #print(len(qc))
     # Initial state preparation
     coloring = [G.nodes[node]['color'] for node in G.nodes]
@@ -333,14 +313,11 @@ def qaoa(par, p, shots, G, G_tuple, num_colors, students_list):
     num_nodes = G.number_of_nodes()
     counts = {}
 
-    # run on local simulator
-    for _ in progressbar.progressbar(range(shots)):
-        result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
-        binary = np.binary_repr(result, width=(num_nodes*num_colors)+num_nodes)
-        if binary in counts:
-            counts[binary] += 1
-        else:
-            counts[binary] = 1
+    # run on local simulator                                                 #############
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)   #############
+    for i in result.get_states():                                            #############
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)   #############
+        counts[binary] = int(2**20*result.probability(i))                    #############
 
     #pp.pprint(counts)
     #print("==Result==")
@@ -349,19 +326,22 @@ def qaoa(par, p, shots, G, G_tuple, num_colors, students_list):
     min_C       = [0, G.number_of_nodes()+1]
 
     for sample in list(counts.keys()):
-        # use sampled bit string x to compute C(x)
-        x         = [int(num) for num in list(sample)]
-        tmp_eng   = cost_function_timetable(x,G_tuple, num_colors, students_list)
+        if counts[sample] > 0:
+            # use sampled bit string x to compute C(x)
+            x         = [int(num) for num in list(sample)]
+            tmp_eng   = cost_function_timetable(x,G_tuple, num_colors, students_list)
 
-        # compute the expectation value and energy distribution
-        avr_C     = avr_C    + counts[sample]*tmp_eng
+            # compute the expectation value and energy distribution
+            avr_C     = avr_C    + counts[sample]*tmp_eng
 
-        # save best bit string
-        if( min_C[1] > tmp_eng):
-            min_C[0] = sample
-            min_C[1] = tmp_eng
+            # save best bit string
+            if( min_C[1] > tmp_eng):
+                min_C[0] = sample
+                min_C[1] = tmp_eng
 
-    M1_sampled   = avr_C/shots
+    #M1_sampled   = avr_C/shots
+    M1_sampled   = avr_C/sum(counts.values())
+    #print(M1_sampled)
     return M1_sampled
 
 def main():
@@ -460,7 +440,7 @@ def main():
     num_colors = num_timeslots
     #num_colors = 6
     print("\nNumber of colors", num_colors)
-    initial_coloring = [0,1,2,3,4,5]
+    initial_coloring = [0,3,1,4,2,5]
 
     node_list = list(G.nodes)
     #color_graph_num(G, num_colors, node_list[0])
@@ -480,7 +460,7 @@ def main():
 
     #archive_name = "results/p1.csv"
     Mp1_sampled = []
-    for iteration in progressbar.progressbar(range(1)):
+    for iteration in progressbar.progressbar(range(2)):
         gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
         beta0 =  [random.uniform(0, np.pi)]
         beta  = [random.uniform(0, np.pi) for _ in range(p)]
@@ -488,7 +468,7 @@ def main():
         qaoa_args = p, shots, G, G_tuple, num_colors, students_list
         print("\nMinimizing function\n")
         res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
-                options={'maxiter': 1, 'xatol': 0.1, 'fatol': 0.01, 'disp': True, 'adaptive':True})
+                options={'maxiter': 300, 'xatol': 0.1, 'fatol': 0.01, 'disp': True, 'adaptive':True})
         print(res)
         Mp1_sampled.append([res['fun'], p, res['x']])
         #save_csv(Mp1_sampled, archive_name)
@@ -501,7 +481,6 @@ def main():
     gamma = final_answer[2][1:p+1]
     beta  = final_answer[2][p+1:]
 
-    #[0.18592726, 5.67104732, 1.57125322]
     print("Using Following parameters:")
     print("Beta 0:", beta0)
     print("Gamma:", gamma)
@@ -511,48 +490,49 @@ def main():
     num_nodes = G.number_of_nodes()
     counts = {}
 
-    # run on local simulator                                                    #############
-    result = qaoa_min_graph_coloring_dump(p, G, num_colors, gamma, beta0, beta) #############
-    for i in result.get_states():                                               #############
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)      #############
-        counts[binary] = int(2**20*result.probability(i))                       #############
+    # run on local simulator                                                 #############
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)   #############
+    for i in result.get_states():                                            #############
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)   #############
+        counts[binary] = int(2**20*result.probability(i))                    #############
 
     pp.pprint(counts)
 
     print("==Result==")
     print("Average Value ", final_answer[0])
-
-    # Evaluate the data from the simulator
+        # Evaluate the data from the simulator
     avr_C       = 0
     min_C       = [0, G.number_of_nodes()+1]
 
     for sample in list(counts.keys()):
-        # use sampled bit string x to compute C(x)
-        x         = [int(num) for num in list(sample)]
-        tmp_eng   = cost_function_timetable(x,G_tuple, num_colors, students_list)
+        if counts[sample] > 0:
+            # use sampled bit string x to compute C(x)
+            x         = [int(num) for num in list(sample)]
+            tmp_eng   = cost_function_timetable(x,G_tuple, num_colors, students_list)
 
-        # compute the expectation value and energy distribution
-        avr_C     = avr_C    + counts[sample]*tmp_eng
+            # compute the expectation value and energy distribution
+            avr_C     = avr_C    + counts[sample]*tmp_eng
 
-        # save best bit string
-        if( min_C[1] > tmp_eng):
-            min_C[0] = sample
-            min_C[1] = tmp_eng
+            # save best bit string
+            if( min_C[1] > tmp_eng):
+                min_C[0] = sample
+                min_C[1] = tmp_eng
 
     #M1_sampled   = avr_C/shots
-    M1_sampled   = avr_C/(2**20)
+    total_counts = sum(counts.values())
+    M1_sampled   = avr_C/total_counts
     print("M1 = ", M1_sampled)
 
     print('\n --- SIMULATION RESULTS ---\n')
     max_counts = max(counts, key=lambda key: counts[key])
 
     print("Best result found: ", min_C[0])
-    print("Number of times result showed: ", counts[min_C[0]])
+    print("Percentage of times result showed: ", (counts[min_C[0]]/total_counts)*100)
     print("Objective function value: ", min_C[1])
     print()
     print("Most commom result found: ", max_counts)
-    print("Number of times result showed: ", counts[max_counts])
-    max_value = cost_function_timetable(x,G_tuple, num_colors, students_list)
+    print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
+    max_value = cost_function_timetable(max_counts, G_tuple, num_colors, students_list)
     print("Objective function value: ", max_value)
 
     maximum_coloring = []
@@ -577,8 +557,8 @@ def main():
                 # color = pos
                 final_coloring.append(pos)
 
-    print("\nFinal Coloring",final_coloring)
-    print("\nFinal Coloring Qudits values")
+    print("\nBest Coloring",final_coloring)
+    print("\nBest Coloring Qudits values")
     for i in range(len(G)):
         print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
 
