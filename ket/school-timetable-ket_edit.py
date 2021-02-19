@@ -20,6 +20,9 @@ import random
 from scipy.optimize import minimize, fmin, Bounds
 from ket.lib import swap, within
 
+# Parallelization tools
+from joblib import Parallel, delayed
+
 def show_figure(fig):
     new_fig = plt.figure()
     new_mngr = new_fig.canvas.manager
@@ -293,9 +296,9 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
         x(qc[(i*num_colors)+color])
 
     # Alternate application of operators
-    #mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
+    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
     for step in range(p):
-        #phase_separator(qc, G, gamma[step], num_nodes, num_colors)
+        phase_separator(qc, G, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
 
     #print(report())
@@ -460,7 +463,7 @@ def main():
 
     #archive_name = "results/p1.csv"
     Mp1_sampled = []
-    for iteration in progressbar.progressbar(range(2)):
+    for iteration in progressbar.progressbar(range(1)):
         gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
         beta0 =  [random.uniform(0, np.pi)]
         beta  = [random.uniform(0, np.pi) for _ in range(p)]
@@ -468,7 +471,7 @@ def main():
         qaoa_args = p, shots, G, G_tuple, num_colors, students_list
         print("\nMinimizing function\n")
         res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
-                options={'maxiter': 300, 'xatol': 0.1, 'fatol': 0.01, 'disp': True, 'adaptive':True})
+                options={'maxiter': 300, 'xatol': 0.01, 'fatol': 0.01, 'disp': True, 'adaptive':True})
         print(res)
         Mp1_sampled.append([res['fun'], p, res['x']])
         #save_csv(Mp1_sampled, archive_name)
@@ -494,12 +497,14 @@ def main():
     result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)   #############
     for i in result.get_states():                                            #############
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)   #############
-        counts[binary] = int(2**20*result.probability(i))                    #############
+        prob = int(2**20*result.probability(i))
+        if prob > 0:
+            counts[binary] = prob                    #############
 
-    pp.pprint(counts)
+    #pp.pprint(counts)
 
     print("==Result==")
-    print("Average Value ", final_answer[0])
+    #print("Average Value ", final_answer[0])
         # Evaluate the data from the simulator
     avr_C       = 0
     min_C       = [0, G.number_of_nodes()+1]
@@ -520,17 +525,20 @@ def main():
 
     #M1_sampled   = avr_C/shots
     total_counts = sum(counts.values())
+    print("Total Counts", total_counts)
     M1_sampled   = avr_C/total_counts
-    print("M1 = ", M1_sampled)
+    print("Expected Value = ", M1_sampled)
 
     print('\n --- SIMULATION RESULTS ---\n')
     max_counts = max(counts, key=lambda key: counts[key])
 
     print("Best result found: ", min_C[0])
+    print("Number of times result showed: ", counts[min_C[0]])
     print("Percentage of times result showed: ", (counts[min_C[0]]/total_counts)*100)
     print("Objective function value: ", min_C[1])
     print()
     print("Most commom result found: ", max_counts)
+    print("Number of times result showed: ", counts[max_counts])
     print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
     max_value = cost_function_timetable(max_counts, G_tuple, num_colors, students_list)
     print("Objective function value: ", max_value)
