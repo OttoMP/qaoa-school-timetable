@@ -5,20 +5,18 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
+from xml-parser import parseXML
 import pprint as pp
-import time
 import progressbar
 
 # We import plotting tools
 import pandas as pd
 import matplotlib.pyplot as plt
-from   matplotlib import cm
-from   matplotlib.ticker import LinearLocator, FormatStrFormatter
 from qiskit.visualization import plot_histogram
 
 # Import tools for running QAOA
 import random
-from scipy.optimize import minimize, fmin, Bounds
+from scipy.optimize import minimize
 from ket import *
 from ket.lib import swap, within
 
@@ -30,18 +28,10 @@ import multiprocessing
 num_cores = 2
 ray.init(num_cpus=num_cores)
 
-def show_figure(fig):
-    new_fig = plt.figure()
-    new_mngr = new_fig.canvas.manager
-    new_mngr.canvas.figure = fig
-    fig.set_canvas(new_mngr.canvas)
-    plt.show(fig)
-
 # Compute the value of the cost function
 def cost_function_timetable(x, G, num_colors, list_students):
 
     coloring = []
-
     for i in range(len(G)):
         for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
             if int(char):
