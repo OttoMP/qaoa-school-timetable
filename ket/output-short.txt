@@ -1,0 +1,142 @@
+Starting program
+
+Subject 0
+Possible Allocations [1, 2]
+Subject 1
+Possible Allocations [1, 2]
+Subject 2
+Possible Allocations [0]
+
+Number of Allocations for each Room [1, 1, 1]
+Allocations [(0, 1), (1, 2), (2, 0)]
+
+Graph information
+
+Pre-coloring [None, None, None, None, None, None]
+
+Degree of each node [3, 3, 3, 3, 3, 3]
+
+Number of colors 6
+
+Node 0 Color 0
+Neighbours Colors [3, 1, 2]
+
+Node 1 Color 3
+Neighbours Colors [0, 4, 5]
+
+Node 2 Color 1
+Neighbours Colors [0, 4, 2]
+
+Node 3 Color 4
+Neighbours Colors [3, 1, 5]
+
+Node 4 Color 2
+Neighbours Colors [0, 1, 5]
+
+Node 5 Color 5
+Neighbours Colors [3, 4, 2]
+
+Initial coloring [0, 3, 1, 4, 2, 5]
+Running QAOA
+[2m[36m(pid=145023)[0m 
+[2m[36m(pid=145023)[0m Minimizing function
+[2m[36m(pid=145023)[0m 
+[2m[36m(pid=145022)[0m 
+[2m[36m(pid=145022)[0m Minimizing function
+[2m[36m(pid=145022)[0m 
+[2m[36m(pid=145022)[0m Optimization terminated successfully.
+[2m[36m(pid=145022)[0m          Current function value: 2.746849
+[2m[36m(pid=145022)[0m          Iterations: 14
+[2m[36m(pid=145022)[0m          Function evaluations: 25
+[2m[36m(pid=145022)[0m  final_simplex: (array([[2.76652576, 2.99648762, 1.58928713],
+[2m[36m(pid=145022)[0m        [2.76233868, 3.05319078, 1.60110402],
+[2m[36m(pid=145022)[0m        [2.76274621, 3.08657874, 1.56671555],
+[2m[36m(pid=145022)[0m        [2.79053495, 3.07363498, 1.56511286]]), array([2.74684922, 2.74741944, 2.75026251, 2.75501136]))
+[2m[36m(pid=145022)[0m            fun: 2.7468492182163007
+[2m[36m(pid=145022)[0m        message: 'Optimization terminated successfully.'
+[2m[36m(pid=145022)[0m           nfev: 25
+[2m[36m(pid=145022)[0m            nit: 14
+[2m[36m(pid=145022)[0m         status: 0
+[2m[36m(pid=145022)[0m        success: True
+[2m[36m(pid=145022)[0m              x: array([2.76652576, 2.99648762, 1.58928713])
+Mp1_sampled
+Using Following parameters:
+Beta 0: 0.06978023111942111
+Gamma: [4.29258885]
+Beta: [0.40262649]
+
+
+[2m[36m(pid=145023)[0m Optimization terminated successfully.
+[2m[36m(pid=145023)[0m          Current function value: 2.651356
+[2m[36m(pid=145023)[0m          Iterations: 30
+[2m[36m(pid=145023)[0m          Function evaluations: 58
+[2m[36m(pid=145023)[0m  final_simplex: (array([[0.06978023, 4.29258885, 0.40262649],
+[2m[36m(pid=145023)[0m        [0.07150924, 4.23283072, 0.39758669],
+[2m[36m(pid=145023)[0m        [0.06767968, 4.219944  , 0.40635981],
+[2m[36m(pid=145023)[0m        [0.07583955, 4.23260354, 0.40085955]]), array([2.65135594, 2.65161521, 2.65167339, 2.65188628]))
+[2m[36m(pid=145023)[0m            fun: 2.6513559411221617
+[2m[36m(pid=145023)[0m        message: 'Optimization terminated successfully.'
+[2m[36m(pid=145023)[0m           nfev: 58
+[2m[36m(pid=145023)[0m            nit: 30
+[2m[36m(pid=145023)[0m         status: 0
+[2m[36m(pid=145023)[0m        success: True
+[2m[36m(pid=145023)[0m              x: array([0.06978023, 4.29258885, 0.40262649])
+==Result==
+Total Counts 1045215
+Expected Value =  2.6513559411221617
+
+ --- SIMULATION RESULTS ---
+
+Best result found:  000010001000001000100000100000000010000000
+Number of times result showed:  3
+Percentage of times result showed:  0.00028702228728060735
+Objective function value:  0
+
+Most commom result found:  000010100000000100010000100000001000000000
+Number of times result showed:  10421
+Percentage of times result showed:  0.9970197519170696
+Objective function value:  3
+
+Maximum Coloring [4, 0, 3, 1, 0, 2]
+
+Maximum Coloring Qudits values
+000010
+100000
+000100
+010000
+100000
+001000
+
+Best Coloring [4, 2, 2, 0, 0, 4]
+
+Best Coloring Qudits values
+000010
+001000
+001000
+100000
+100000
+000010
+
+New Graph information
+
+Degree of each node [3, 3, 3, 3, 3, 3]
+
+Node 0 Color 4
+Neighbours Colors [2, 2, 0]
+
+Node 1 Color 2
+Neighbours Colors [4, 0, 4]
+
+Node 2 Color 2
+Neighbours Colors [4, 0, 0]
+
+Node 3 Color 0
+Neighbours Colors [2, 2, 4]
+
+Node 4 Color 0
+Neighbours Colors [4, 2, 4]
+
+Node 5 Color 4
+Neighbours Colors [2, 0, 0]
+
+Final coloring [4, 2, 2, 0, 0, 4]

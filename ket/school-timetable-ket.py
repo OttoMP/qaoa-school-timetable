@@ -313,9 +313,9 @@ def qaoa_min_graph_coloring_dump(p, G, num_colors, gamma, beta0, beta):
         x(qc[(i*num_colors)+color])
 
     # Alternate application of operators
-    #mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
+    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
     for step in range(p):
-        #phase_separator(qc, G, gamma[step], num_nodes, num_colors)
+        phase_separator(qc, G, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
 
     #print(report())

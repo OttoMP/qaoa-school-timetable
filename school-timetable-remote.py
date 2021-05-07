@@ -164,18 +164,17 @@ def create_graph(events):
 def partial_mixer(qc, neighbour, ancilla, target, beta):
     def outer():
         if neighbour == None:
-            x(ancilla)
+            X(ancilla)
         else:
-            within(lambda : x(neighbour),
-                    lambda : ctrl(neighbour, x, ancilla))
+            with around(X, neighbour):
+                ctrl(neighbour, X, ancilla)
 
-    within(lambda : outer(),
-            lambda : [within(lambda :[h(target),
-                                        ctrl(target[0], x, target[1])],
-                            lambda : ctrl(ancilla, rz, 2*beta, target[1])),
-                        within(lambda :[rx(-np.pi/2, target),
-                                        ctrl(target[0], x, target[1])],
-                            lambda : ctrl(ancilla, rz, 2*beta, target[1]))])
+    with around(outer):
+        with around([H, ctrl(0, X, target=1)], target):
+            ctrl(ancilla, RZ, 2*beta, target[1])
+        
+        with around([RX(-np.pi/2), ctrl(0, X, target=1)], target):
+            ctrl(ancilla, RZ, 2*beta, target[1])
 
 def neighbourhood(G, num_colors, node, color):
     neighbour = G[node]
@@ -271,17 +270,17 @@ def color2qubits(qc, num_nodes, num_colors):
 def phase_separator(qc, G, gamma, num_nodes, num_colors):
     qubits2color(qc, num_nodes, num_colors)
     for node in range(num_colors*num_nodes):
-        x(qc[node])
+        X(qc[node])
     for k in range(num_colors):
         qubits = [k*num_nodes+node for node in range(num_nodes)]
         control = qc[qubits[0]]
         for qub in qubits[1:-1]:
             control = control | qc[qub]
         target = qc[qubits[-1]]
-        ctrl(control, rz, 2*gamma, target)
+        ctrl(control, RZ, 2*gamma, target)
         #cRz(qc, qubits, 2*gamma)
     for node in range(num_colors*num_nodes):
-        x(qc[node])
+        X(qc[node])
     color2qubits(qc, num_nodes, num_colors)
 
 def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
@@ -347,7 +346,7 @@ def qaoa(par, p, G, num_colors):
 def minimization_process(p, G, num_colors, school):
     data = []
     gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-    beta0 =  [random.uniform(0, np.pi)]
+    beta0 = [random.uniform(0, np.pi)]
     beta  = [random.uniform(0, np.pi) for _ in range(p)]
     qaoa_par = beta0+gamma+beta
     qaoa_args = p, G, num_colors

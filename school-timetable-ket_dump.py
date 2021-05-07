@@ -366,13 +366,16 @@ def main():
     #plt.show()
 
     print("Running QAOA")
-    number_of_qubits: G.number_of_nodes*num_colors+num_colors+G.number_of_nodes
+    number_of_qubits: G.number_of_nodes*num_colors+G.number_of_nodes
     print("Necessary number of qubits: ", number_of_qubits)
 
+    # QAOA parameter
     p = 1
     # Parallel task using ray
     expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, students_list) for iteration in progressbar.progressbar(range(2))])
 
+
+    #---------------------------------------------------------
     final_answer = min(expected_value_sample, key=lambda x: x[0])
     beta0 = final_answer[2][0]
     gamma = final_answer[2][1:p+1]
@@ -390,7 +393,7 @@ def main():
     # run on local simulator
     result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
     for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
         prob = int(2**20*result.probability(i))
         if prob > 0:
             counts[binary] = prob
@@ -434,6 +437,28 @@ def main():
     print("Objective function value: ", min_C[1])
     print()
 
+    list_qubits = min_C[0]
+    for i in range(len(G)):
+        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                # color = pos
+                best_coloring.append(pos)
+
+    print("\nBest Coloring",best_coloring)
+    print("\nBest Coloring Qudits values")
+    for i in range(len(G)):
+        print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
+
+    print("\nNew Graph information")
+    print("\nDegree of each node", degree)
+    #print("\nNumber of colors", num_colors)
+    color_graph_coloring(G, best_coloring)
+    for i in G.nodes:
+        print("\nNode",i,"Color", G.nodes[i]['color'])
+        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+        print("Neighbours Colors", neighbours)
+
+    #-----------------------------
     max_counts = max(counts, key=lambda key: counts[key])
     print("Most commom result found: ", max_counts)
     print("Number of times result showed: ", counts[max_counts])
@@ -441,7 +466,6 @@ def main():
     max_value = cost_function_timetable(max_counts, G, num_colors, students_list)
     print("Objective function value: ", max_value)
 
-    #-----------------------------
     list_qubits = max_counts
     for i in range(len(G)):
         for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
@@ -464,26 +488,6 @@ def main():
         print("Neighbours Colors", neighbours)
 
     #-----------------------------
-    list_qubits = min_C[0]
-    for i in range(len(G)):
-        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
-            if int(char):
-                # color = pos
-                best_coloring.append(pos)
-
-    print("\nBest Coloring",best_coloring)
-    print("\nBest Coloring Qudits values")
-    for i in range(len(G)):
-        print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
-
-    print("\nNew Graph information")
-    print("\nDegree of each node", degree)
-    #print("\nNumber of colors", num_colors)
-    color_graph_coloring(G, best_coloring)
-    for i in G.nodes:
-        print("\nNode",i,"Color", G.nodes[i]['color'])
-        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-        print("Neighbours Colors", neighbours)
 
     '''
     print("Histogram", hist)

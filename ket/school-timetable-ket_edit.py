@@ -14,14 +14,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from   matplotlib import cm
 from   matplotlib.ticker import LinearLocator, FormatStrFormatter
+from qiskit.visualization import plot_histogram
 
 # Import tools for running QAOA
 import random
 from scipy.optimize import minimize, fmin, Bounds
+from ket import *
 from ket.lib import swap, within
 
 # Parallelization tools
-from joblib import Parallel, delayed
+import ray
+import multiprocessing
+
+#num_cores = multiprocessing.cpu_count()
+num_cores = 2
+ray.init(num_cpus=num_cores)
 
 def show_figure(fig):
     new_fig = plt.figure()
@@ -347,6 +354,19 @@ def qaoa(par, p, shots, G, G_tuple, num_colors, students_list):
     #print(M1_sampled)
     return M1_sampled
 
+@ray.remote
+def minimization_process(p, shots, G, G_tuple, num_colors, students_list):
+    gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
+    beta0 =  [random.uniform(0, np.pi)]
+    beta  = [random.uniform(0, np.pi) for _ in range(p)]
+    qaoa_par = beta0+gamma+beta
+    qaoa_args = p, shots, G, G_tuple, num_colors, students_list
+    print("\nMinimizing function\n")
+    res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
+            options={'maxiter': 300, 'xatol': 0.1, 'fatol': 0.01, 'disp': True, 'adaptive':True})
+    print(res)
+    return [res['fun'], p, res['x']]
+
 def main():
     print("Starting program\n")
     # Problem variables
@@ -457,10 +477,17 @@ def main():
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
 
+
     print("Running QAOA")
     p = 1
     shots = 100
 
+    # Parallel task using ray
+    Mp1_sampled = ray.get([minimization_process.remote(p, shots, G, G_tuple, num_colors, students_list) for iteration in progressbar.progressbar(range(2))])
+    print("Mp1_sampled")
+    #pp.pprint(Mp1_sampled)
+
+    '''
     #archive_name = "results/p1.csv"
     Mp1_sampled = []
     for iteration in progressbar.progressbar(range(1)):
@@ -472,12 +499,13 @@ def main():
         print("\nMinimizing function\n")
         res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
                 options={'maxiter': 300, 'xatol': 0.01, 'fatol': 0.01, 'disp': True, 'adaptive':True})
-        print(res)
+        #print(res)
         Mp1_sampled.append([res['fun'], p, res['x']])
         #save_csv(Mp1_sampled, archive_name)
 
     print("Mp1_sampled")
-    pp.pprint(Mp1_sampled)
+    #pp.pprint(Mp1_sampled)
+    '''
 
     final_answer = min(Mp1_sampled, key=lambda x: x[0])
     beta0 = final_answer[2][0]
@@ -508,6 +536,10 @@ def main():
         # Evaluate the data from the simulator
     avr_C       = 0
     min_C       = [0, G.number_of_nodes()+1]
+    hist        = {}
+
+    for k in range(num_colors+1):
+        hist[str(k)] = hist.get(str(k),0)
 
     for sample in list(counts.keys()):
         if counts[sample] > 0:
@@ -517,6 +549,7 @@ def main():
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
+            hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + counts[sample]
 
             # save best bit string
             if( min_C[1] > tmp_eng):
@@ -543,31 +576,40 @@ def main():
     max_value = cost_function_timetable(max_counts, G_tuple, num_colors, students_list)
     print("Objective function value: ", max_value)
 
-    maximum_coloring = []
+
     list_qubits = max_counts
     for i in range(len(G)):
         for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
             if int(char):
                 # color = pos
                 maximum_coloring.append(pos)
+
     print("\nMaximum Coloring",maximum_coloring)
     print("\nMaximum Coloring Qudits values")
-    for i in range(len(G)):
+    for i in range(len(G_tuple)):
         print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
 
+    print("\nNew Graph information")
+    print("\nDegree of each node", degree)
+    #print("\nNumber of colors", num_colors)
+    color_graph_coloring(G_tuple, maximum_coloring)
+    for i in G_tuple.nodes:
+        print("\nNode",i,"Color", G_tuple.nodes[i]['color'])
+        neighbours = [G_tuple.nodes[neighbour]['color'] for neighbour in G_tuple[i]]
+        print("Neighbours Colors", neighbours)
 
-    final_coloring = []
+
+
     list_qubits = min_C[0]
-
     for i in range(len(G)):
         for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
             if int(char):
                 # color = pos
-                final_coloring.append(pos)
+                best_coloring.append(pos)
 
-    print("\nBest Coloring",final_coloring)
+    print("\nBest Coloring",best_coloring)
     print("\nBest Coloring Qudits values")
-    for i in range(len(G)):
+    for i in range(len(G_tuple)):
         print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
 
     #print('\nThe approximate solution is x* = %s with C(x*) = %d' % (min_C[0],min_C[1]))
@@ -577,14 +619,34 @@ def main():
     print("\nNew Graph information")
     print("\nDegree of each node", degree)
     #print("\nNumber of colors", num_colors)
-    color_graph_coloring(G, final_coloring)
-    for i in G.nodes:
-        print("\nNode",i,"Color", G.nodes[i]['color'])
-        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+    color_graph_coloring(G_tuple, best_coloring)
+    for i in G_tuple.nodes:
+        print("\nNode",i,"Color", G_tuple.nodes[i]['color'])
+        neighbours = [G_tuple.nodes[neighbour]['color'] for neighbour in G_tuple[i]]
         print("Neighbours Colors", neighbours)
 
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
-    print("\nFinal coloring", final_coloring)
+    #coloring = [G.nodes[node]['color'] for node in G.nodes]
+    #print("\nFinal coloring", final_coloring)
+
+    '''
+    print("Histogram", hist)
+    hist_max = sum(counts.values())
+    hist_3 = (hist['3']/hist_max)*100
+    hist_2 = (hist['2']/hist_max)*100
+    hist_0 = (hist['0']/hist_max)*100
+    hist_1 = (hist['1']/hist_max)*100
+    hist_4 = (hist['4']/hist_max)*100
+    hist_5 = (hist['5']/hist_max)*100
+    print("Histogram 3", hist_3)
+    print("Histogram 2", hist_2)
+    print("Histogram 1", hist_1)
+    print("Histogram 0", hist_0)
+    print("Histogram 4", hist_4)
+    print("Histogram 5", hist_5)
+    #print('The cost function is distributed as: \n')
+    #plot_histogram(hist,figsize = (8,6),bar_labels = False)
+    #plt.savefig("histogram.pdf")
+    '''
 
 if __name__ == '__main__':
     main()
