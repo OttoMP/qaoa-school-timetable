@@ -22,12 +22,7 @@ from ket import *
 from ket.lib import swap, within
 
 # Parallelization tools
-import ray
 import multiprocessing
-
-#num_cores = multiprocessing.cpu_count()
-num_cores = 2
-ray.init(num_cpus=num_cores)
 
 # Compute the value of the cost function
 def cost_function_timetable(x, G, num_colors, list_students):
@@ -342,7 +337,6 @@ def qaoa(par, p, G, num_colors):
 
     return expectation_value
 
-@ray.remote
 def minimization_process(p, G, num_colors, school):
     data = []
     gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
@@ -363,51 +357,200 @@ def minimization_process(p, G, num_colors, school):
 def main():
     print("Starting program\n")
 
-    # parse xml file
-    events = parseXML('dataset/den-smallschool.xml')
-    #events = parseXML('dataset/bra-instance01.xml')
+    # QAOA parameter
+    p = 1
 
     school = "Den"
     #school = "Bra"
 
+    # Reading values from CSV file
+    result_list = pd.read_csv("results/"+school+"p"+str(p)+".csv", header=0)
+
+    # Parsing necessary values
+    expected_value_list = list(result_list["Expected Value"])
+    qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
+    min_expected_value = min(expected_value_list)
+    min_expected_value_index = expected_value_list.index(min_expected_value)
+    min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
+    
+    print("Expected Value List")
+    print(expected_value_list)
+    print("Min Expected Value")
+    print(min_expected_value, '\n')
+    print("Beta0|Gamma|Beta")
+    print(qaoa_par_list, '\n')
+
+    beta0 = float(min_qaoa_par[0])
+    gamma = [float(par) for par in min_qaoa_par[1:p+1]]
+    beta  = [float(par) for par in min_qaoa_par[p+1:]]
+
+    print("Using Following parameters:")
+    print("Beta 0:", beta0)
+    print("Gamma:", gamma)
+    print("Beta:", beta)
+    print("\n")
+
+    # Preparing Conflict Graph for QAOA Analysis 
+    # parse xml file
+    events = parseXML('dataset/den-smallschool.xml')
+    #events = parseXML('dataset/bra-instance01.xml')
     G = create_graph(events)
 
     # Graph Information
-    print("\nGraph information")
+    #print("\nGraph information")
 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    print("\nPre-coloring", coloring)
+    #print("\nPre-coloring", coloring)
 
     degree = [deg for (node, deg) in G.degree()]
-    print("\nDegree of each node", degree)
+    #print("\nDegree of each node", degree)
 
     num_colors = 5
-    print("\nNumber of colors", num_colors)
+    #print("\nNumber of colors", num_colors)
 
     node_list = list(G.nodes)
     color_graph_num(G, num_colors, node_list[0])
     #color_graph_coloring(G, initial_coloring)
 
     for i in G.nodes:
-        print("\nNode",i,"Color", G.nodes[i]['color'])
+    #    print("\nNode",i,"Color", G.nodes[i]['color'])
         neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-        print("Neighbours Colors", neighbours)
+    #    print("Neighbours Colors", neighbours)
 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    print("\nInitial coloring", coloring)
+    #print("\nInitial coloring", coloring)
 
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()
 
+    # Starting QAOA
     print("Running QAOA")
     number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
     print("Necessary number of qubits: ", number_of_qubits)
+    
+    num_nodes = G.number_of_nodes()
+    # Dictionary for keeping the results of the simulation
+    counts = {}
+    # run on local simulator
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    for i in result.get_states():
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        prob = int(2**20*result.probability(i))
+        if prob > 0:
+            counts[binary] = prob
+    #pp.pprint(counts)
 
-    # QAOA parameter
-    p = 1
+    print("==Result==")
 
-    # Parallel task using ray
-    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(4))])
+    # Evaluate the data from the simulator
+    avr_C       = 0
+    min_C       = [0, 9999]
+    hist        = {}
 
+    for k in range(num_colors+1):
+        hist[str(k)] = hist.get(str(k),0)
+
+    for sample in list(counts.keys()):
+        if counts[sample] > 0:
+            # use sampled bit string x to compute f(x)
+            x         = [int(num) for num in list(sample)]
+            #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
+            tmp_eng = cost_function_den(x, G, num_colors)
+
+            # compute the expectation value and energy distribution
+            avr_C     = avr_C    + counts[sample]*tmp_eng
+            hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + counts[sample]
+
+            # save best bit string
+            if( min_C[1] > tmp_eng):
+                min_C[0] = sample
+                min_C[1] = tmp_eng
+
+    total_counts = sum(counts.values())
+    print("Total Number of Measurements", total_counts)
+    expected_value = avr_C/total_counts
+    print("Expected Value = ", expected_value)
+
+    print('\n --- SIMULATION RESULTS ---\n')
+    print("Best result found: ", min_C[0])
+    print("Number of times result showed: ", counts[min_C[0]])
+    print("Percentage of times result showed: ", (counts[min_C[0]]/total_counts)*100)
+    print("Objective function value: ", min_C[1])
+    print()
+
+    list_qubits = min_C[0]
+    best_coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                # color = pos
+                best_coloring.append(pos)
+
+    print("\nBest Coloring",best_coloring)
+    print("\nBest Coloring Qudits values")
+    for i in range(len(G)):
+        print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
+
+    print("\nNew Graph information")
+    print("\nDegree of each node", degree)
+    #print("\nNumber of colors", num_colors)
+    color_graph_coloring(G, best_coloring)
+    for i in G.nodes:
+        print("\nNode",i,"Color", G.nodes[i]['color'])
+        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+        print("Neighbours Colors", neighbours)
+
+    print('\n')
+    #-----------------------------
+    max_counts = max(counts, key=lambda key: counts[key])
+    print("Most commom result found: ", max_counts)
+    print("Number of times result showed: ", counts[max_counts])
+    print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
+    #max_value = cost_function_timetable(max_counts, G, num_colors, students_list)
+    max_value = cost_function_den(x, G, num_colors)
+    print("Objective function value: ", max_value)
+
+    list_qubits = max_counts
+    maximum_coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                # color = pos
+                maximum_coloring.append(pos)
+
+    print("\nMost Common Coloring",maximum_coloring)
+    print("\nMost Common Coloring Qudits values")
+    for i in range(len(G)):
+        print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
+
+    print("\nNew Graph information")
+    print("\nDegree of each node", degree)
+    #print("\nNumber of colors", num_colors)
+    color_graph_coloring(G, maximum_coloring)
+    for i in G.nodes:
+        print("\nNode",i,"Color", G.nodes[i]['color'])
+        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+        print("Neighbours Colors", neighbours)
+
+    #-----------------------------
+    '''
+    print("Histogram", hist)
+    hist_max = sum(counts.values())
+    hist_3 = (hist['3']/hist_max)*100
+    hist_2 = (hist['2']/hist_max)*100
+    hist_0 = (hist['0']/hist_max)*100
+    hist_1 = (hist['1']/hist_max)*100
+    hist_4 = (hist['4']/hist_max)*100
+    hist_5 = (hist['5']/hist_max)*100
+    print("Histogram 3", hist_3)
+    print("Histogram 2", hist_2)
+    print("Histogram 1", hist_1)
+    print("Histogram 0", hist_0)
+    print("Histogram 4", hist_4)
+    print("Histogram 5", hist_5)
+    #print('The cost function is distributed as: \n')
+    #plot_histogram(hist,figsize = (8,6),bar_labels = False)
+    #plt.savefig("histogram.pdf")
+    '''
 if __name__ == '__main__':
     main()
