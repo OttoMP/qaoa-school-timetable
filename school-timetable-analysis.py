@@ -19,6 +19,7 @@ from qiskit.visualization import plot_histogram
 import random
 from scipy.optimize import minimize
 from ket import *
+from ket.plugins import make_quantum
 from ket.lib import swap, within
 
 # Parallelization tools
@@ -278,6 +279,55 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
         X(qc[node])
     color2qubits(qc, num_nodes, num_colors)
 
+@make_quantum
+def G_gate(p, target):
+    matrix = [[np.sqrt(p), -np.sqrt(1-p)],[np.sqrt(1-p), np.sqrt(p)]]
+    return matrix*target
+
+def dichotomy_tree_gen(num_total):
+    dichotomy_tree = []
+    n = np.floor(num_total/2)
+    m = num_total
+    root = n/m
+    dichotomy_tree.append(n/m)
+    new_values = [(n,m)]
+
+    while new_values:
+        leaf = new_values.pop(0)
+        n = leaf[0]
+        m = leaf[1]
+        upper_child = (np.floor(n/2), np.floor(m/2))
+        lower_child = (np.ceil(n/2), np.ceil(m/2))
+        if upper_child != (0,1) and upper_child != (1,1):
+            new_values.append(upper_child)
+            dichotomy_tree.append(upper_child[0]/upper_child[1])
+        if lower_child != (0,1) and lower_child != (1,1):
+            new_values.append(lower_child)
+            dichotomy_tree.append(lower_child[0]/lower_child[1])
+    
+    return dichotomy_tree
+        
+        
+def w_state_preparation(qc, num_colors, num_nodes):
+    n = qc.len()
+    X(qc[0])
+    if (n & (n-1) == 0) and n != 0:
+        for i in range(int(np.log2(n))):
+            exp = 2**i
+            for j in range(exp):
+                ctrl(qc[j], RY, np.pi/2, qc[j+exp])
+                cnot(qc[j+exp], qc[j])
+    else:
+        dich_tree = dichotomy_tree_gen(n)
+        for i in range(int(ceil(np.log2(n)))):
+            exp = 2**i
+            for j in range(exp):
+                if j+exp > n:
+                    break
+                param = dich_tree.pop(0)
+                ctrl(qc[j], G_gate, param, qc[j+exp])
+                cnot(qc[j+exp], qc[j])
+
 def w4_state_preparation(qc, num_colors, num_nodes):
     for qudit in range(num_nodes):
         X(qc[qudit*num_colors])
@@ -453,15 +503,23 @@ def main():
     #        counts[binary] = prob
     #pp.pprint(counts)
 
-    qc = quant((num_nodes*num_colors) + num_nodes)
-    w4_state_preparation(qc, num_colors, num_nodes)
-    result = dump(qc)
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
-        prob = int(2**20*result.probability(i))
-        if prob > 0:
-            counts[binary] = prob
-    pp.pprint(counts)
+    #qc = quant(4)
+    #qc = quant(1)
+    #X(qc[0])
+    #G_gate(0.5, qc[0])
+    ##w_state_preparation(qc, 4, 1)
+    #result = dump(qc)
+    #for i in result.get_states():
+        #binary = np.binary_repr(i, width=4)
+        #prob = int(2**20*result.probability(i))
+        #if prob > 0:
+            #counts[binary] = prob
+    #pp.pprint(counts)
+
+    dich_tree = dichotomy_tree_gen(11)
+    print("Tree", dich_tree)
+    dich_tree = dichotomy_tree_gen(6)
+    print("Tree", dich_tree)
     '''
     print("==Result==")
 
