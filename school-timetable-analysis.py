@@ -278,14 +278,26 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
         X(qc[node])
     color2qubits(qc, num_nodes, num_colors)
 
+def w4_state_preparation(qc, num_colors, num_nodes):
+    for qudit in range(num_nodes):
+        X(qc[qudit*num_colors])
+        ctrl(qc[qudit*num_colors], RY, np.pi/2, qc[qudit*num_colors+1])
+        cnot(qc[qudit*num_colors+1], qc[qudit*num_colors])
+        ctrl(qc[qudit*num_colors], RY, np.pi/2, qc[qudit*num_colors+2])
+        cnot(qc[qudit*num_colors+2], qc[qudit*num_colors])
+        ctrl(qc[qudit*num_colors+1], RY, np.pi/2, qc[qudit*num_colors+3])
+        cnot(qc[qudit*num_colors+3], qc[qudit*num_colors+1])
+
 def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     num_nodes = G.number_of_nodes()
     qc = quant((num_nodes*num_colors) + num_nodes)
 
     # Initial state preparation
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
-    for i, color in enumerate(coloring):
-        X(qc[(i*num_colors)+color])
+    w4_state_preparation(qc, num_colors, num_nodes)
+    
+    #coloring = [G.nodes[node]['color'] for node in G.nodes]
+    #for i, color in enumerate(coloring):
+    #    X(qc[(i*num_colors)+color])
 
     # Alternate application of operators
     mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
@@ -296,6 +308,7 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     # Measurement
     #result = measure(qc).get()
     return dump(qc)
+
 
 def qaoa(par, p, G, num_colors):
     # QAOA parameters
@@ -409,7 +422,7 @@ def main():
     #print("\nNumber of colors", num_colors)
 
     node_list = list(G.nodes)
-    color_graph_num(G, num_colors, node_list[0])
+    #color_graph_num(G, num_colors, node_list[0])
     #color_graph_coloring(G, initial_coloring)
 
     for i in G.nodes:
@@ -432,14 +445,24 @@ def main():
     # Dictionary for keeping the results of the simulation
     counts = {}
     # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    #result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    #for i in result.get_states():
+    #    binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+    #    prob = int(2**20*result.probability(i))
+    #    if prob > 0:
+    #        counts[binary] = prob
+    #pp.pprint(counts)
+
+    qc = quant((num_nodes*num_colors) + num_nodes)
+    w4_state_preparation(qc, num_colors, num_nodes)
+    result = dump(qc)
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
         prob = int(2**20*result.probability(i))
         if prob > 0:
             counts[binary] = prob
-    #pp.pprint(counts)
-
+    pp.pprint(counts)
+    '''
     print("==Result==")
 
     # Evaluate the data from the simulator
@@ -533,6 +556,7 @@ def main():
         print("Neighbours Colors", neighbours)
 
     #-----------------------------
+    '''
     '''
     print("Histogram", hist)
     hist_max = sum(counts.values())

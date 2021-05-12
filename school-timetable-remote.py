@@ -283,14 +283,26 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
         X(qc[node])
     color2qubits(qc, num_nodes, num_colors)
 
+def w4_state_preparation(qc, num_colors, num_nodes):
+    X(qc[0])
+    for qudit in num_nodes:
+        ctrl(qc[qudit*num_colors], RY, np.pi, qc[qudit*num_colors+1])
+        cnot(qc[qudit*num_colors+1], qc[qudit*num_colors])
+        ctrl(qc[qudit*num_colors], RY, np.pi, qc[qudit*num_colors+2])
+        cnot(qc[qudit*num_colors+2], qc[qudit*num_colors])
+        ctrl(qc[qudit*num_colors+1], RY, np.pi, qc[qudit*num_colors+3])
+        cnot(qc[qudit*num_colors+3], qc[qudit*num_colors+1])
+
 def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     num_nodes = G.number_of_nodes()
     qc = quant((num_nodes*num_colors) + num_nodes)
 
     # Initial state preparation
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
-    for i, color in enumerate(coloring):
-        X(qc[(i*num_colors)+color])
+    w4_state_preparation(qc, num_colors, num_nodes)
+    
+    #coloring = [G.nodes[node]['color'] for node in G.nodes]
+    #for i, color in enumerate(coloring):
+    #    X(qc[(i*num_colors)+color])
 
     # Alternate application of operators
     mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
