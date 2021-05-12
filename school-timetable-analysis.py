@@ -19,7 +19,7 @@ from qiskit.visualization import plot_histogram
 import random
 from scipy.optimize import minimize
 from ket import *
-from ket.plugins import make_quantum
+from ket.plugins import matrix
 from ket.lib import swap, within
 
 # Parallelization tools
@@ -279,10 +279,8 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
         X(qc[node])
     color2qubits(qc, num_nodes, num_colors)
 
-@make_quantum
 def G_gate(p, target):
-    matrix = [[np.sqrt(p), -np.sqrt(1-p)],[np.sqrt(1-p), np.sqrt(p)]]
-    return matrix*target
+    matrix(np.sqrt(p), -np.sqrt(1-p), np.sqrt(1-p), np.sqrt(p), target)
 
 def dichotomy_tree_gen(num_total):
     dichotomy_tree = []
@@ -307,8 +305,7 @@ def dichotomy_tree_gen(num_total):
     
     return dichotomy_tree
         
-        
-def w_state_preparation(qc, num_colors, num_nodes):
+def w_state_preparation(qc):
     n = qc.len()
     X(qc[0])
     if (n & (n-1) == 0) and n != 0:
@@ -319,7 +316,7 @@ def w_state_preparation(qc, num_colors, num_nodes):
                 cnot(qc[j+exp], qc[j])
     else:
         dich_tree = dichotomy_tree_gen(n)
-        for i in range(int(ceil(np.log2(n)))):
+        for i in range(int(np.ceil(np.log2(n)))):
             exp = 2**i
             for j in range(exp):
                 if j+exp > n:
@@ -328,32 +325,23 @@ def w_state_preparation(qc, num_colors, num_nodes):
                 ctrl(qc[j], G_gate, param, qc[j+exp])
                 cnot(qc[j+exp], qc[j])
 
-def w4_state_preparation(qc, num_colors, num_nodes):
-    for qudit in range(num_nodes):
-        X(qc[qudit*num_colors])
-        ctrl(qc[qudit*num_colors], RY, np.pi/2, qc[qudit*num_colors+1])
-        cnot(qc[qudit*num_colors+1], qc[qudit*num_colors])
-        ctrl(qc[qudit*num_colors], RY, np.pi/2, qc[qudit*num_colors+2])
-        cnot(qc[qudit*num_colors+2], qc[qudit*num_colors])
-        ctrl(qc[qudit*num_colors+1], RY, np.pi/2, qc[qudit*num_colors+3])
-        cnot(qc[qudit*num_colors+3], qc[qudit*num_colors+1])
-
 def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     num_nodes = G.number_of_nodes()
     qc = quant((num_nodes*num_colors) + num_nodes)
 
     # Initial state preparation
-    w4_state_preparation(qc, num_colors, num_nodes)
+    for i in range(num_nodes):
+        w_state_preparation(qc[i*num_colors:i*num_colors+num_colors])
     
     #coloring = [G.nodes[node]['color'] for node in G.nodes]
     #for i, color in enumerate(coloring):
     #    X(qc[(i*num_colors)+color])
 
     # Alternate application of operators
-    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
-    for step in range(p):
-        phase_separator(qc, G, gamma[step], num_nodes, num_colors)
-        mixer(qc, G, beta[step], num_nodes, num_colors)
+    #mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
+    #for step in range(p):
+    #    phase_separator(qc, G, gamma[step], num_nodes, num_colors)
+    #    mixer(qc, G, beta[step], num_nodes, num_colors)
 
     # Measurement
     #result = measure(qc).get()
@@ -468,10 +456,11 @@ def main():
     degree = [deg for (node, deg) in G.degree()]
     #print("\nDegree of each node", degree)
 
-    num_colors = 5
+    num_colors = 4
     #print("\nNumber of colors", num_colors)
-
     node_list = list(G.nodes)
+
+    # Color Graph Initial State when necessary
     #color_graph_num(G, num_colors, node_list[0])
     #color_graph_coloring(G, initial_coloring)
 
@@ -495,31 +484,14 @@ def main():
     # Dictionary for keeping the results of the simulation
     counts = {}
     # run on local simulator
-    #result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
-    #for i in result.get_states():
-    #    binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
-    #    prob = int(2**20*result.probability(i))
-    #    if prob > 0:
-    #        counts[binary] = prob
-    #pp.pprint(counts)
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    for i in result.get_states():
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        prob = int(2**20*result.probability(i))
+        if prob > 0:
+            counts[binary] = prob
+    pp.pprint(counts)
 
-    #qc = quant(4)
-    #qc = quant(1)
-    #X(qc[0])
-    #G_gate(0.5, qc[0])
-    ##w_state_preparation(qc, 4, 1)
-    #result = dump(qc)
-    #for i in result.get_states():
-        #binary = np.binary_repr(i, width=4)
-        #prob = int(2**20*result.probability(i))
-        #if prob > 0:
-            #counts[binary] = prob
-    #pp.pprint(counts)
-
-    dich_tree = dichotomy_tree_gen(11)
-    print("Tree", dich_tree)
-    dich_tree = dichotomy_tree_gen(6)
-    print("Tree", dich_tree)
     '''
     print("==Result==")
 
