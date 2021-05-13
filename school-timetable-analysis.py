@@ -454,7 +454,7 @@ def main():
     #print("\nPre-coloring", coloring)
 
     degree = [deg for (node, deg) in G.degree()]
-    #print("\nDegree of each node", degree)
+    print("Degree of each node", degree)
 
     num_colors = 4
     #print("\nNumber of colors", num_colors)
@@ -490,6 +490,7 @@ def main():
         prob = int(2**20*result.probability(i))
         if prob > 0:
             counts[binary] = prob
+    print("Number of States", len(counts))
     pp.pprint(counts)
 
     '''
