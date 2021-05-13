@@ -144,6 +144,17 @@ def color_graph_coloring(graph, coloring):
 
     return
 
+def create_graphv2(nodes, edges):
+    G = nx.Graph()
+    G.add_nodes_from([(num, {'color' : None}) for num in range(len(nodes))])
+
+    for e, row in enumerate(edges):
+        for f, column in enumerate(row):
+            if column == 1:
+                G.add_edge(e,f)
+
+    return G
+
 def create_graph(events):
     G = nx.Graph()
     G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
@@ -319,11 +330,12 @@ def w_state_preparation(qc):
         for i in range(int(np.ceil(np.log2(n)))):
             exp = 2**i
             for j in range(exp):
-                if j+exp > n:
+                if dich_tree:
+                    param = dich_tree.pop(0)
+                    ctrl(qc[j], G_gate, param, qc[j+exp])
+                    cnot(qc[j+exp], qc[j])
+                else:
                     break
-                param = dich_tree.pop(0)
-                ctrl(qc[j], G_gate, param, qc[j+exp])
-                cnot(qc[j+exp], qc[j])
 
 def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     num_nodes = G.number_of_nodes()
@@ -407,6 +419,84 @@ def minimization_process(p, G, num_colors, school):
 
 def main():
     print("Starting program\n")
+    # Problem variables
+    num_weeks = 1
+    num_days = 1 #5
+    num_periods = 6
+    num_timeslots = num_days*num_periods
+
+    # Each subject has only one teacher
+    # Each teacher teaches only one subject
+    num_subjects = 3
+    num_teachers = num_subjects
+    num_students = 2
+    num_rooms = 3
+
+    # Number of features in a room
+    # Ex.: has computers, has >40 chairs...
+    num_features = 2
+
+    teachers_list = [teacher for teacher in range(num_teachers)]
+    students_list = [student for student in range(num_students)]
+
+    #roomFeatures = np.matrix([[0 for feature in range(num_rooms)] for event in range(num_features)])
+    roomFeatures = np.matrix([[0, 1, 1],
+                             [1, 0, 0]])
+    #subjectFeatures = np.matrix([[0 for feature in range(num_features)] for event in range(num_subjects)])
+    subjectFeatures = np.matrix([[1, 0],
+                                [1, 0],
+                                [0, 1]])
+    suitableRoom = subjectFeatures*roomFeatures
+
+    # Allocate rooms
+    # Each subject will be allocated to the least busy room
+    allocations = []
+    num_allocations = [0 for room in range(num_rooms)]
+
+    for subject_index, subject in enumerate(suitableRoom.tolist()):
+        possible_allocations = []
+        for index, room in enumerate(subject):
+            if room == 1:
+                possible_allocations.append(index)
+        print("Subject", subject_index)
+        print("Possible Allocations", possible_allocations)
+
+        min_allocations = np.inf
+        allocated_room = np.inf
+        for alloc_index in possible_allocations:
+            if num_allocations[alloc_index] < min_allocations:
+                allocated_room = alloc_index
+                min_allocations = num_allocations[allocated_room]
+        allocations.append((subject_index, allocated_room))
+        num_allocations[allocated_room] += 1
+
+    print("\nNumber of Allocations for each Room", num_allocations)
+    print("Allocations", allocations)
+
+    # Pair subjects with students
+    # lecture = (subject, room, student)
+    lectures = [(j,k,l) for j,k in allocations for l in students_list]
+
+    # Generate the lectureConflict Matrix
+    # The hard constraints of the problem are included in the matrix
+    lectureConflict = [[0 for feature in range(len(lectures))] for event in range(len(lectures))]
+
+    # If two lectures are allocated to the same room,
+    # share a student or have the same teacher they
+    # cannot be assigned to the same timeslot
+    for e, j in enumerate(lectures):
+        subject,room,student = j
+        for f,a in enumerate(lectures[e+1:]):
+            subject2,room2,student2 = a
+            if subject == subject2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+            if student == student2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+            if room == room2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
 
     # QAOA parameter
     p = 1
@@ -445,7 +535,8 @@ def main():
     # parse xml file
     events = parseXML('dataset/den-smallschool.xml')
     #events = parseXML('dataset/bra-instance01.xml')
-    G = create_graph(events)
+    G = create_graphv2(lectures, lectureConflict)
+    #G = create_graph(events)
 
     # Graph Information
     #print("\nGraph information")
@@ -456,7 +547,8 @@ def main():
     degree = [deg for (node, deg) in G.degree()]
     print("Degree of each node", degree)
 
-    num_colors = 4
+    #num_colors = 4
+    num_colors = num_timeslots
     #print("\nNumber of colors", num_colors)
     node_list = list(G.nodes)
 
