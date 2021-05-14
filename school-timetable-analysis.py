@@ -24,9 +24,6 @@ from ket.plugins import matrix
 from ket.lib import swap, within
 from ket.gates.more import u3
 
-# Parallelization tools
-import multiprocessing
-
 # Compute the value of the cost function
 def cost_function_timetable(x, G, num_colors, list_students):
 
@@ -99,7 +96,7 @@ def cost_function_den(x, G, num_colors):
     return C
 
 def save_csv(data, nome_csv):
-    data_points = pd.DataFrame(data, columns=['Expected Value', 'p', 'Beta0|Gamma|Beta'])
+    data_points = pd.DataFrame(data, columns=['Expected Value', 'p', 'Gamma|Beta'])
     data_points.to_csv(nome_csv, mode='a', header=False)
 
     return
@@ -148,12 +145,12 @@ def color_graph_coloring(graph, coloring):
 
 def create_graphv2(nodes, edges):
     G = nx.Graph()
-    G.add_nodes_from([(num, {'color' : None}) for num in range(len(nodes))])
+    G.add_nodes_from([(num, {'color' : None}) for num in nodes])
 
     for e, row in enumerate(edges):
         for f, column in enumerate(row):
             if column == 1:
-                G.add_edge(e,f)
+                G.add_edge(nodes[e],nodes[f])
 
     return G
 
@@ -276,7 +273,7 @@ def color2qubits(qc, num_nodes, num_colors):
                 swap(qc[qubit_b], qc[start])
                 start = qubit_b
 
-def phase_separator(qc, G, gamma, num_nodes, num_colors):
+def phase_separator(qc, gamma, num_nodes, num_colors):
     qubits2color(qc, num_nodes, num_colors)
     for node in range(num_colors*num_nodes):
         X(qc[node])
@@ -293,12 +290,11 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
     color2qubits(qc, num_nodes, num_colors)
 
 def G_gate(p, upper, lower):
-    theta = 2*np.arccos(np.sqrt(p))
-    RY(theta/2, lower)
+    theta = np.arccos(np.sqrt(p))
+    RY(theta, lower)
     cnot(upper, lower)
-    RY(-theta/2, lower)
+    RY(-theta, lower)
     cnot(upper, lower)
-    #matrix(np.sqrt(p), -np.sqrt(1-p), np.sqrt(1-p), np.sqrt(p), target)
 
 def dichotomy_tree_gen(num_total):
     dichotomy_tree = []
@@ -346,20 +342,9 @@ def w_state_preparation(qc):
     else:
         root = dichotomy_tree_gen(n)
         leafs = []
-        print("applying G gate from 0 to 1 with param", root.value)
         G_gate(root.value, qc[0], qc[1])
         cnot(qc[1], qc[0])
-
-        '''
-        G_gate(root.value, qc[0], qc[2])
-        cnot(qc[2], qc[0])
-        G_gate(root.value, qc[1], qc[3])
-        cnot(qc[3], qc[1])
-        G_gate(root.value, qc[2], qc[4])
-        cnot(qc[4], qc[2])
-        G_gate(root.value, qc[1], qc[5])
-        cnot(qc[5], qc[1])
-        '''
+        
         target_index = 2
         if root.left.value != None:
             leafs.append((root.left, 0, target_index))
@@ -369,12 +354,10 @@ def w_state_preparation(qc):
             target_index += 1
 
         while leafs:
-        #for _ in range(2):
             leaf = leafs.pop(0)
             param = leaf[0].value
             upper_qubit_index = leaf[1]
             lower_qubit_index = leaf[2]
-            print("applying G gate from", upper_qubit_index, "to", lower_qubit_index, "with param", param)
             G_gate(param, qc[upper_qubit_index], qc[lower_qubit_index])
             cnot(qc[lower_qubit_index], qc[upper_qubit_index])
             # Left = Upper Child
@@ -388,14 +371,12 @@ def w_state_preparation(qc):
                 leafs.append((lower, lower_qubit_index, target_index))
                 target_index += 1
 
-def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
+def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta):
     num_nodes = G.number_of_nodes()
     qc = quant((num_nodes*num_colors) + num_nodes)
 
     # Initial state preparation
     for i in range(num_nodes):
-        print("Preparing states from node: ", i)
-        print("Qubit ranging from ", i*num_colors, " to ", i*num_colors+num_colors-1)
         w_state_preparation(qc[i*num_colors:i*num_colors+num_colors])
     
     #coloring = [G.nodes[node]['color'] for node in G.nodes]
@@ -403,19 +384,17 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     #    X(qc[(i*num_colors)+color])
 
     # Alternate application of operators
-    #mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
-    #for step in range(p):
-    #    phase_separator(qc, G, gamma[step], num_nodes, num_colors)
-    #    mixer(qc, G, beta[step], num_nodes, num_colors)
+    #mixer(qc, G, num_nodes, num_colors) # Mixer 0
+    for step in range(p):
+        phase_separator(qc, gamma[step], num_nodes, num_colors)
+        mixer(qc, G, beta[step], num_nodes, num_colors)
 
     # Measurement
     #result = measure(qc).get()
     return dump(qc)
 
-
 def qaoa(par, p, G, num_colors):
     # QAOA parameters
-    beta0, par= par[0], par[1:]
     middle = int(len(par)/2)
     gamma = par[:middle]
     beta = par[middle:]
@@ -425,7 +404,7 @@ def qaoa(par, p, G, num_colors):
     # Dictionary for keeping the results of the simulation
     counts = {}
     # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta)
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
         counts[binary] = int(2**20*result.probability(i))
@@ -456,9 +435,8 @@ def qaoa(par, p, G, num_colors):
 def minimization_process(p, G, num_colors, school):
     data = []
     gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-    beta0 = [random.uniform(0, np.pi)]
     beta  = [random.uniform(0, np.pi) for _ in range(p)]
-    qaoa_par = beta0+gamma+beta
+    qaoa_par = gamma+beta
     qaoa_args = p, G, num_colors
     print("\nMinimizing function\n")
     res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
@@ -562,7 +540,7 @@ def main():
 
     # Parsing necessary values
     expected_value_list = list(result_list["Expected Value"])
-    qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
+    qaoa_par_list = list(result_list["Gamma|Beta"])
     min_expected_value = min(expected_value_list)
     min_expected_value_index = expected_value_list.index(min_expected_value)
     min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
@@ -571,15 +549,13 @@ def main():
     print(expected_value_list)
     print("Min Expected Value")
     print(min_expected_value, '\n')
-    print("Beta0|Gamma|Beta")
+    print("Gamma|Beta")
     print(qaoa_par_list, '\n')
 
-    beta0 = float(min_qaoa_par[0])
-    gamma = [float(par) for par in min_qaoa_par[1:p+1]]
-    beta  = [float(par) for par in min_qaoa_par[p+1:]]
+    gamma = [float(par) for par in min_qaoa_par[:p]]
+    beta  = [float(par) for par in min_qaoa_par[p:]]
 
     print("Using Following parameters:")
-    print("Beta 0:", beta0)
     print("Gamma:", gamma)
     print("Beta:", beta)
     print("\n")
@@ -588,12 +564,15 @@ def main():
     # parse xml file
     events = parseXML('dataset/den-smallschool.xml')
     #events = parseXML('dataset/bra-instance01.xml')
+    
     G = create_graphv2(lectures, lectureConflict)
     #G = create_graph(events[0:4])
 
     # Graph Information
     #print("\nGraph information")
 
+    print("Nodes = ", G.nodes)
+    
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     #print("\nPre-coloring", coloring)
 
@@ -629,7 +608,7 @@ def main():
     # Dictionary for keeping the results of the simulation
     counts = {}
     # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta)
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
         prob = int(2**20*result.probability(i))
@@ -638,7 +617,6 @@ def main():
     print("Number of States", len(counts))
     pp.pprint(counts)
 
-    '''
     print("==Result==")
 
     # Evaluate the data from the simulator
@@ -653,8 +631,8 @@ def main():
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
             x         = [int(num) for num in list(sample)]
-            #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
-            tmp_eng = cost_function_den(x, G, num_colors)
+            tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
+            #tmp_eng = cost_function_den(x, G, num_colors)
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
@@ -732,7 +710,6 @@ def main():
         print("Neighbours Colors", neighbours)
 
     #-----------------------------
-    '''
     '''
     print("Histogram", hist)
     hist_max = sum(counts.values())

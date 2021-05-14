@@ -9,6 +9,7 @@ from xml_parser import parseXML
 from itertools import combinations
 import pprint as pp
 import progressbar
+from binarytree import build
 
 # We import plotting tools
 import pandas as pd
@@ -20,6 +21,7 @@ import random
 from scipy.optimize import minimize
 from ket import *
 from ket.lib import swap, within
+from ket.gates.more import u3
 
 # Parallelization tools
 import ray
@@ -101,7 +103,7 @@ def cost_function_den(x, G, num_colors):
     return C
 
 def save_csv(data, nome_csv):
-    data_points = pd.DataFrame(data, columns=['Expected Value', 'p', 'Beta0|Gamma|Beta'])
+    data_points = pd.DataFrame(data, columns=['Expected Value', 'p', 'Gamma|Beta'])
     data_points.to_csv(nome_csv, mode='a', header=False)
 
     return
@@ -147,6 +149,17 @@ def color_graph_coloring(graph, coloring):
         graph.nodes[node]['color'] = coloring[index]
 
     return
+
+def create_graphv2(nodes, edges):
+    G = nx.Graph()
+    G.add_nodes_from([(num, {'color' : None}) for num in nodes])
+
+    for e, row in enumerate(edges):
+        for f, column in enumerate(row):
+            if column == 1:
+                G.add_edge(nodes[e],nodes[f])
+
+    return G
 
 def create_graph(events):
     G = nx.Graph()
@@ -267,7 +280,7 @@ def color2qubits(qc, num_nodes, num_colors):
                 swap(qc[qubit_b], qc[start])
                 start = qubit_b
 
-def phase_separator(qc, G, gamma, num_nodes, num_colors):
+def phase_separator(qc, gamma, num_nodes, num_colors):
     qubits2color(qc, num_nodes, num_colors)
     for node in range(num_colors*num_nodes):
         X(qc[node])
@@ -283,40 +296,113 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
         X(qc[node])
     color2qubits(qc, num_nodes, num_colors)
 
-def w4_state_preparation(qc, num_colors, num_nodes):
-    X(qc[0])
-    for qudit in num_nodes:
-        ctrl(qc[qudit*num_colors], RY, np.pi, qc[qudit*num_colors+1])
-        cnot(qc[qudit*num_colors+1], qc[qudit*num_colors])
-        ctrl(qc[qudit*num_colors], RY, np.pi, qc[qudit*num_colors+2])
-        cnot(qc[qudit*num_colors+2], qc[qudit*num_colors])
-        ctrl(qc[qudit*num_colors+1], RY, np.pi, qc[qudit*num_colors+3])
-        cnot(qc[qudit*num_colors+3], qc[qudit*num_colors+1])
+def G_gate(p, upper, lower):
+    theta = np.arccos(np.sqrt(p))
+    RY(theta, lower)
+    cnot(upper, lower)
+    RY(-theta, lower)
+    cnot(upper, lower)
 
-def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
+def dichotomy_tree_gen(num_total):
+    dichotomy_tree = []
+    n = np.floor(num_total/2)
+    m = num_total
+    root = n/m
+    dichotomy_tree.append((n/m))
+    new_values = [(n,m)]
+
+    while new_values:
+        leaf = new_values.pop(0)
+        if leaf != (0,1) and leaf != (1,1) and leaf != (1,2):
+            n = leaf[0]
+            m = leaf[1]
+            upper_child = (np.floor(n/2), np.floor(m/2))
+            lower_child = (np.ceil(n/2), np.ceil(m/2))
+            if (upper_child == (1,1) and lower_child == (1,2)) or (lower_child == (1,1) and upper_child == (1,2)):
+                temp = upper_child
+                upper_child = lower_child
+                lower_child = temp
+            
+            if upper_child == (1,1) or upper_child == (0,1):
+                dichotomy_tree.append(None)
+            else:
+                dichotomy_tree.append(upper_child[0]/upper_child[1])
+            if lower_child == (1,1) or lower_child == (0,1):
+                dichotomy_tree.append(None)
+            else:
+                dichotomy_tree.append(lower_child[0]/lower_child[1])
+            new_values.append(upper_child)
+            new_values.append(lower_child)
+
+    root = build(dichotomy_tree) 
+    return root
+        
+def w_state_preparation(qc):
+    n = qc.len()
+    X(qc[0])
+    if (n & (n-1) == 0) and n != 0:
+        for i in range(int(np.log2(n))):
+            exp = 2**i
+            for j in range(exp):
+                ctrl(qc[j], RY, np.pi/2, qc[j+exp])
+                cnot(qc[j+exp], qc[j])
+    else:
+        root = dichotomy_tree_gen(n)
+        leafs = []
+        G_gate(root.value, qc[0], qc[1])
+        cnot(qc[1], qc[0])
+        
+        target_index = 2
+        if root.left.value != None:
+            leafs.append((root.left, 0, target_index))
+            target_index += 1
+        if root.right.value != None:
+            leafs.append((root.right, 1, target_index))
+            target_index += 1
+
+        while leafs:
+            leaf = leafs.pop(0)
+            param = leaf[0].value
+            upper_qubit_index = leaf[1]
+            lower_qubit_index = leaf[2]
+            G_gate(param, qc[upper_qubit_index], qc[lower_qubit_index])
+            cnot(qc[lower_qubit_index], qc[upper_qubit_index])
+            # Left = Upper Child
+            upper = leaf[0].left
+            if upper != None:
+                leafs.append((upper, upper_qubit_index, target_index))
+                target_index += 1
+            # Right = Lower Child
+            lower = leaf[0].right
+            if lower != None:
+                leafs.append((lower, lower_qubit_index, target_index))
+                target_index += 1
+
+def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta):
     num_nodes = G.number_of_nodes()
     qc = quant((num_nodes*num_colors) + num_nodes)
 
     # Initial state preparation
-    w4_state_preparation(qc, num_colors, num_nodes)
+    for i in range(num_nodes):
+        w_state_preparation(qc[i*num_colors:i*num_colors+num_colors])
     
     #coloring = [G.nodes[node]['color'] for node in G.nodes]
     #for i, color in enumerate(coloring):
     #    X(qc[(i*num_colors)+color])
 
     # Alternate application of operators
-    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
+    # No need for beta 0 if initial state is W
+    #mixer(qc, G, num_nodes, num_colors) # Mixer 0
     for step in range(p):
-        phase_separator(qc, G, gamma[step], num_nodes, num_colors)
+        phase_separator(qc, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
 
     # Measurement
     #result = measure(qc).get()
     return dump(qc)
 
-def qaoa(par, p, G, num_colors):
+def qaoa(par, p, G, num_colors, students_list):
     # QAOA parameters
-    beta0, par= par[0], par[1:]
     middle = int(len(par)/2)
     gamma = par[:middle]
     beta = par[middle:]
@@ -326,7 +412,7 @@ def qaoa(par, p, G, num_colors):
     # Dictionary for keeping the results of the simulation
     counts = {}
     # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta)
+    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta)
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
         counts[binary] = int(2**20*result.probability(i))
@@ -339,8 +425,8 @@ def qaoa(par, p, G, num_colors):
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
             x       = [int(num) for num in list(sample)]
-            #tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
-            tmp_eng = cost_function_den(x, G, num_colors)
+            tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
+            #tmp_eng = cost_function_den(x, G, num_colors)
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
@@ -355,16 +441,15 @@ def qaoa(par, p, G, num_colors):
     return expectation_value
 
 @ray.remote
-def minimization_process(p, G, num_colors, school):
+def minimization_process(p, G, num_colors, school, students_list):
     data = []
     gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-    beta0 = [random.uniform(0, np.pi)]
     beta  = [random.uniform(0, np.pi) for _ in range(p)]
-    qaoa_par = beta0+gamma+beta
-    qaoa_args = p, G, num_colors
+    qaoa_par = gamma+beta
+    qaoa_args = p, G, num_colors, students_list
     print("\nMinimizing function\n")
     res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
-            options={'maxiter': 300, 'disp': True, 'adaptive':True})
+            options={'maxiter': 1, 'maxfev': 1, 'disp': True, 'adaptive':True})
     #print(res)
 
     data.append([res['fun'], p, res['x']])
@@ -374,6 +459,85 @@ def minimization_process(p, G, num_colors, school):
 
 def main():
     print("Starting program\n")
+    # Problem variables
+    num_weeks = 1
+    num_days = 1 #5
+    num_periods = 6
+    num_timeslots = num_days*num_periods
+
+    # Each subject has only one teacher
+    # Each teacher teaches only one subject
+    num_subjects = 3
+    num_teachers = num_subjects
+    num_students = 2
+    num_rooms = 3
+
+    # Number of features in a room
+    # Ex.: has computers, has >40 chairs...
+    num_features = 2
+
+    teachers_list = [teacher for teacher in range(num_teachers)]
+    students_list = [student for student in range(num_students)]
+
+    #roomFeatures = np.matrix([[0 for feature in range(num_rooms)] for event in range(num_features)])
+    roomFeatures = np.matrix([[0, 1, 1],
+                             [1, 0, 0]])
+    #subjectFeatures = np.matrix([[0 for feature in range(num_features)] for event in range(num_subjects)])
+    subjectFeatures = np.matrix([[1, 0],
+                                [1, 0],
+                                [0, 1]])
+    suitableRoom = subjectFeatures*roomFeatures
+
+    # Allocate rooms
+    # Each subject will be allocated to the least busy room
+    allocations = []
+    num_allocations = [0 for room in range(num_rooms)]
+
+    for subject_index, subject in enumerate(suitableRoom.tolist()):
+        possible_allocations = []
+        for index, room in enumerate(subject):
+            if room == 1:
+                possible_allocations.append(index)
+        print("Subject", subject_index)
+        print("Possible Allocations", possible_allocations)
+
+        min_allocations = np.inf
+        allocated_room = np.inf
+        for alloc_index in possible_allocations:
+            if num_allocations[alloc_index] < min_allocations:
+                allocated_room = alloc_index
+                min_allocations = num_allocations[allocated_room]
+        allocations.append((subject_index, allocated_room))
+        num_allocations[allocated_room] += 1
+
+    print("\nNumber of Allocations for each Room", num_allocations)
+    print("Allocations", allocations)
+
+    # Pair subjects with students
+    # lecture = (subject, room, student)
+    lectures = [(j,k,l) for j,k in allocations for l in students_list]
+
+    # Generate the lectureConflict Matrix
+    # The hard constraints of the problem are included in the matrix
+    lectureConflict = [[0 for feature in range(len(lectures))] for event in range(len(lectures))]
+
+    # If two lectures are allocated to the same room,
+    # share a student or have the same teacher they
+    # cannot be assigned to the same timeslot
+    for e, j in enumerate(lectures):
+        subject,room,student = j
+        for f,a in enumerate(lectures[e+1:]):
+            subject2,room2,student2 = a
+            if subject == subject2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+            if student == student2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+            if room == room2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+
 
     # parse xml file
     events = parseXML('dataset/den-smallschool.xml')
@@ -382,18 +546,20 @@ def main():
     school = "Den"
     #school = "Bra"
 
-    G = create_graph(events)
+    G = create_graphv2(lectures, lectureConflict)
+    #G = create_graph(events)
 
     # Graph Information
     print("\nGraph information")
 
+    print("Nodes = ", G.nodes)
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nPre-coloring", coloring)
 
     degree = [deg for (node, deg) in G.degree()]
     print("\nDegree of each node", degree)
 
-    num_colors = 5
+    num_colors = 6
     print("\nNumber of colors", num_colors)
 
     node_list = list(G.nodes)
@@ -419,7 +585,7 @@ def main():
     p = 1
 
     # Parallel task using ray
-    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(4))])
+    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school, students_list) for iteration in progressbar.progressbar(range(1))])
 
 if __name__ == '__main__':
     main()
