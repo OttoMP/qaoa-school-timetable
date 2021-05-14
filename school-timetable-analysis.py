@@ -9,6 +9,7 @@ from xml_parser import parseXML
 from itertools import combinations
 import pprint as pp
 import progressbar
+from binarytree import build
 
 # We import plotting tools
 import pandas as pd
@@ -21,6 +22,7 @@ from scipy.optimize import minimize
 from ket import *
 from ket.plugins import matrix
 from ket.lib import swap, within
+from ket.gates.more import u3
 
 # Parallelization tools
 import multiprocessing
@@ -290,31 +292,47 @@ def phase_separator(qc, G, gamma, num_nodes, num_colors):
         X(qc[node])
     color2qubits(qc, num_nodes, num_colors)
 
-def G_gate(p, target):
-    matrix(np.sqrt(p), -np.sqrt(1-p), np.sqrt(1-p), np.sqrt(p), target)
+def G_gate(p, upper, lower):
+    theta = 2*np.arccos(np.sqrt(p))
+    RY(theta/2, lower)
+    cnot(upper, lower)
+    RY(-theta/2, lower)
+    cnot(upper, lower)
+    #matrix(np.sqrt(p), -np.sqrt(1-p), np.sqrt(1-p), np.sqrt(p), target)
 
 def dichotomy_tree_gen(num_total):
     dichotomy_tree = []
     n = np.floor(num_total/2)
     m = num_total
     root = n/m
-    dichotomy_tree.append(n/m)
+    dichotomy_tree.append((n/m))
     new_values = [(n,m)]
 
     while new_values:
         leaf = new_values.pop(0)
-        n = leaf[0]
-        m = leaf[1]
-        upper_child = (np.floor(n/2), np.floor(m/2))
-        lower_child = (np.ceil(n/2), np.ceil(m/2))
-        if upper_child != (0,1) and upper_child != (1,1):
+        if leaf != (0,1) and leaf != (1,1) and leaf != (1,2):
+            n = leaf[0]
+            m = leaf[1]
+            upper_child = (np.floor(n/2), np.floor(m/2))
+            lower_child = (np.ceil(n/2), np.ceil(m/2))
+            if (upper_child == (1,1) and lower_child == (1,2)) or (lower_child == (1,1) and upper_child == (1,2)):
+                temp = upper_child
+                upper_child = lower_child
+                lower_child = temp
+            
+            if upper_child == (1,1) or upper_child == (0,1):
+                dichotomy_tree.append(None)
+            else:
+                dichotomy_tree.append(upper_child[0]/upper_child[1])
+            if lower_child == (1,1) or lower_child == (0,1):
+                dichotomy_tree.append(None)
+            else:
+                dichotomy_tree.append(lower_child[0]/lower_child[1])
             new_values.append(upper_child)
-            dichotomy_tree.append(upper_child[0]/upper_child[1])
-        if lower_child != (0,1) and lower_child != (1,1):
             new_values.append(lower_child)
-            dichotomy_tree.append(lower_child[0]/lower_child[1])
-    
-    return dichotomy_tree
+
+    root = build(dichotomy_tree) 
+    return root
         
 def w_state_preparation(qc):
     n = qc.len()
@@ -326,16 +344,49 @@ def w_state_preparation(qc):
                 ctrl(qc[j], RY, np.pi/2, qc[j+exp])
                 cnot(qc[j+exp], qc[j])
     else:
-        dich_tree = dichotomy_tree_gen(n)
-        for i in range(int(np.ceil(np.log2(n)))):
-            exp = 2**i
-            for j in range(exp):
-                if dich_tree:
-                    param = dich_tree.pop(0)
-                    ctrl(qc[j], G_gate, param, qc[j+exp])
-                    cnot(qc[j+exp], qc[j])
-                else:
-                    break
+        root = dichotomy_tree_gen(n)
+        leafs = []
+        print("applying G gate from 0 to 1 with param", root.value)
+        G_gate(root.value, qc[0], qc[1])
+        cnot(qc[1], qc[0])
+
+        '''
+        G_gate(root.value, qc[0], qc[2])
+        cnot(qc[2], qc[0])
+        G_gate(root.value, qc[1], qc[3])
+        cnot(qc[3], qc[1])
+        G_gate(root.value, qc[2], qc[4])
+        cnot(qc[4], qc[2])
+        G_gate(root.value, qc[1], qc[5])
+        cnot(qc[5], qc[1])
+        '''
+        target_index = 2
+        if root.left.value != None:
+            leafs.append((root.left, 0, target_index))
+            target_index += 1
+        if root.right.value != None:
+            leafs.append((root.right, 1, target_index))
+            target_index += 1
+
+        while leafs:
+        #for _ in range(2):
+            leaf = leafs.pop(0)
+            param = leaf[0].value
+            upper_qubit_index = leaf[1]
+            lower_qubit_index = leaf[2]
+            print("applying G gate from", upper_qubit_index, "to", lower_qubit_index, "with param", param)
+            G_gate(param, qc[upper_qubit_index], qc[lower_qubit_index])
+            cnot(qc[lower_qubit_index], qc[upper_qubit_index])
+            # Left = Upper Child
+            upper = leaf[0].left
+            if upper != None:
+                leafs.append((upper, upper_qubit_index, target_index))
+                target_index += 1
+            # Right = Lower Child
+            lower = leaf[0].right
+            if lower != None:
+                leafs.append((lower, lower_qubit_index, target_index))
+                target_index += 1
 
 def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
     num_nodes = G.number_of_nodes()
@@ -343,6 +394,8 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta0, beta):
 
     # Initial state preparation
     for i in range(num_nodes):
+        print("Preparing states from node: ", i)
+        print("Qubit ranging from ", i*num_colors, " to ", i*num_colors+num_colors-1)
         w_state_preparation(qc[i*num_colors:i*num_colors+num_colors])
     
     #coloring = [G.nodes[node]['color'] for node in G.nodes]
@@ -536,7 +589,7 @@ def main():
     events = parseXML('dataset/den-smallschool.xml')
     #events = parseXML('dataset/bra-instance01.xml')
     G = create_graphv2(lectures, lectureConflict)
-    #G = create_graph(events)
+    #G = create_graph(events[0:4])
 
     # Graph Information
     #print("\nGraph information")
@@ -547,8 +600,8 @@ def main():
     degree = [deg for (node, deg) in G.degree()]
     print("Degree of each node", degree)
 
-    #num_colors = 4
-    num_colors = num_timeslots
+    num_colors = 6
+    #num_colors = num_timeslots
     #print("\nNumber of colors", num_colors)
     node_list = list(G.nodes)
 
