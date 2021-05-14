@@ -393,61 +393,6 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
-def qaoa(par, p, G, num_colors):
-    # QAOA parameters
-    middle = int(len(par)/2)
-    gamma = par[:middle]
-    beta = par[middle:]
-
-    num_nodes = G.number_of_nodes()
-
-    # Dictionary for keeping the results of the simulation
-    counts = {}
-    # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta)
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
-        counts[binary] = int(2**20*result.probability(i))
-
-    # Evaluate the data from the simulator
-    avr_C       = 0
-    min_C       = [0, 9999]
-
-    for sample in list(counts.keys()):
-        if counts[sample] > 0:
-            # use sampled bit string x to compute f(x)
-            x       = [int(num) for num in list(sample)]
-            #tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
-            tmp_eng = cost_function_den(x, G, num_colors)
-
-            # compute the expectation value and energy distribution
-            avr_C     = avr_C    + counts[sample]*tmp_eng
-
-            # save best bit string
-            if( min_C[1] > tmp_eng):
-                min_C[0] = sample
-                min_C[1] = tmp_eng
-
-    expectation_value = avr_C/sum(counts.values())
-
-    return expectation_value
-
-def minimization_process(p, G, num_colors, school):
-    data = []
-    gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-    beta  = [random.uniform(0, np.pi) for _ in range(p)]
-    qaoa_par = gamma+beta
-    qaoa_args = p, G, num_colors
-    print("\nMinimizing function\n")
-    res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
-            options={'maxiter': 300, 'disp': True, 'adaptive':True})
-    #print(res)
-
-    data.append([res['fun'], p, res['x']])
-    save_csv(data, "results/"+school+"p"+str(p)+".csv" )
-
-    return [['fun'], p, res['x']]
-
 def main():
     print("Starting program\n")
     # Problem variables
@@ -683,8 +628,8 @@ def main():
     print("Most commom result found: ", max_counts)
     print("Number of times result showed: ", counts[max_counts])
     print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
-    #max_value = cost_function_timetable(max_counts, G, num_colors, students_list)
-    max_value = cost_function_den(x, G, num_colors)
+    max_value = cost_function_timetable(max_counts, G, num_colors, students_list)
+    #max_value = cost_function_den(x, G, num_colors)
     print("Objective function value: ", max_value)
 
     list_qubits = max_counts
