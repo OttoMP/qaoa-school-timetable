@@ -574,7 +574,7 @@ def main():
     #events = parseXML('dataset/bra-instance01.xml')
     
     #G = create_graphv2(lectures, lectureConflict)
-    G = create_graph(events[0:4])
+    G = create_graph(events)
 
     # Graph Information
     print("\nGraph information")
@@ -587,7 +587,7 @@ def main():
     degree = [deg for (node, deg) in G.degree()]
     print("Degree of each node", degree)
 
-    num_colors = 5
+    num_colors = 4
     #num_colors = num_timeslots
     print("\nNumber of colors", num_colors)
 
@@ -607,6 +607,7 @@ def main():
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()
 
+    '''
     # Starting QAOA
     print("\nRunning QAOA")
     number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
@@ -717,6 +718,7 @@ def main():
         print("Neighbours Colors", neighbours)
 
     #-----------------------------
+    '''
     '''
     print("Histogram", hist)
     hist_max = sum(counts.values())

@@ -1,0 +1,710 @@
+Starting program
+
+Expected Value List
+[2.900715570486034]
+Min Expected Value
+2.900715570486034 
+
+Beta0|Gamma|Beta
+['[3.06687058 0.81948915]'] 
+
+Using Following parameters:
+Beta0: 3.06687058
+Gamma: []
+Beta: [3.06687058, 0.81948915]
+
+
+
+Graph information
+Nodes =  ['Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6', 'Event7', 'Event8', 'Event9', 'Event10', 'Event11', 'Event12', 'Event13', 'Event14', 'Event15', 'Event16', 'Event17', 'Event18', 'Event19', 'Event20', 'Event21', 'Event22', 'Event23', 'Event24', 'Event25']
+
+Pre-coloring [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+Degree of each node [6, 8, 8, 7, 5, 7, 4, 6, 5, 9, 6, 5, 5, 7, 7, 7, 4, 8, 5, 6, 5, 3, 9, 7, 7]
+
+Number of colors 4
+Testing Node Event1 as root
+Source Event1
+Not allowed color set()
+Source Event2
+Not allowed color {0}
+Source Event3
+Not allowed color {0, 1}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event13
+Not allowed color {0, 2}
+Source Event22
+Not allowed color {0}
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event20
+Not allowed color {1}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event1 not correct
+
+Testing Node Event2 as root
+Source Event25
+Not allowed color {1, 2}
+Source Event15
+Not allowed color {2}
+Source Event5
+Not allowed color {2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event9
+Not allowed color {3}
+Source Event18
+Not allowed color {0, 3}
+Source Event19
+Not allowed color {0, 2, 3}
+Source Event8
+Not allowed color {0, 2}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event17
+Not allowed color {0}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event2 not correct
+
+Testing Node Event3 as root
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event3 not correct
+
+Testing Node Event4 as root
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event25
+Not allowed color {1, 2}
+Source Event13
+Not allowed color {0, 2}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event19
+Not allowed color {0, 2, 3}
+Source Event20
+Not allowed color {1, 2, 3}
+Source Event22
+Not allowed color {0, 1, 2}
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event4 not correct
+
+Testing Node Event5 as root
+Source Event25
+Not allowed color {1, 2}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event5 not correct
+
+Testing Node Event6 as root
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event19
+Not allowed color {0, 2, 3}
+Source Event20
+Not allowed color {1, 2, 3}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event6 not correct
+
+Testing Node Event7 as root
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event17
+Not allowed color {0, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event7 not correct
+
+Testing Node Event8 as root
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event13
+Not allowed color {0, 2}
+Source Event22
+Not allowed color {0, 1, 2}
+Source Event25
+Not allowed color {1, 2}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event17
+Not allowed color {0, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event8 not correct
+
+Testing Node Event9 as root
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event13
+Not allowed color {0, 2}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event9 not correct
+
+Testing Node Event10 as root
+Source Event25
+Not allowed color {1, 2}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event20
+Not allowed color {1, 2, 3}
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event19
+Not allowed color {0, 2, 3}
+Source Event20
+Not allowed color {1, 2, 3}
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event22
+Not allowed color {0, 1, 2}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event13
+Not allowed color {0, 2}
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event10 not correct
+
+Testing Node Event11 as root
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event11 not correct
+
+Testing Node Event12 as root
+Source Event17
+Not allowed color {0}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event25
+Not allowed color {1, 2}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event12 not correct
+
+Testing Node Event13 as root
+Source Event25
+Not allowed color {1, 2}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event13
+Not allowed color {0, 2}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event13 not correct
+
+Testing Node Event14 as root
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event19
+Not allowed color {0, 2, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event19
+Not allowed color {0, 2, 3}
+Source Event20
+Not allowed color {1, 2, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event14 not correct
+
+Testing Node Event15 as root
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event17
+Not allowed color {0, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event15 not correct
+
+Testing Node Event16 as root
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event25
+Not allowed color {1, 2}
+Source Event13
+Not allowed color {0, 2}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event16 not correct
+
+Testing Node Event17 as root
+Source Event25
+Not allowed color {1, 2}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event17 not correct
+
+Testing Node Event18 as root
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event17
+Not allowed color {0, 3}
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event17
+Not allowed color {0, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event18 not correct
+
+Testing Node Event19 as root
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event18
+Not allowed color {0, 1, 3}
+Source Event20
+Not allowed color {1, 2, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event13
+Not allowed color {0, 2}
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event19 not correct
+
+Testing Node Event20 as root
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event19
+Not allowed color {0, 2, 3}
+Source Event22
+Not allowed color {0, 1, 2}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event25
+Not allowed color {1, 2}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event20 not correct
+
+Testing Node Event21 as root
+Source Event25
+Not allowed color {1, 2}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event21 not correct
+
+Testing Node Event22 as root
+Source Event12
+Not allowed color {0, 1, 2}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event22 not correct
+
+Testing Node Event23 as root
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event23 not correct
+
+Testing Node Event24 as root
+Source Event25
+Not allowed color {1, 2}
+Source Event1
+Not allowed color {1, 2, 3}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event17
+Not allowed color {0}
+Source Event10
+Not allowed color {0, 1, 2}
+Source Event21
+Not allowed color {0, 1, 2}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event4
+Not allowed color {0, 1, 2}
+Source Event13
+Not allowed color {0, 2}
+Source Event22
+Not allowed color {0, 1, 2}
+Source Event14
+Not allowed color {1, 2, 3}
+Source Event20
+Not allowed color {1, 2, 3}
+Source Event13
+Not allowed color {0, 2}
+Source Event2
+Not allowed color {0, 2, 3}
+Source Event3
+Not allowed color {0, 1, 3}
+Source Event6
+Not allowed color {0, 1, 3}
+Source Event11
+Not allowed color {0, 2, 3}
+Source Event17
+Not allowed color {0}
+Source Event23
+Not allowed color {0, 1, 2, 3}
+Node Event24 not correct
+
+Testing Node Event25 as root
+Source Event24
+Not allowed color {0, 1, 3}
+Source Event5
+Not allowed color {1, 2, 3}
+Source Event7
+Not allowed color {1, 2, 3}
+Source Event8
+Not allowed color {0, 2, 3}
+Source Event9
+Not allowed color {0, 1, 3}
+Source Event15
+Not allowed color {1, 2, 3}
+Source Event16
+Not allowed color {0, 1, 2, 3}
+Node Event25 not correct
+
+
+Node Event1 Color 0
+Neighbours Colors [1, 2, 3, 1, 3, 2]
+
+Node Event2 Color 1
+Neighbours Colors [0, 2, 3, 0, 0, None, 2, 0]
+
+Node Event3 Color 2
+Neighbours Colors [0, 1, 3, 1, 0, 0, None, 0]
+
+Node Event4 Color 3
+Neighbours Colors [0, 1, 2, 0, 1, None, 2]
+
+Node Event5 Color 0
+Neighbours Colors [3, 2, 3, 1, 2]
+
+Node Event6 Color 2
+Neighbours Colors [0, 3, 1, 1, 0, None, 0]
+
+Node Event7 Color 0
+Neighbours Colors [1, 2, 3, None]
+
+Node Event8 Color 1
+Neighbours Colors [0, 2, 3, 0, 2, 0]
+
+Node Event9 Color 2
+Neighbours Colors [0, 1, 3, 1, 3]
+
+Node Event10 Color 3
+Neighbours Colors [0, 2, 0, 1, 2, 0, None, 2, None]
+
+Node Event11 Color 1
+Neighbours Colors [3, 0, 2, 3, 2, 0]
+
+Node Event12 Color 3
+Neighbours Colors [1, 0, 0, None, 2]
+
+Node Event13 Color 1
+Neighbours Colors [0, 2, 2, 2, 0]
+
+Node Event14 Color 0
+Neighbours Colors [1, 2, 1, 3, 1, 2, 1]
+
+Node Event15 Color 0
+Neighbours Colors [2, 2, 3, 3, None, 1, 3]
+
+Node Event16 Color None
+Neighbours Colors [2, 0, 3, 3, 0, 1, None]
+
+Node Event17 Color 1
+Neighbours Colors [0, None, None, 0]
+
+Node Event18 Color 2
+Neighbours Colors [1, 3, 3, 0, 1, 0, 3, 3]
+
+Node Event19 Color 1
+Neighbours Colors [0, 2, 0, 3, 3]
+
+Node Event20 Color 0
+Neighbours Colors [1, 1, 2, 1, 3, None]
+
+Node Event21 Color 3
+Neighbours Colors [2, 0, 2, 1, 0]
+
+Node Event22 Color 3
+Neighbours Colors [0, 2, 1]
+
+Node Event23 Color None
+Neighbours Colors [1, 2, 3, 3, None, 1, 0, 2, 0]
+
+Node Event24 Color 2
+Neighbours Colors [0, 1, 3, 0, 1, None, 0]
+
+Node Event25 Color 0
+Neighbours Colors [1, 2, 2, 1, 1, None, 2]
+
+Initial coloring [0, 1, 2, 3, 0, 2, 0, 1, 2, 3, 1, 3, 1, 0, 0, None, 1, 2, 1, 0, 3, 3, None, 2, 0]
