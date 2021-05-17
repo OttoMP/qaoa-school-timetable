@@ -101,8 +101,9 @@ def save_csv(data, nome_csv):
 
     return
 
-def color_graph_num(graph, num_color, root):
+def color_graph_num(graph, num_color):
     color_index = 0
+    node_list = list(graph.nodes)
     not_allowed_color = []
 
     # Mark all the vertices as not visited
@@ -113,27 +114,41 @@ def color_graph_num(graph, num_color, root):
 
     # Mark the source node as
     # visited and enqueue it
-    queue.append(root)
-    visited[root] = True
+    for u in node_list:
+        print("Testing Node", u, "as root")
+        success = True
+        queue.append(u)
+        visited[u] = True
 
-    while queue:
-        # Dequeue a vertex from queue and color it
-        source = queue.pop(0)
-        not_allowed_color = [graph.nodes[neighbour]['color'] for neighbour in graph[source]
-                                if (graph.nodes[neighbour]['color'] != None) ]
-        while color_index in not_allowed_color:
-            color_index = (color_index+1)%num_color
-        graph.nodes[source]['color'] = color_index
-        not_allowed_color = []
+        while queue:
+            # Dequeue a vertex from queue and color it
+            source = queue.pop(0)
+            not_allowed_color = {graph.nodes[neighbour]['color'] for neighbour in graph[source]
+                                    if (graph.nodes[neighbour]['color'] != None) }
+            print("Source", source)
+            print("Not allowed color", not_allowed_color)
+            if len(not_allowed_color) == num_color:
+                print("Node", u, "not correct\n")
+                success = False
+                visited = {x: False for x in graph.nodes}
+                break
 
-        # Get all adjacent vertices of the
-        # dequeued vertex s. If a adjacent
-        # has not been visited, then mark it
-        # visited and enqueue it
-        for i in graph[source]:
-            if visited[i] == False:
-                queue.append(i)
-                visited[i] = True
+            while color_index in not_allowed_color:
+                color_index = (color_index+1)%num_color
+            graph.nodes[source]['color'] = color_index
+            not_allowed_color = set()
+
+            # Get all adjacent vertices of the
+            # dequeued vertex s. If a adjacent
+            # has not been visited, then mark it
+            # visited and enqueue it
+            for i in graph[source]:
+                if visited[i] == False:
+                    queue.append(i)
+                    visited[i] = True
+        if success:
+            print("Succesfully Colored\n")
+            break
 
     return
 
@@ -142,6 +157,44 @@ def color_graph_coloring(graph, coloring):
         graph.nodes[node]['color'] = coloring[index]
 
     return
+
+def color_graph_greedy(G):
+    node_list = list(G.nodes)
+    V = G.number_of_nodes()
+    result = [-1] * V
+ 
+    # Assign the first color to first vertex
+    root = node_list[0]
+    G.nodes[root]['color'] = 0
+ 
+    # A temporary array to store the available colors.
+    # True value of available[cr] would mean that the
+    # color cr is assigned to one of its adjacent vertices
+    available = [False for _ in range(V)]
+ 
+    # Assign colors to remaining V-1 vertices
+    for u in node_list[1:]:
+         
+        # Process all adjacent vertices and
+        # flag their colors as unavailable
+        not_allowed_color = [G.nodes[neighbour]['color'] for neighbour in G[u]
+                                if (G.nodes[neighbour]['color'] != None) ]
+        for color in not_allowed_color:
+            available[color] = True
+ 
+        # Find the first available color
+        cr = 0
+        while cr < V:
+            if (available[cr] == False):
+                break
+            cr += 1
+             
+        # Assign the found color
+        G.nodes[u]['color'] = cr
+ 
+        # Reset the values back to false
+        # for the next iteration
+        available = [False for _ in range(V)]
 
 def create_graphv2(nodes, edges):
     G = nx.Graph()
@@ -395,6 +448,10 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta):
 
 def main():
     print("Starting program\n")
+    
+    # ----------------------------------
+    # Minimal Example Preparation Begins
+    # ----------------------------------
     # Problem variables
     num_weeks = 1
     num_days = 1 #5
@@ -434,8 +491,8 @@ def main():
         for index, room in enumerate(subject):
             if room == 1:
                 possible_allocations.append(index)
-        print("Subject", subject_index)
-        print("Possible Allocations", possible_allocations)
+        #print("Subject", subject_index)
+        #print("Possible Allocations", possible_allocations)
 
         min_allocations = np.inf
         allocated_room = np.inf
@@ -446,8 +503,8 @@ def main():
         allocations.append((subject_index, allocated_room))
         num_allocations[allocated_room] += 1
 
-    print("\nNumber of Allocations for each Room", num_allocations)
-    print("Allocations", allocations)
+    #print("\nNumber of Allocations for each Room", num_allocations)
+    #print("Allocations", allocations)
 
     # Pair subjects with students
     # lecture = (subject, room, student)
@@ -474,6 +531,10 @@ def main():
                 lectureConflict[e][e+1+f] = 1
                 lectureConflict[e+1+f][e] = 1
 
+    # ----------------------------------
+    # Minimal Example Preparation Ends
+    # ----------------------------------
+
     # QAOA parameter
     p = 1
 
@@ -485,7 +546,7 @@ def main():
 
     # Parsing necessary values
     expected_value_list = list(result_list["Expected Value"])
-    qaoa_par_list = list(result_list["Gamma|Beta"])
+    qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
     min_expected_value = min(expected_value_list)
     min_expected_value_index = expected_value_list.index(min_expected_value)
     min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
@@ -494,13 +555,15 @@ def main():
     print(expected_value_list)
     print("Min Expected Value")
     print(min_expected_value, '\n')
-    print("Gamma|Beta")
+    print("Beta0|Gamma|Beta")
     print(qaoa_par_list, '\n')
 
-    gamma = [float(par) for par in min_qaoa_par[:p]]
-    beta  = [float(par) for par in min_qaoa_par[p:]]
+    beta0 = float(min_qaoa_par[0])
+    gamma = [float(par) for par in min_qaoa_par[1:p-1]]
+    beta  = [float(par) for par in min_qaoa_par[p-1:]]
 
     print("Using Following parameters:")
+    print("Beta0:", beta0)
     print("Gamma:", gamma)
     print("Beta:", beta)
     print("\n")
@@ -510,42 +573,42 @@ def main():
     events = parseXML('dataset/den-smallschool.xml')
     #events = parseXML('dataset/bra-instance01.xml')
     
-    G = create_graphv2(lectures, lectureConflict)
-    #G = create_graph(events[0:4])
+    #G = create_graphv2(lectures, lectureConflict)
+    G = create_graph(events[0:4])
 
     # Graph Information
-    #print("\nGraph information")
+    print("\nGraph information")
 
     print("Nodes = ", G.nodes)
     
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    #print("\nPre-coloring", coloring)
+    print("\nPre-coloring", coloring)
 
     degree = [deg for (node, deg) in G.degree()]
     print("Degree of each node", degree)
 
-    num_colors = 6
+    num_colors = 5
     #num_colors = num_timeslots
-    #print("\nNumber of colors", num_colors)
-    node_list = list(G.nodes)
+    print("\nNumber of colors", num_colors)
 
     # Color Graph Initial State when necessary
-    #color_graph_num(G, num_colors, node_list[0])
+    color_graph_num(G, num_colors)
     #color_graph_coloring(G, initial_coloring)
+    #color_graph_greedy(G)
 
     for i in G.nodes:
-    #    print("\nNode",i,"Color", G.nodes[i]['color'])
+        print("\nNode",i,"Color", G.nodes[i]['color'])
         neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-    #    print("Neighbours Colors", neighbours)
+        print("Neighbours Colors", neighbours)
 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    #print("\nInitial coloring", coloring)
+    print("\nInitial coloring", coloring)
 
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()
 
     # Starting QAOA
-    print("Running QAOA")
+    print("\nRunning QAOA")
     number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
     print("Necessary number of qubits: ", number_of_qubits)
     
@@ -576,8 +639,8 @@ def main():
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
             x         = [int(num) for num in list(sample)]
-            tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
-            #tmp_eng = cost_function_den(x, G, num_colors)
+            #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
+            tmp_eng = cost_function_den(x, G, num_colors)
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
@@ -598,7 +661,6 @@ def main():
     print("Number of times result showed: ", counts[min_C[0]])
     print("Percentage of times result showed: ", (counts[min_C[0]]/total_counts)*100)
     print("Objective function value: ", min_C[1])
-    print()
 
     list_qubits = min_C[0]
     best_coloring = []
@@ -628,8 +690,8 @@ def main():
     print("Most commom result found: ", max_counts)
     print("Number of times result showed: ", counts[max_counts])
     print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
-    max_value = cost_function_timetable(max_counts, G, num_colors, students_list)
-    #max_value = cost_function_den(x, G, num_colors)
+    #max_value = cost_function_timetable(max_counts, G, num_colors, students_list)
+    max_value = cost_function_den(x, G, num_colors)
     print("Objective function value: ", max_value)
 
     list_qubits = max_counts
