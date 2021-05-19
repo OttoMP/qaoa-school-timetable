@@ -613,8 +613,8 @@ def main():
     school = "Den"
     #school = "Bra"
 
-    G = create_graphv2(lectures, lectureConflict)
-    #G = create_graph(events)
+    #G = create_graphv2(lectures, lectureConflict)
+    G = create_graph(events)
 
     # --------------------------
     #  Preparing Conflict Graph
@@ -628,12 +628,12 @@ def main():
     degree = [deg for (node, deg) in G.degree()]
     print("\nDegree of each node", degree)
 
-    num_colors = 6
+    num_colors = 5
     print("\nNumber of colors", num_colors)
 
-    #color_graph_num(G, num_colors)
+    color_graph_num(G, num_colors)
     #color_graph_coloring(G, initial_coloring)
-    color_graph_greedy(G)
+    #color_graph_greedy(G)
 
     for i in G.nodes:
         print("\nNode",i,"Color", G.nodes[i]['color'])

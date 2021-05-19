@@ -424,20 +424,21 @@ def w_state_preparation(qc):
                 leafs.append((lower, lower_qubit_index, target_index))
                 target_index += 1
 
-def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta):
+def qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta):
     num_nodes = G.number_of_nodes()
     qc = quant((num_nodes*num_colors) + num_nodes)
 
     # Initial state preparation
-    for i in range(num_nodes):
-        w_state_preparation(qc[i*num_colors:i*num_colors+num_colors])
+    #for i in range(num_nodes):
+    #    w_state_preparation(qc[i*num_colors:i*num_colors+num_colors])
     
-    #coloring = [G.nodes[node]['color'] for node in G.nodes]
-    #for i, color in enumerate(coloring):
-    #    X(qc[(i*num_colors)+color])
+    coloring = [G.nodes[node]['color'] for node in G.nodes]
+    for i, color in enumerate(coloring):
+        X(qc[(i*num_colors)+color])
 
     # Alternate application of operators
-    #mixer(qc, G, num_nodes, num_colors) # Mixer 0
+    # No need for beta 0 if initial state is W
+    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
     for step in range(p):
         phase_separator(qc, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
@@ -445,6 +446,7 @@ def qaoa_min_graph_coloring(p, G, num_colors, gamma, beta):
     # Measurement
     #result = measure(qc).get()
     return dump(qc)
+
 
 def main():
     print("Starting program\n")
@@ -607,7 +609,6 @@ def main():
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()
 
-    '''
     # Starting QAOA
     print("\nRunning QAOA")
     number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
@@ -617,12 +618,13 @@ def main():
     # Dictionary for keeping the results of the simulation
     counts = {}
     # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_colors, gamma, beta)
+    result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
         prob = int(2**20*result.probability(i))
         if prob > 0:
             counts[binary] = prob
+ 
     print("Number of States", len(counts))
     pp.pprint(counts)
 
@@ -719,7 +721,6 @@ def main():
 
     #-----------------------------
     '''
-    '''
     print("Histogram", hist)
     hist_max = sum(counts.values())
     hist_3 = (hist['3']/hist_max)*100
@@ -738,5 +739,6 @@ def main():
     #plot_histogram(hist,figsize = (8,6),bar_labels = False)
     #plt.savefig("histogram.pdf")
     '''
+
 if __name__ == '__main__':
     main()
