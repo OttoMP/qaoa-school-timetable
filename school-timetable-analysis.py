@@ -80,6 +80,25 @@ def cost_function_den(x, G, num_colors):
     color_graph_coloring(G, coloring)
 
     C = 0
+    
+    if G.nodes["Event1"]['color'] != 0:
+        C += 1
+    if G.nodes["Event2"]['color'] != 1:
+        C += 1
+    if G.nodes["Event3"]['color'] != 2:
+        C += 1
+    if G.nodes["Event4"]['color'] != 3:
+        C += 1
+
+    if G.nodes["Event5"]['color'] != 0:
+        C += 1
+    if G.nodes["Event6"]['color'] != 1:
+        C += 1
+    if G.nodes["Event7"]['color'] != 2:
+        C += 1
+    if G.nodes["Event8"]['color'] != 3:
+        C += 1
+
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
@@ -190,7 +209,7 @@ def color_graph_greedy_random(G, alpha):
             c = p_colors[0]
             color_by_node[node] = c
         else:
-            c = len(colors)+1
+            c = len(colors)
             colors.append(c)
             color_by_node[node] = c
         #proibe cor para adjacentes
@@ -450,7 +469,6 @@ def qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
-
 def main():
     print("Starting program\n")
     
@@ -477,9 +495,10 @@ def main():
     print("Beta0|Gamma|Beta")
     print(qaoa_par_list, '\n')
 
-    beta0 = float(min_qaoa_par[0])
-    gamma = [float(par) for par in min_qaoa_par[1:p-1]]
-    beta  = [float(par) for par in min_qaoa_par[p-1:]]
+    beta0 = float(min_qaoa_par.pop(0))
+    middle = int(len(min_qaoa_par)/2)
+    gamma = [float(par) for par in min_qaoa_par[:middle]]
+    beta  = [float(par) for par in min_qaoa_par[middle:]]
 
     print("Using Following parameters:")
     print("Beta0:", beta0)

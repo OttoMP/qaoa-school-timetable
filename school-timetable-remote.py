@@ -87,6 +87,25 @@ def cost_function_den(x, G, num_colors):
     color_graph_coloring(G, coloring)
 
     C = 0
+    
+    if G.nodes["Event1"]['color'] != 0:
+        C += 1
+    if G.nodes["Event2"]['color'] != 1:
+        C += 1
+    if G.nodes["Event3"]['color'] != 2:
+        C += 1
+    if G.nodes["Event4"]['color'] != 3:
+        C += 1
+
+    if G.nodes["Event5"]['color'] != 0:
+        C += 1
+    if G.nodes["Event6"]['color'] != 1:
+        C += 1
+    if G.nodes["Event7"]['color'] != 2:
+        C += 1
+    if G.nodes["Event8"]['color'] != 3:
+        C += 1
+
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
@@ -210,7 +229,7 @@ def color_graph_greedy_random(G, alpha):
             c = p_colors[0]
             color_by_node[node] = c
         else:
-            c = len(colors)+1
+            c = len(colors)
             colors.append(c)
             color_by_node[node] = c
         #proibe cor para adjacentes
@@ -525,7 +544,7 @@ def minimization_process(p, G, num_colors, school):
     qaoa_args = p, G, num_colors
     print("\nMinimizing function\n")
     res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
-            options={'maxiter': 1, 'maxfev': 1, 'disp': True, 'adaptive':True})
+            options={'maxiter': 300, 'disp': True, 'adaptive':True})
     #print(res)
 
     data.append([res['fun'], p, res['x']])
@@ -579,7 +598,13 @@ def main():
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     #color_graph_num(G, num_colors)
-    
+
+    ''' 
+    for i in G.nodes:
+        print("\nNode",i)
+        print("Neighbours", G[i])
+    '''
+
     for i in G.nodes:
         print("\nNode",i,"Color", G.nodes[i]['color'])
         neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
@@ -599,7 +624,7 @@ def main():
     p = 1
 
     # Parallel task using ray
-    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(1))])
+    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(2))])
 
 if __name__ == '__main__':
     main()
