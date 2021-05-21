@@ -158,44 +158,47 @@ def color_graph_coloring(graph, coloring):
 
     return
 
-def color_graph_greedy(G):
-    node_list = list(G.nodes)
-    V = G.number_of_nodes()
-    result = [-1] * V
- 
-    # Assign the first color to first vertex
-    root = node_list[0]
-    G.nodes[root]['color'] = 0
- 
-    # A temporary array to store the available colors.
-    # True value of available[cr] would mean that the
-    # color cr is assigned to one of its adjacent vertices
-    available = [False for _ in range(V)]
- 
-    # Assign colors to remaining V-1 vertices
-    for u in node_list[1:]:
-         
-        # Process all adjacent vertices and
-        # flag their colors as unavailable
-        not_allowed_color = [G.nodes[neighbour]['color'] for neighbour in G[u]
-                                if (G.nodes[neighbour]['color'] != None) ]
-        for color in not_allowed_color:
-            available[color] = True
- 
-        # Find the first available color
-        cr = 0
-        while cr < V:
-            if (available[cr] == False):
+def color_graph_greedy_random(G, alpha):
+    
+    n = G.number_of_nodes()
+    
+    #lista de cores
+    colors = []
+    
+    #vértices ordenadas por degree decrescente
+    nodes_ordered = sorted(G.degree, key=lambda x: x[1], reverse=True)
+    
+    
+    #lista de cores proibidas
+    forbidden_colors = {}
+    for (node, d) in nodes_ordered:
+        forbidden_colors[node]=[]
+        
+    color_by_node = {}
+    while len(nodes_ordered) > 0:
+        node = None
+        i = 0
+        while i < len(nodes_ordered):
+            if random.random() <=  alpha or i == len(nodes_ordered)-1:
+                (node, d) = nodes_ordered.pop(i)
                 break
-            cr += 1
-             
-        # Assign the found color
-        G.nodes[u]['color'] = cr
- 
-        # Reset the values back to false
-        # for the next iteration
-        available = [False for _ in range(V)]
+            i+=1              
+        
+        p_colors = list(set.difference(set(colors), set(forbidden_colors[node]))) 
+        c = 0
+        if len(p_colors) > 0:
+            c = p_colors[0]
+            color_by_node[node] = c
+        else:
+            c = len(colors)+1
+            colors.append(c)
+            color_by_node[node] = c
+        #proibe cor para adjacentes
+        for adj in G.neighbors(node):
+            forbidden_colors[adj].append(c)
 
+    return color_by_node, colors
+ 
 def create_graphv2(nodes, edges):
     G = nx.Graph()
     G.add_nodes_from([(num, {'color' : None}) for num in nodes])
@@ -451,92 +454,6 @@ def qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta):
 def main():
     print("Starting program\n")
     
-    # ----------------------------------
-    # Minimal Example Preparation Begins
-    # ----------------------------------
-    # Problem variables
-    num_weeks = 1
-    num_days = 1 #5
-    num_periods = 6
-    num_timeslots = num_days*num_periods
-
-    # Each subject has only one teacher
-    # Each teacher teaches only one subject
-    num_subjects = 3
-    num_teachers = num_subjects
-    num_students = 2
-    num_rooms = 3
-
-    # Number of features in a room
-    # Ex.: has computers, has >40 chairs...
-    num_features = 2
-
-    teachers_list = [teacher for teacher in range(num_teachers)]
-    students_list = [student for student in range(num_students)]
-
-    #roomFeatures = np.matrix([[0 for feature in range(num_rooms)] for event in range(num_features)])
-    roomFeatures = np.matrix([[0, 1, 1],
-                             [1, 0, 0]])
-    #subjectFeatures = np.matrix([[0 for feature in range(num_features)] for event in range(num_subjects)])
-    subjectFeatures = np.matrix([[1, 0],
-                                [1, 0],
-                                [0, 1]])
-    suitableRoom = subjectFeatures*roomFeatures
-
-    # Allocate rooms
-    # Each subject will be allocated to the least busy room
-    allocations = []
-    num_allocations = [0 for room in range(num_rooms)]
-
-    for subject_index, subject in enumerate(suitableRoom.tolist()):
-        possible_allocations = []
-        for index, room in enumerate(subject):
-            if room == 1:
-                possible_allocations.append(index)
-        #print("Subject", subject_index)
-        #print("Possible Allocations", possible_allocations)
-
-        min_allocations = np.inf
-        allocated_room = np.inf
-        for alloc_index in possible_allocations:
-            if num_allocations[alloc_index] < min_allocations:
-                allocated_room = alloc_index
-                min_allocations = num_allocations[allocated_room]
-        allocations.append((subject_index, allocated_room))
-        num_allocations[allocated_room] += 1
-
-    #print("\nNumber of Allocations for each Room", num_allocations)
-    #print("Allocations", allocations)
-
-    # Pair subjects with students
-    # lecture = (subject, room, student)
-    lectures = [(j,k,l) for j,k in allocations for l in students_list]
-
-    # Generate the lectureConflict Matrix
-    # The hard constraints of the problem are included in the matrix
-    lectureConflict = [[0 for feature in range(len(lectures))] for event in range(len(lectures))]
-
-    # If two lectures are allocated to the same room,
-    # share a student or have the same teacher they
-    # cannot be assigned to the same timeslot
-    for e, j in enumerate(lectures):
-        subject,room,student = j
-        for f,a in enumerate(lectures[e+1:]):
-            subject2,room2,student2 = a
-            if subject == subject2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-            if student == student2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-            if room == room2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-
-    # ----------------------------------
-    # Minimal Example Preparation Ends
-    # ----------------------------------
-
     # QAOA parameter
     p = 1
 
@@ -578,26 +495,39 @@ def main():
     #G = create_graphv2(lectures, lectureConflict)
     G = create_graph(events)
 
-    # Graph Information
+    # --------------------------
+    #  Preparing Conflict Graph
+    # --------------------------
     print("\nGraph information")
 
     print("Nodes = ", G.nodes)
-    
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nPre-coloring", coloring)
 
     degree = [deg for (node, deg) in G.degree()]
-    print("Degree of each node", degree)
+    print("\nDegree of each node", degree)
 
-    num_colors = 4
-    #num_colors = num_timeslots
+    color_graph_greedy_random(G, 0.7)
+    # Finding suitable initial coloring
+    pair = None, G.number_of_nodes(), 0
+    it = 0
+    for i in range (1, 10000):
+        color_by_node, colors = color_graph_greedy_random(G, 0.7)
+        if pair[1] > len(colors):
+            pair = color_by_node, len(colors), it
+        it+= 1
+    # Coloring Graph
+    for key, value in pair[0].items(): 
+        G.nodes[key]['color'] = value
+    
+    num_colors = pair[1]
+    #num_colors = 25
     print("\nNumber of colors", num_colors)
-
-    # Color Graph Initial State when necessary
-    color_graph_num(G, num_colors)
-    #color_graph_coloring(G, initial_coloring)
-    #color_graph_greedy(G)
-
+    
+    # If a suitable coloring can be found without the greedy method use
+    # the color_graph_num method
+    #color_graph_num(G, num_colors)
+    
     for i in G.nodes:
         print("\nNode",i,"Color", G.nodes[i]['color'])
         neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]

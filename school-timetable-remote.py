@@ -536,92 +536,6 @@ def minimization_process(p, G, num_colors, school):
 def main():
     print("Starting program\n")
 
-    # ----------------------------------
-    # Minimal Example Preparation Begins
-    # ----------------------------------
-    # Problem variables
-    num_weeks = 1
-    num_days = 1 #5
-    num_periods = 6
-    num_timeslots = num_days*num_periods
-
-    # Each subject has only one teacher
-    # Each teacher teaches only one subject
-    num_subjects = 3
-    num_teachers = num_subjects
-    num_students = 2
-    num_rooms = 3
-
-    # Number of features in a room
-    # Ex.: has computers, has >40 chairs...
-    num_features = 2
-
-    teachers_list = [teacher for teacher in range(num_teachers)]
-    students_list = [student for student in range(num_students)]
-
-    #roomFeatures = np.matrix([[0 for feature in range(num_rooms)] for event in range(num_features)])
-    roomFeatures = np.matrix([[0, 1, 1],
-                             [1, 0, 0]])
-    #subjectFeatures = np.matrix([[0 for feature in range(num_features)] for event in range(num_subjects)])
-    subjectFeatures = np.matrix([[1, 0],
-                                [1, 0],
-                                [0, 1]])
-    suitableRoom = subjectFeatures*roomFeatures
-
-    # Allocate rooms
-    # Each subject will be allocated to the least busy room
-    allocations = []
-    num_allocations = [0 for room in range(num_rooms)]
-
-    for subject_index, subject in enumerate(suitableRoom.tolist()):
-        possible_allocations = []
-        for index, room in enumerate(subject):
-            if room == 1:
-                possible_allocations.append(index)
-        #print("Subject", subject_index)
-        #print("Possible Allocations", possible_allocations)
-
-        min_allocations = np.inf
-        allocated_room = np.inf
-        for alloc_index in possible_allocations:
-            if num_allocations[alloc_index] < min_allocations:
-                allocated_room = alloc_index
-                min_allocations = num_allocations[allocated_room]
-        allocations.append((subject_index, allocated_room))
-        num_allocations[allocated_room] += 1
-
-    #print("\nNumber of Allocations for each Room", num_allocations)
-    #print("Allocations", allocations)
-
-    # Pair subjects with students
-    # lecture = (subject, room, student)
-    lectures = [(j,k,l) for j,k in allocations for l in students_list]
-
-    # Generate the lectureConflict Matrix
-    # The hard constraints of the problem are included in the matrix
-    lectureConflict = [[0 for feature in range(len(lectures))] for event in range(len(lectures))]
-
-    # If two lectures are allocated to the same room,
-    # share a student or have the same teacher they
-    # cannot be assigned to the same timeslot
-    for e, j in enumerate(lectures):
-        subject,room,student = j
-        for f,a in enumerate(lectures[e+1:]):
-            subject2,room2,student2 = a
-            if subject == subject2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-            if student == student2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-            if room == room2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-
-    # ----------------------------------
-    # Minimal Example Preparation Ends
-    # ----------------------------------
-
     # School Instances
     # Parse XML file
     events = parseXML('dataset/den-smallschool.xml')
@@ -665,8 +579,6 @@ def main():
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     #color_graph_num(G, num_colors)
-    #color_graph_coloring(G, initial_coloring)
-    
     
     for i in G.nodes:
         print("\nNode",i,"Color", G.nodes[i]['color'])
