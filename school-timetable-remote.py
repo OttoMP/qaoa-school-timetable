@@ -77,6 +77,73 @@ def cost_function_timetable(x, G, num_colors, list_students):
 
     return C
 
+def initial_cost_function_den(G, coloring):
+    color_graph_coloring(G, coloring)
+
+    C = 0
+    
+    if G.nodes["Event1"]['color'] != 3:
+        C += 1
+    if G.nodes["Event2"]['color'] != 2:
+        C += 1
+    if G.nodes["Event3"]['color'] != 1:
+        C += 1
+    if G.nodes["Event4"]['color'] != 0:
+        C += 1
+
+    if G.nodes["Event5"]['color'] != 3:
+        C += 1
+    if G.nodes["Event6"]['color'] != 2:
+        C += 1
+    if G.nodes["Event7"]['color'] != 1:
+        C += 1
+    if G.nodes["Event8"]['color'] != 0:
+        C += 1
+
+    if G.nodes["Event9"]['color'] != 3:
+        C += 1
+    if G.nodes["Event10"]['color'] != 2:
+        C += 1
+    if G.nodes["Event11"]['color'] != 1:
+        C += 1
+    if G.nodes["Event12"]['color'] != 0:
+        C += 1
+
+    if G.nodes["Event13"]['color'] != 3:
+        C += 1
+    if G.nodes["Event14"]['color'] != 2:
+        C += 1
+    if G.nodes["Event15"]['color'] != 1:
+        C += 1
+    if G.nodes["Event16"]['color'] != 0:
+        C += 1
+
+    if G.nodes["Event17"]['color'] != 3:
+        C += 1
+    if G.nodes["Event22"]['color'] != 2:
+        C += 1
+    if G.nodes["Event23"]['color'] != 1:
+        C += 1
+    if G.nodes["Event24"]['color'] != 0:
+        C += 1
+    if G.nodes["Event25"]['color'] != 3:
+        C += 1
+
+    #PreferTimes_3
+    if G.nodes["Event18"]['color'] != 0:
+        C += 1
+    #PreferTimes_4
+    if G.nodes["Event19"]['color'] != 1:
+        C += 1
+    #PreferTimes_5
+    if G.nodes["Event20"]['color'] != 2:
+        C += 1
+    #PreferTimes_6
+    if G.nodes["Event21"]['color'] != 3:
+        C += 1
+
+    return C
+
 def cost_function_den(x, G, num_colors):
     coloring = []
     for i in range(len(G)):
@@ -88,22 +155,51 @@ def cost_function_den(x, G, num_colors):
 
     C = 0
     
-    if G.nodes["Event1"]['color'] != 0:
+    if G.nodes["Event1"]['color'] != 3:
         C += 1
-    if G.nodes["Event2"]['color'] != 1:
+    if G.nodes["Event2"]['color'] != 2:
         C += 1
-    if G.nodes["Event3"]['color'] != 2:
+    if G.nodes["Event3"]['color'] != 1:
         C += 1
-    if G.nodes["Event4"]['color'] != 3:
+    if G.nodes["Event4"]['color'] != 0:
         C += 1
 
-    if G.nodes["Event5"]['color'] != 0:
+    if G.nodes["Event5"]['color'] != 3:
         C += 1
-    if G.nodes["Event6"]['color'] != 1:
+    if G.nodes["Event6"]['color'] != 2:
         C += 1
-    if G.nodes["Event7"]['color'] != 2:
+    if G.nodes["Event7"]['color'] != 1:
         C += 1
-    if G.nodes["Event8"]['color'] != 3:
+    if G.nodes["Event8"]['color'] != 0:
+        C += 1
+
+    if G.nodes["Event9"]['color'] != 3:
+        C += 1
+    if G.nodes["Event10"]['color'] != 2:
+        C += 1
+    if G.nodes["Event11"]['color'] != 1:
+        C += 1
+    if G.nodes["Event12"]['color'] != 0:
+        C += 1
+
+    if G.nodes["Event13"]['color'] != 3:
+        C += 1
+    if G.nodes["Event14"]['color'] != 2:
+        C += 1
+    if G.nodes["Event15"]['color'] != 1:
+        C += 1
+    if G.nodes["Event16"]['color'] != 0:
+        C += 1
+
+    if G.nodes["Event17"]['color'] != 3:
+        C += 1
+    if G.nodes["Event22"]['color'] != 2:
+        C += 1
+    if G.nodes["Event23"]['color'] != 1:
+        C += 1
+    if G.nodes["Event24"]['color'] != 0:
+        C += 1
+    if G.nodes["Event25"]['color'] != 3:
         C += 1
 
     #PreferTimes_3
@@ -154,7 +250,6 @@ def color_graph_num(graph, num_color):
     # Mark the source node as
     # visited and enqueue it
     for u in node_list:
-        print("Testing Node", u, "as root")
         success = True
         queue.append(u)
         visited[u] = True
@@ -164,10 +259,7 @@ def color_graph_num(graph, num_color):
             source = queue.pop(0)
             not_allowed_color = {graph.nodes[neighbour]['color'] for neighbour in graph[source]
                                     if (graph.nodes[neighbour]['color'] != None) }
-            print("Source", source)
-            print("Not allowed color", not_allowed_color)
             if len(not_allowed_color) == num_color:
-                print("Node", u, "not correct\n")
                 success = False
                 visited = {x: False for x in graph.nodes}
                 break
@@ -186,7 +278,6 @@ def color_graph_num(graph, num_color):
                     queue.append(i)
                     visited[i] = True
         if success:
-            print("Succesfully Colored\n")
             break
 
     return
@@ -571,47 +662,50 @@ def main():
     # --------------------------
     print("\nGraph information")
 
-    print("Nodes = ", G.nodes)
+    #print("Nodes = ", G.nodes)
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    print("\nPre-coloring", coloring)
+    #print("\nPre-coloring", coloring)
 
     degree = [deg for (node, deg) in G.degree()]
-    print("\nDegree of each node", degree)
+    #print("\nDegree of each node", degree)
 
-    color_graph_greedy_random(G, 0.7)
+    #color_graph_greedy_random(G, 0.7)
     # Finding suitable initial coloring
-    pair = None, G.number_of_nodes(), 0
-    it = 0
-    for i in range (1, 10000):
-        color_by_node, colors = color_graph_greedy_random(G, 0.7)
-        if pair[1] > len(colors):
-            pair = color_by_node, len(colors), it
-        it+= 1
+    #pair = None, G.number_of_nodes(), 0
+    #it = 0
+    #for i in range (1, 10000):
+    #    color_by_node, colors = color_graph_greedy_random(G, 0.7)
+    #    if pair[1] > len(colors):
+    #        pair = color_by_node, len(colors), it
+    #    it+= 1
     # Coloring Graph
-    for key, value in pair[0].items(): 
-        G.nodes[key]['color'] = value
+    #for key, value in pair[0].items(): 
+    #    G.nodes[key]['color'] = value
     
-    num_colors = pair[1]
-    #num_colors = 25
+
+    #num_colors = pair[1] #Denmark colors
+    num_colors = 5 #Denmark colors
+    #num_colors = 25 #Brazil colors
     print("\nNumber of colors", num_colors)
     
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
-    #color_graph_num(G, num_colors)
+    color_graph_num(G, num_colors)
 
-    ''' 
-    for i in G.nodes:
-        print("\nNode",i)
-        print("Neighbours", G[i])
-    '''
+    #for i in G.nodes:
+    #    print("\nNode",i)
+    #    print("Neighbours", G[i])
 
-    for i in G.nodes:
-        print("\nNode",i,"Color", G.nodes[i]['color'])
-        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-        print("Neighbours Colors", neighbours)
+    #for i in G.nodes:
+    #    print("\nNode",i,"Color", G.nodes[i]['color'])
+    #    neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+    #    print("Neighbours Colors", neighbours)
 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
+
+    initial_function_value = initial_cost_function_den(G, coloring)
+    print("\nInitial Function Value", initial_function_value)
 
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()
@@ -621,7 +715,7 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    p = 1
+    p = 2
 
     # Parallel task using ray
     expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(2))])
