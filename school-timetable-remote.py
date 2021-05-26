@@ -368,20 +368,23 @@ def partial_mixer(qc, neighbour, ancilla, target, beta):
         with around([RX(-np.pi/2), ctrl(0, X, target=1)], target):
             ctrl(ancilla, RZ, 2*beta, target[1])
 
-def neighbourhood(G, num_colors, node, color):
-    neighbour = G[node]
-    neighbour_qubit = [color+(num_colors*u) for u, neigh in enumerate(neighbour)]
+def neighbourhood(G, num_colors, node, color, list_nodes):
+    neighbours = list(G[node])
+    neighbours_index = [list_nodes.index(neigh) for neigh in neighbours]
 
-    return neighbour_qubit
+    neighbours_color_qubit = [color+(num_colors*u) for u in neighbours_index]
+
+    return neighbours_color_qubit
 
 # Apply the partial mixer for each pair of colors of each node
 def mixer(qc, G, beta, num_nodes, num_colors):
+    list_nodes = list(G.nodes())
     for u, node in enumerate(G.nodes):
         for i in range(num_colors):
-            neighbours_i = neighbourhood(G, num_colors, node, i)
+            neighbours_i = neighbourhood(G, num_colors, node, i, list_nodes)
             for j in range(num_colors):
                 if i < j:
-                    neighbours_j = neighbourhood(G, num_colors, node, j)
+                    neighbours_j = neighbourhood(G, num_colors, node, j, list_nodes)
                     neighbours = neighbours_i+neighbours_j
 
                     if neighbours == []:
@@ -715,7 +718,7 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    p = 2
+    p = 1
 
     # Parallel task using ray
     expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(2))])

@@ -553,10 +553,10 @@ def qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta):
 
     # Alternate application of operators
     # No need for beta 0 if initial state is W
-    #mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
-    #for step in range(p):
-    #    phase_separator(qc, gamma[step], num_nodes, num_colors)
-    #    mixer(qc, G, beta[step], num_nodes, num_colors)
+    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
+    for step in range(p):
+        phase_separator(qc, gamma[step], num_nodes, num_colors)
+        mixer(qc, G, beta[step], num_nodes, num_colors)
 
     # Measurement
     #result = measure(qc).get()
@@ -618,21 +618,21 @@ def main():
     degree = [deg for (node, deg) in G.degree()]
     #print("\nDegree of each node", degree)
 
-    color_graph_greedy_random(G, 0.7)
+    #color_graph_greedy_random(G, 0.7)
     # Finding suitable initial coloring
-    pair = None, G.number_of_nodes(), 0
-    it = 0
-    for i in range (1, 10000):
-        color_by_node, colors = color_graph_greedy_random(G, 0.7)
-        if pair[1] > len(colors):
-            pair = color_by_node, len(colors), it
-        it+= 1
+    #pair = None, G.number_of_nodes(), 0
+    #it = 0
+    #for i in range (1, 10000):
+    #    color_by_node, colors = color_graph_greedy_random(G, 0.7)
+    #    if pair[1] > len(colors):
+    #        pair = color_by_node, len(colors), it
+    #    it+= 1
     # Coloring Graph
-    for key, value in pair[0].items(): 
-        G.nodes[key]['color'] = value
+    #for key, value in pair[0].items(): 
+    #    G.nodes[key]['color'] = value
     
-    num_colors = pair[1] #Denmark colors
-    #num_colors = 5 #Denmark colors
+    #num_colors = pair[1] #Denmark colors
+    num_colors = 5 #Denmark colors
     #num_colors = 25 #Brazil colors
     print("\nNumber of colors", num_colors)
     
@@ -680,8 +680,8 @@ def main():
     min_C       = [0, 9999]
     hist        = {}
 
-    for k in range(12):
-        hist[str(k)] = hist.get(str(k),0)
+    #for k in range(12):
+    #    hist[str(k)] = hist.get(str(k),0)
 
     for sample in list(counts.keys()):
         if counts[sample] > 0:
