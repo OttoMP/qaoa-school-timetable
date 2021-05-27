@@ -664,14 +664,19 @@ def main():
     counts = {}
     # run on local simulator
     result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
+
+    # Probabilities list to be used at the end of the program 
+    states = []
+    probabilities = []
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
-        prob = int(2**20*result.probability(i))
-        if prob > 0:
-            counts[binary] = prob
+        states.append(binary)
+        probabilities.append(result.probability(i))
+        prob = int((2**20)*result.probability(i))
+        counts[binary] = prob
  
     print("Number of States", len(counts))
-    pp.pprint(counts)
+    #pp.pprint(counts)
 
     print("==Result==")
 
@@ -765,6 +770,8 @@ def main():
     #    print("Neighbours Colors", neighbours)
 
     #-----------------------------
+    print("Histogram")
+    pp.pprint(hist)
     '''
     print("Histogram", hist)
     hist_max = sum(counts.values())
@@ -783,6 +790,30 @@ def main():
     #print('The cost function is distributed as: \n')
     #plt.savefig("histogram.pdf")
     '''
+
+    # Evaluate the data from Measurement
+    measurement_number = 10000
+    print("Total Number of Measurements", measurement_number)
+
+    measurement = np.random.choice(states, measurement_number, p=probabilities)
+    unique, counts = np.unique(measurement, return_counts=True)
+    analysis = dict(zip(unique, counts))
+
+    avr_C       = 0
+    hist        = {}
+    for sample in list(analysis.keys()):
+        # use sampled bit string x to compute f(x)
+        x         = [int(num) for num in list(sample)]
+        #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
+        tmp_eng = cost_function_den(x, G, num_colors)
+
+        # compute the expectation value and energy distribution
+        avr_C     = avr_C    + analysis[sample]*tmp_eng
+        hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + analysis[sample]
+
+    expected_value = avr_C/measurement_number
+    print("Expected Value = ", expected_value)
+
     #plot_histogram(hist,figsize = (8,6),bar_labels = False)
     print("\nObjective Function Distribution")
     pp.pprint(hist)

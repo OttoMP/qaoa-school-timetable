@@ -721,7 +721,7 @@ def main():
     p = 1
 
     # Parallel task using ray
-    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(2))])
+    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(1))])
 
 if __name__ == '__main__':
     main()
