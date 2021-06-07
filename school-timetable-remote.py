@@ -81,7 +81,7 @@ def initial_cost_function_den(G, coloring):
     color_graph_coloring(G, coloring)
 
     C = 0
-    
+    '''
     if G.nodes["Event1"]['color'] != 3:
         C += 1
     if G.nodes["Event2"]['color'] != 2:
@@ -128,7 +128,7 @@ def initial_cost_function_den(G, coloring):
         C += 1
     if G.nodes["Event25"]['color'] != 3:
         C += 1
-
+    '''
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
@@ -154,7 +154,7 @@ def cost_function_den(x, G, num_colors):
     color_graph_coloring(G, coloring)
 
     C = 0
-    
+    '''
     if G.nodes["Event1"]['color'] != 3:
         C += 1
     if G.nodes["Event2"]['color'] != 2:
@@ -201,7 +201,7 @@ def cost_function_den(x, G, num_colors):
         C += 1
     if G.nodes["Event25"]['color'] != 3:
         C += 1
-
+    '''
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
@@ -610,7 +610,8 @@ def qaoa(par, p, G, num_colors):
             # use sampled bit string x to compute f(x)
             x       = [int(num) for num in list(sample)]
             #tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
-            tmp_eng = cost_function_den(x, G, num_colors)
+            #tmp_eng = cost_function_den(x, G, num_colors)
+            tmp_eng = cost_function_min(x, G, num_colors)
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
@@ -646,6 +647,52 @@ def minimization_process(p, G, num_colors, school):
 
     return [['fun'], p, res['x']]
 
+def minimal_example():
+    nodes = [('Event1', {'color': None}),
+             ('Event2', {'color': None}),
+             ('Event3', {'color': None}),
+             ('Event4', {'color': None}),
+             ('Event5', {'color': None}),
+    ]
+    edges = [('Event1', 'Event2'),
+             ('Event1', 'Event3'),
+             ('Event1', 'Event4'),
+             ('Event1', 'Event5'),
+             ('Event2', 'Event3'),
+             ('Event2', 'Event4'),
+             ('Event2', 'Event5'),
+             ('Event3', 'Event4'),
+             ('Event3', 'Event5'),
+             ('Event4', 'Event5')]
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+    G.add_edges_from(edges)
+
+    return G
+
+def cost_function_min(x, G, num_colors):
+    coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                coloring.append(pos)
+    color_graph_coloring(G, coloring)
+    
+    C = 0
+    
+    if G.nodes["Event1"]['color'] != 1:
+        C += 1
+    if G.nodes["Event2"]['color'] != 2:
+        C += 1
+    if G.nodes["Event3"]['color'] != 3:
+        C += 1
+    if G.nodes["Event4"]['color'] != 4:
+        C += 1
+    if G.nodes["Event5"]['color'] != 0:
+        C += 1
+    
+    return C
+
 def main():
     print("Starting program\n")
 
@@ -654,11 +701,13 @@ def main():
     events = parseXML('dataset/den-smallschool.xml')
     #events = parseXML('dataset/bra-instance01.xml')
 
-    school = "Den"
+    #school = "Den"
     #school = "Bra"
+    school = "Min"
 
     #G = create_graphv2(lectures, lectureConflict)
-    G = create_graph(events)
+    #G = create_graph(events)
+    G = minimal_example()
 
     # --------------------------
     #  Preparing Conflict Graph
@@ -687,13 +736,16 @@ def main():
     
 
     #num_colors = pair[1] #Denmark colors
-    num_colors = 5 #Denmark colors
+    num_colors = 6 #Denmark colors
     #num_colors = 25 #Brazil colors
     print("\nNumber of colors", num_colors)
     
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
-    color_graph_num(G, num_colors)
+    #color_graph_num(G, num_colors)
+
+    # Minimal example Coloring
+    color_graph_coloring(G, [0,1,2,3,4])
 
     #for i in G.nodes:
     #    print("\nNode",i)
@@ -707,8 +759,8 @@ def main():
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
 
-    initial_function_value = initial_cost_function_den(G, coloring)
-    print("\nInitial Function Value", initial_function_value)
+    #initial_function_value = initial_cost_function_den(G, coloring)
+    #print("\nInitial Function Value", initial_function_value)
 
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()

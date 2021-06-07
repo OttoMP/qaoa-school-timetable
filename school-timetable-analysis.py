@@ -121,7 +121,7 @@ def initial_cost_function_den(G, coloring):
         C += 1
     if G.nodes["Event25"]['color'] != 3:
         C += 1
-
+    
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
@@ -193,7 +193,7 @@ def cost_function_den(x, G, num_colors):
         C += 1
     if G.nodes["Event25"]['color'] != 3:
         C += 1
-
+    
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
@@ -562,14 +562,79 @@ def qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
+def minimal_example():
+    nodes = [('Event1', {'color': None}),
+             ('Event2', {'color': None}),
+             ('Event3', {'color': None}),
+             ('Event4', {'color': None}),
+             ('Event5', {'color': None}),
+    ]
+    edges = [('Event1', 'Event2'),
+             ('Event1', 'Event3'),
+             ('Event1', 'Event4'),
+             ('Event1', 'Event5'),
+             ('Event2', 'Event3'),
+             ('Event2', 'Event4'),
+             ('Event2', 'Event5'),
+             ('Event3', 'Event4'),
+             ('Event3', 'Event5'),
+             ('Event4', 'Event5')]
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+    G.add_edges_from(edges)
+
+    return G
+
+def initial_cost_function_min(G, coloring):
+    color_graph_coloring(G, coloring)
+
+    C = 0
+    
+    if G.nodes["Event1"]['color'] != 1:
+        C += 1
+    if G.nodes["Event2"]['color'] != 2:
+        C += 1
+    if G.nodes["Event3"]['color'] != 3:
+        C += 1
+    if G.nodes["Event4"]['color'] != 4:
+        C += 1
+    if G.nodes["Event4"]['color'] != 0:
+        C += 1
+    
+    return C
+
+def cost_function_min(x, G, num_colors):
+    coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                coloring.append(pos)
+    color_graph_coloring(G, coloring)
+    
+    C = 0
+    
+    if G.nodes["Event1"]['color'] != 1:
+        C += 1
+    if G.nodes["Event2"]['color'] != 2:
+        C += 1
+    if G.nodes["Event3"]['color'] != 3:
+        C += 1
+    if G.nodes["Event4"]['color'] != 4:
+        C += 1
+    if G.nodes["Event5"]['color'] != 0:
+        C += 1
+    
+    return C
+
 def main():
     print("Starting program\n")
     
     # QAOA parameter
     p = 1
 
-    school = "Den"
+    #school = "Den"
     #school = "Bra"
+    school = "Min"
 
     # Reading values from CSV file
     result_list = pd.read_csv("results/"+school+"p"+str(p)+".csv", header=0)
@@ -578,7 +643,8 @@ def main():
     expected_value_list = list(result_list["Expected Value"])
     qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
     min_expected_value = min(expected_value_list)
-    min_expected_value_index = expected_value_list.index(min_expected_value)
+    #min_expected_value_index = expected_value_list.index(min_expected_value)
+    min_expected_value_index = -1
     min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
     
     print("Expected Value List")
@@ -604,19 +670,20 @@ def main():
     #events = parseXML('dataset/bra-instance01.xml')
     
     #G = create_graphv2(lectures, lectureConflict)
-    G = create_graph(events)
+    #G = create_graph(events)
+    G = minimal_example()
 
     # --------------------------
     #  Preparing Conflict Graph
     # --------------------------
-    #print("\nGraph information")
+    print("\nGraph information")
 
-    #print("Nodes = ", G.nodes)
+    print("Nodes = ", G.nodes)
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    #print("\nPre-coloring", coloring)
+    print("\nPre-coloring", coloring)
 
     degree = [deg for (node, deg) in G.degree()]
-    #print("\nDegree of each node", degree)
+    print("\nDegree of each node", degree)
 
     #color_graph_greedy_random(G, 0.7)
     # Finding suitable initial coloring
@@ -632,23 +699,27 @@ def main():
     #    G.nodes[key]['color'] = value
     
     #num_colors = pair[1] #Denmark colors
-    num_colors = 5 #Denmark colors
+    num_colors = 6 #Denmark colors
     #num_colors = 25 #Brazil colors
     print("\nNumber of colors", num_colors)
     
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
-    color_graph_num(G, num_colors)
+    #color_graph_num(G, num_colors)
     
-    #for i in G.nodes:
-    #    print("\nNode",i,"Color", G.nodes[i]['color'])
-    #    neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-    #    print("Neighbours Colors", neighbours)
+    # Minimal example Coloring
+    color_graph_coloring(G, [0,1,2,3,4])
+    
+    for i in G.nodes:
+        print("\nNode",i,"Color", G.nodes[i]['color'])
+        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+        print("Neighbours Colors", neighbours)
 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
 
-    initial_function_value = initial_cost_function_den(G, coloring)
+    #initial_function_value = initial_cost_function_den(G, coloring)
+    initial_function_value = initial_cost_function_min(G, coloring)
     print("\nInitial Function Value", initial_function_value)
 
     #nx.draw(G, with_labels=True, font_weight='bold')
@@ -676,7 +747,7 @@ def main():
         counts[binary] = prob
  
     print("Number of States", len(counts))
-    #pp.pprint(counts)
+    pp.pprint(counts)
 
     print("==Result==")
 
@@ -693,7 +764,8 @@ def main():
             # use sampled bit string x to compute f(x)
             x         = [int(num) for num in list(sample)]
             #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
-            tmp_eng = cost_function_den(x, G, num_colors)
+            #tmp_eng = cost_function_den(x, G, num_colors)
+            tmp_eng = cost_function_min(x, G, num_colors)
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
@@ -709,6 +781,7 @@ def main():
     expected_value = avr_C/total_counts
     print("Expected Value = ", expected_value)
 
+    
     print('\n --- SIMULATION RESULTS ---\n')
     print("Best result found: ", min_C[0])
     print("Number of times result showed: ", counts[min_C[0]])
@@ -744,7 +817,7 @@ def main():
     print("Number of times result showed: ", counts[max_counts])
     print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
     #max_value = cost_function_timetable(max_counts, G, num_colors, students_list)
-    max_value = cost_function_den(x, G, num_colors)
+    max_value = cost_function_min(x, G, num_colors)
     print("Objective function value: ", max_value)
 
     list_qubits = max_counts
@@ -770,9 +843,11 @@ def main():
     #    print("Neighbours Colors", neighbours)
 
     #-----------------------------
+    
+    '''
+
     print("Histogram")
     pp.pprint(hist)
-    '''
     print("Histogram", hist)
     hist_max = sum(counts.values())
     hist_3 = (hist['3']/hist_max)*100
@@ -789,8 +864,7 @@ def main():
     print("Histogram 5", hist_5)
     #print('The cost function is distributed as: \n')
     #plt.savefig("histogram.pdf")
-    '''
-
+    
     # Evaluate the data from Measurement
     measurement_number = 10000
     print("Total Number of Measurements", measurement_number)
@@ -817,7 +891,7 @@ def main():
     #plot_histogram(hist,figsize = (8,6),bar_labels = False)
     print("\nObjective Function Distribution")
     pp.pprint(hist)
-
+    '''
 
 if __name__ == '__main__':
     main()
