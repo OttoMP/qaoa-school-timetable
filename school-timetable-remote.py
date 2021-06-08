@@ -27,8 +27,8 @@ from ket.gates.more import u3
 import ray
 import multiprocessing
 
-#num_cores = multiprocessing.cpu_count()
-num_cores = 2
+num_cores = multiprocessing.cpu_count()
+#num_cores = 4
 ray.init(num_cpus=num_cores)
 
 # Compute the value of the cost function
@@ -77,66 +77,60 @@ def cost_function_timetable(x, G, num_colors, list_students):
 
     return C
 
-def initial_cost_function_den(G, coloring):
-    color_graph_coloring(G, coloring)
-
+def initial_cost_function_den_25pts(G):
     C = 0
-    '''
-    if G.nodes["Event1"]['color'] != 3:
+    
+    if G.nodes["Event1"]['color'] != 0:
         C += 1
     if G.nodes["Event2"]['color'] != 2:
         C += 1
-    if G.nodes["Event3"]['color'] != 1:
+    if G.nodes["Event3"]['color'] != 3:
         C += 1
-    if G.nodes["Event4"]['color'] != 0:
+    if G.nodes["Event4"]['color'] != 1:
         C += 1
-
-    if G.nodes["Event5"]['color'] != 3:
+    if G.nodes["Event5"]['color'] != 2:
         C += 1
-    if G.nodes["Event6"]['color'] != 2:
+    if G.nodes["Event6"]['color'] != 3:
         C += 1
-    if G.nodes["Event7"]['color'] != 1:
+    if G.nodes["Event7"]['color'] != 3:
         C += 1
-    if G.nodes["Event8"]['color'] != 0:
+    if G.nodes["Event8"]['color'] != 2:
         C += 1
-
-    if G.nodes["Event9"]['color'] != 3:
+    if G.nodes["Event9"]['color'] != 0:
         C += 1
-    if G.nodes["Event10"]['color'] != 2:
+    if G.nodes["Event10"]['color'] != 1:
         C += 1
-    if G.nodes["Event11"]['color'] != 1:
+    if G.nodes["Event11"]['color'] != 0:
         C += 1
-    if G.nodes["Event12"]['color'] != 0:
+    if G.nodes["Event12"]['color'] != 3:
         C += 1
-
-    if G.nodes["Event13"]['color'] != 3:
+    if G.nodes["Event13"]['color'] != 2:
         C += 1
-    if G.nodes["Event14"]['color'] != 2:
+    if G.nodes["Event14"]['color'] != 1:
         C += 1
-    if G.nodes["Event15"]['color'] != 1:
+    if G.nodes["Event15"]['color'] != 0:
         C += 1
-    if G.nodes["Event16"]['color'] != 0:
+    if G.nodes["Event16"]['color'] != 2:
         C += 1
-
     if G.nodes["Event17"]['color'] != 3:
         C += 1
-    if G.nodes["Event22"]['color'] != 2:
+    if G.nodes["Event22"]['color'] != 3:
         C += 1
-    if G.nodes["Event23"]['color'] != 1:
+    if G.nodes["Event23"]['color'] != 0:
         C += 1
-    if G.nodes["Event24"]['color'] != 0:
+    if G.nodes["Event24"]['color'] != 3:
         C += 1
-    if G.nodes["Event25"]['color'] != 3:
+    if G.nodes["Event25"]['color'] != 1:
         C += 1
-    '''
+    
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
     #PreferTimes_4
-    if G.nodes["Event19"]['color'] != 1:
+    if G.nodes["Event19"]['color'] != 2:
         C += 1
     #PreferTimes_5
-    if G.nodes["Event20"]['color'] != 2:
+    if G.nodes["Event20"]['color'] != 1:
         C += 1
     #PreferTimes_6
     if G.nodes["Event21"]['color'] != 3:
@@ -144,7 +138,24 @@ def initial_cost_function_den(G, coloring):
 
     return C
 
-def cost_function_den(x, G, num_colors):
+def initial_cost_function_den_4pts(G):
+    C = 0
+    #PreferTimes_3
+    if G.nodes["Event18"]['color'] != 0:
+        C += 1
+    #PreferTimes_4
+    if G.nodes["Event19"]['color'] != 2:
+        C += 1
+    #PreferTimes_5
+    if G.nodes["Event20"]['color'] != 1:
+        C += 1
+    #PreferTimes_6
+    if G.nodes["Event21"]['color'] != 3:
+        C += 1
+
+    return C
+
+def cost_function_den_25pts(x, G, num_colors):
     coloring = []
     for i in range(len(G)):
         for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
@@ -154,62 +165,83 @@ def cost_function_den(x, G, num_colors):
     color_graph_coloring(G, coloring)
 
     C = 0
-    '''
-    if G.nodes["Event1"]['color'] != 3:
+    
+    if G.nodes["Event1"]['color'] != 0:
         C += 1
     if G.nodes["Event2"]['color'] != 2:
         C += 1
-    if G.nodes["Event3"]['color'] != 1:
+    if G.nodes["Event3"]['color'] != 3:
         C += 1
-    if G.nodes["Event4"]['color'] != 0:
+    if G.nodes["Event4"]['color'] != 1:
         C += 1
-
-    if G.nodes["Event5"]['color'] != 3:
+    if G.nodes["Event5"]['color'] != 2:
         C += 1
-    if G.nodes["Event6"]['color'] != 2:
+    if G.nodes["Event6"]['color'] != 3:
         C += 1
-    if G.nodes["Event7"]['color'] != 1:
+    if G.nodes["Event7"]['color'] != 3:
         C += 1
-    if G.nodes["Event8"]['color'] != 0:
+    if G.nodes["Event8"]['color'] != 2:
         C += 1
-
-    if G.nodes["Event9"]['color'] != 3:
+    if G.nodes["Event9"]['color'] != 0:
         C += 1
-    if G.nodes["Event10"]['color'] != 2:
+    if G.nodes["Event10"]['color'] != 1:
         C += 1
-    if G.nodes["Event11"]['color'] != 1:
+    if G.nodes["Event11"]['color'] != 0:
         C += 1
-    if G.nodes["Event12"]['color'] != 0:
+    if G.nodes["Event12"]['color'] != 3:
         C += 1
-
-    if G.nodes["Event13"]['color'] != 3:
+    if G.nodes["Event13"]['color'] != 2:
         C += 1
-    if G.nodes["Event14"]['color'] != 2:
+    if G.nodes["Event14"]['color'] != 1:
         C += 1
-    if G.nodes["Event15"]['color'] != 1:
+    if G.nodes["Event15"]['color'] != 0:
         C += 1
-    if G.nodes["Event16"]['color'] != 0:
+    if G.nodes["Event16"]['color'] != 2:
         C += 1
-
     if G.nodes["Event17"]['color'] != 3:
         C += 1
-    if G.nodes["Event22"]['color'] != 2:
+    if G.nodes["Event22"]['color'] != 3:
         C += 1
-    if G.nodes["Event23"]['color'] != 1:
+    if G.nodes["Event23"]['color'] != 0:
         C += 1
-    if G.nodes["Event24"]['color'] != 0:
+    if G.nodes["Event24"]['color'] != 3:
         C += 1
-    if G.nodes["Event25"]['color'] != 3:
+    if G.nodes["Event25"]['color'] != 1:
         C += 1
-    '''
+    
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
         C += 1
     #PreferTimes_4
-    if G.nodes["Event19"]['color'] != 1:
+    if G.nodes["Event19"]['color'] != 2:
         C += 1
     #PreferTimes_5
-    if G.nodes["Event20"]['color'] != 2:
+    if G.nodes["Event20"]['color'] != 1:
+        C += 1
+    #PreferTimes_6
+    if G.nodes["Event21"]['color'] != 3:
+        C += 1
+
+    return C
+
+def cost_function_den_4pts(x, G, num_colors):
+    coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                coloring.append(pos)
+
+    color_graph_coloring(G, coloring)
+
+    C = 0
+    #PreferTimes_3
+    if G.nodes["Event18"]['color'] != 0:
+        C += 1
+    #PreferTimes_4
+    if G.nodes["Event19"]['color'] != 2:
+        C += 1
+    #PreferTimes_5
+    if G.nodes["Event20"]['color'] != 1:
         C += 1
     #PreferTimes_6
     if G.nodes["Event21"]['color'] != 3:
@@ -480,10 +512,7 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
 
 def G_gate(p, upper, lower):
     theta = np.arccos(np.sqrt(p))
-    RY(theta, lower)
-    cnot(upper, lower)
-    RY(-theta, lower)
-    cnot(upper, lower)
+    ctrl(upper, RY(2*theta), lower)
 
 def dichotomy_tree_gen(num_total):
     dichotomy_tree = []
@@ -583,7 +612,7 @@ def qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
-def qaoa(par, p, G, num_colors):
+def qaoa_4pts(par, p, G, num_colors):
     # QAOA parameters
     beta0 = par[0]
     new_par = np.delete(par, 0)
@@ -609,9 +638,8 @@ def qaoa(par, p, G, num_colors):
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
             x       = [int(num) for num in list(sample)]
-            #tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
-            #tmp_eng = cost_function_den(x, G, num_colors)
-            tmp_eng = cost_function_min(x, G, num_colors)
+            tmp_eng = cost_function_den_4pts(x, G, num_colors)
+            #tmp_eng = cost_function_min(x, G, num_colors)
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
@@ -626,7 +654,7 @@ def qaoa(par, p, G, num_colors):
     return expectation_value
 
 @ray.remote
-def minimization_process(p, G, num_colors, school):
+def minimization_process_4pts(p, G, num_colors, school):
     data = []
     
     # Initializing QAOA Parameters 
@@ -638,7 +666,70 @@ def minimization_process(p, G, num_colors, school):
     qaoa_par = [beta0]+gamma+beta
     qaoa_args = p, G, num_colors
     print("\nMinimizing function\n")
-    res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
+    res = minimize(qaoa_4pts, qaoa_par, args=qaoa_args, method='Nelder-Mead',
+            options={'maxiter': 300, 'disp': True, 'adaptive':True})
+    #print(res)
+
+    data.append([res['fun'], p, res['x']])
+    save_csv(data, "results/"+school+"p"+str(p)+".csv" )
+
+    return [['fun'], p, res['x']]
+
+def qaoa_25pts(par, p, G, num_colors):
+    # QAOA parameters
+    beta0 = par[0]
+    new_par = np.delete(par, 0)
+    middle = int(len(par)/2)
+    gamma = new_par[:middle]
+    beta = new_par[middle:]
+
+    num_nodes = G.number_of_nodes()
+
+    # Dictionary for keeping the results of the simulation
+    counts = {}
+    # run on local simulator
+    result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
+    for i in result.get_states():
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        counts[binary] = int(2**20*result.probability(i))
+
+    # Evaluate the data from the simulator
+    avr_C       = 0
+    min_C       = [0, np.inf]
+
+    for sample in list(counts.keys()):
+        if counts[sample] > 0:
+            # use sampled bit string x to compute f(x)
+            x       = [int(num) for num in list(sample)]
+            tmp_eng = cost_function_den_25pts(x, G, num_colors)
+            #tmp_eng = cost_function_min(x, G, num_colors)
+
+            # compute the expectation value and energy distribution
+            avr_C     = avr_C    + counts[sample]*tmp_eng
+
+            # save best bit string
+            if( min_C[1] > tmp_eng):
+                min_C[0] = sample
+                min_C[1] = tmp_eng
+
+    expectation_value = avr_C/sum(counts.values())
+
+    return expectation_value
+
+@ray.remote
+def minimization_process_25pts(p, G, num_colors, school):
+    data = []
+    
+    # Initializing QAOA Parameters 
+    gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
+    beta0 = random.uniform(0, np.pi)
+    beta  = [random.uniform(0, np.pi) for _ in range(p)]
+
+    # Packing and Sending to minimize
+    qaoa_par = [beta0]+gamma+beta
+    qaoa_args = p, G, num_colors
+    print("\nMinimizing function\n")
+    res = minimize(qaoa_25pts, qaoa_par, args=qaoa_args, method='Nelder-Mead',
             options={'maxiter': 300, 'disp': True, 'adaptive':True})
     #print(res)
 
@@ -701,13 +792,13 @@ def main():
     events = parseXML('dataset/den-smallschool.xml')
     #events = parseXML('dataset/bra-instance01.xml')
 
-    #school = "Den"
+    school = "Den"
     #school = "Bra"
-    school = "Min"
+    #school = "Min"
 
     #G = create_graphv2(lectures, lectureConflict)
-    #G = create_graph(events)
-    G = minimal_example()
+    G = create_graph(events)
+    #G = minimal_example()
 
     # --------------------------
     #  Preparing Conflict Graph
@@ -736,16 +827,16 @@ def main():
     
 
     #num_colors = pair[1] #Denmark colors
-    num_colors = 6 #Denmark colors
+    num_colors = 5 #Denmark colors
     #num_colors = 25 #Brazil colors
     print("\nNumber of colors", num_colors)
     
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
-    #color_graph_num(G, num_colors)
+    color_graph_num(G, num_colors)
 
     # Minimal example Coloring
-    color_graph_coloring(G, [0,1,2,3,4])
+    #color_graph_coloring(G, [0,1,2,3,4])
 
     #for i in G.nodes:
     #    print("\nNode",i)
@@ -755,12 +846,15 @@ def main():
     #    print("\nNode",i,"Color", G.nodes[i]['color'])
     #    neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
     #    print("Neighbours Colors", neighbours)
-
+    
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
 
-    #initial_function_value = initial_cost_function_den(G, coloring)
-    #print("\nInitial Function Value", initial_function_value)
+    initial_function_value = initial_cost_function_den_25pts(G)
+    print("\nInitial Function Value Max 25:", initial_function_value)
+
+    initial_function_value = initial_cost_function_den_4pts(G)
+    print("\nInitial Function Value Max 4:", initial_function_value)
 
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()
@@ -773,7 +867,11 @@ def main():
     p = 1
 
     # Parallel task using ray
-    expected_value_sample = ray.get([minimization_process.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(1))])
+    # Minimizing Denmark 4pts
+    expected_value_sample = ray.get([minimization_process_4pts.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(10))])
+
+    # Minimizing Denmark 25pts
+    expected_value_sample = ray.get([minimization_process_25pts.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(10))])
 
 if __name__ == '__main__':
     main()

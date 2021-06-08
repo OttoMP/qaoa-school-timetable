@@ -459,10 +459,7 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
 
 def G_gate(p, upper, lower):
     theta = np.arccos(np.sqrt(p))
-    RY(theta, lower)
-    cnot(upper, lower)
-    RY(-theta, lower)
-    cnot(upper, lower)
+    ctrl(upper, RY(2*theta), lower)
 
 def dichotomy_tree_gen(num_total):
     dichotomy_tree = []
@@ -643,8 +640,8 @@ def main():
     expected_value_list = list(result_list["Expected Value"])
     qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
     min_expected_value = min(expected_value_list)
-    #min_expected_value_index = expected_value_list.index(min_expected_value)
-    min_expected_value_index = -1
+    min_expected_value_index = expected_value_list.index(min_expected_value)
+    #min_expected_value_index = -1
     min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
     
     print("Expected Value List")
@@ -864,7 +861,8 @@ def main():
     print("Histogram 5", hist_5)
     #print('The cost function is distributed as: \n')
     #plt.savefig("histogram.pdf")
-    
+    '''
+
     # Evaluate the data from Measurement
     measurement_number = 10000
     print("Total Number of Measurements", measurement_number)
@@ -879,7 +877,8 @@ def main():
         # use sampled bit string x to compute f(x)
         x         = [int(num) for num in list(sample)]
         #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
-        tmp_eng = cost_function_den(x, G, num_colors)
+        #tmp_eng = cost_function_den(x, G, num_colors)
+        tmp_eng = cost_function_min(x, G, num_colors)
 
         # compute the expectation value and energy distribution
         avr_C     = avr_C    + analysis[sample]*tmp_eng
@@ -891,7 +890,6 @@ def main():
     #plot_histogram(hist,figsize = (8,6),bar_labels = False)
     print("\nObjective Function Distribution")
     pp.pprint(hist)
-    '''
 
 if __name__ == '__main__':
     main()
