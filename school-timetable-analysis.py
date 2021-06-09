@@ -307,17 +307,6 @@ def color_graph_greedy_random(G, alpha):
 
     return color_by_node, colors
  
-def create_graphv2(nodes, edges):
-    G = nx.Graph()
-    G.add_nodes_from([(num, {'color' : None}) for num in nodes])
-
-    for e, row in enumerate(edges):
-        for f, column in enumerate(row):
-            if column == 1:
-                G.add_edge(nodes[e],nodes[f])
-
-    return G
-
 def create_graph(events):
     G = nx.Graph()
     G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
@@ -644,34 +633,32 @@ def main():
     min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
     
     print("Expected Value List")
-    print(expected_value_list)
-    print("Min Expected Value")
-    print(min_expected_value, '\n')
+    pp.pprint(expected_value_list)
     print("Beta0|Gamma|Beta")
-    print(qaoa_par_list, '\n')
-
+    pp.pprint(qaoa_par_list)
+    print()
+    
+    print("Min Expected Value")
+    print(min_expected_value)
+    
     beta0 = float(min_qaoa_par.pop(0))
     middle = int(len(min_qaoa_par)/2)
     gamma = [float(par) for par in min_qaoa_par[:middle]]
     beta  = [float(par) for par in min_qaoa_par[middle:]]
-
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
     print("Beta:", beta)
 
-    # Preparing Conflict Graph for QAOA Analysis 
-    # parse xml file
-    events = parseXML('dataset/den-smallschool.xml')
-    #events = parseXML('dataset/bra-instance01.xml')
-    
-    #G = create_graphv2(lectures, lectureConflict)
-    #G = create_graph(events)
-    G = minimal_example()
-
     # --------------------------
     #  Preparing Conflict Graph
     # --------------------------
+    events = parseXML('dataset/den-smallschool.xml')
+    #events = parseXML('dataset/bra-instance01.xml')
+    
+    #G = create_graph(events)
+    G = minimal_example()
+    
     print("\nGraph information")
 
     print("Nodes = ", G.nodes)
@@ -681,8 +668,9 @@ def main():
     degree = [deg for (node, deg) in G.degree()]
     print("\nDegree of each node", degree)
 
-    #color_graph_greedy_random(G, 0.7)
-    # Finding suitable initial coloring
+    # Greedy coloring to be used in cases where a trivial coloring cannot be
+    # found
+    # ---------------------------------------------------------------------
     #pair = None, G.number_of_nodes(), 0
     #it = 0
     #for i in range (1, 10000):
@@ -695,7 +683,7 @@ def main():
     #    G.nodes[key]['color'] = value
     
     #num_colors = pair[1] #Denmark colors
-    num_colors = 6 #Denmark colors
+    num_colors = 5 #Denmark colors
     #num_colors = 25 #Brazil colors
     print("\nNumber of colors", num_colors)
     
@@ -706,22 +694,30 @@ def main():
     # Minimal example Coloring
     color_graph_coloring(G, [0,1,2,3,4])
     
-    for i in G.nodes:
-        print("\nNode",i,"Color", G.nodes[i]['color'])
-        neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-        print("Neighbours Colors", neighbours)
+    # Verifying Graph consistency
+    #----------------------------
+    #for i in G.nodes:
+    #    print("\nNode",i)
+    #    print("Neighbours", G[i])
+    #for i in G.nodes:
+    #    print("\nNode",i,"Color", G.nodes[i]['color'])
+    #    neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+    #    print("Neighbours Colors", neighbours)
+    #nx.draw(G, with_labels=True, font_weight='bold')
+    #plt.show()
 
+
+    # Initial Values
+    # -------------- 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
-
     #initial_function_value = initial_cost_function_den(G, coloring)
     initial_function_value = initial_cost_function_min(G, coloring)
     print("\nInitial Function Value", initial_function_value)
 
-    #nx.draw(G, with_labels=True, font_weight='bold')
-    #plt.show()
-
+    # -------------
     # Starting QAOA
+    # ------------- 
     print("\nRunning QAOA")
     number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
     print("Necessary number of qubits: ", number_of_qubits)
@@ -752,9 +748,6 @@ def main():
     min_C       = [0, 9999]
     hist        = {}
 
-    #for k in range(12):
-    #    hist[str(k)] = hist.get(str(k),0)
-
     for sample in list(counts.keys()):
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
@@ -772,13 +765,46 @@ def main():
                 min_C[0] = sample
                 min_C[1] = tmp_eng
 
+    print('\n --- SIMULATION RESULTS ---')
+    print(' --- Function Distribution  ---\n')
     total_counts = sum(counts.values())
     print("Total Number of Measurements", total_counts)
     expected_value = avr_C/total_counts
     print("Expected Value = ", expected_value)
+    print("\nObjective Function Distribution")
+    pp.pprint(hist)
+
+    # -----------------------------------------------------
+    # Evaluate the data from limited number of Measurements
+    # -----------------------------------------------------
+    measurement_number = 10000
+    measurement = np.random.choice(states, measurement_number, p=probabilities)
+    unique, counts = np.unique(measurement, return_counts=True)
+    analysis = dict(zip(unique, counts))
+
+    avr_C       = 0
+    hist        = {}
+    for sample in list(analysis.keys()):
+        # use sampled bit string x to compute f(x)
+        x         = [int(num) for num in list(sample)]
+        #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
+        #tmp_eng = cost_function_den(x, G, num_colors)
+        tmp_eng = cost_function_min(x, G, num_colors)
+
+        # compute the expectation value and energy distribution
+        avr_C     = avr_C    + analysis[sample]*tmp_eng
+        hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + analysis[sample]
 
     
-    print('\n --- SIMULATION RESULTS ---\n')
+    print("Total Number of Measurements", measurement_number)
+    expected_value = avr_C/measurement_number
+    print("Expected Value = ", expected_value)
+    print("\nObjective Function Distribution")
+    pp.pprint(hist)
+    
+    # -----------------------------------------------------
+    print('\n --- SIMULATION RESULTS ---')
+    print(' --- Individual States  ---\n')
     print("Best result found: ", min_C[0])
     print("Number of times result showed: ", counts[min_C[0]])
     print("Percentage of times result showed: ", (counts[min_C[0]]/total_counts)*100)
@@ -796,17 +822,8 @@ def main():
     #print("\nBest Coloring Qudits values")
     #for i in range(len(G)):
     #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
-
-    #print("\nNew Graph information")
-    #print("\nDegree of each node", degree)
-    #print("\nNumber of colors", num_colors)
-    #color_graph_coloring(G, best_coloring)
-    #for i in G.nodes:
-    #    print("\nNode",i,"Color", G.nodes[i]['color'])
-    #    neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-    #    print("Neighbours Colors", neighbours)
-
     print('\n')
+    
     #-----------------------------
     max_counts = max(counts, key=lambda key: counts[key])
     print("Most commom result found: ", max_counts)
@@ -828,67 +845,8 @@ def main():
     #print("\nMost Common Coloring Qudits values")
     #for i in range(len(G)):
     #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
-
-    #print("\nNew Graph information")
-    #print("\nDegree of each node", degree)
-    #print("\nNumber of colors", num_colors)
-    #color_graph_coloring(G, maximum_coloring)
-    #for i in G.nodes:
-    #    print("\nNode",i,"Color", G.nodes[i]['color'])
-    #    neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
-    #    print("Neighbours Colors", neighbours)
-
     #-----------------------------
-    
-    '''
 
-    print("Histogram")
-    pp.pprint(hist)
-    print("Histogram", hist)
-    hist_max = sum(counts.values())
-    hist_3 = (hist['3']/hist_max)*100
-    hist_2 = (hist['2']/hist_max)*100
-    hist_0 = (hist['0']/hist_max)*100
-    hist_1 = (hist['1']/hist_max)*100
-    hist_4 = (hist['4']/hist_max)*100
-    hist_5 = (hist['5']/hist_max)*100
-    print("Histogram 3", hist_3)
-    print("Histogram 2", hist_2)
-    print("Histogram 1", hist_1)
-    print("Histogram 0", hist_0)
-    print("Histogram 4", hist_4)
-    print("Histogram 5", hist_5)
-    #print('The cost function is distributed as: \n')
-    #plt.savefig("histogram.pdf")
-    '''
-
-    # Evaluate the data from Measurement
-    measurement_number = 10000
-    print("Total Number of Measurements", measurement_number)
-
-    measurement = np.random.choice(states, measurement_number, p=probabilities)
-    unique, counts = np.unique(measurement, return_counts=True)
-    analysis = dict(zip(unique, counts))
-
-    avr_C       = 0
-    hist        = {}
-    for sample in list(analysis.keys()):
-        # use sampled bit string x to compute f(x)
-        x         = [int(num) for num in list(sample)]
-        #tmp_eng   = cost_function_timetable(x, G, num_colors, students_list)
-        #tmp_eng = cost_function_den(x, G, num_colors)
-        tmp_eng = cost_function_min(x, G, num_colors)
-
-        # compute the expectation value and energy distribution
-        avr_C     = avr_C    + analysis[sample]*tmp_eng
-        hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + analysis[sample]
-
-    expected_value = avr_C/measurement_number
-    print("Expected Value = ", expected_value)
-
-    #plot_histogram(hist,figsize = (8,6),bar_labels = False)
-    print("\nObjective Function Distribution")
-    pp.pprint(hist)
 
 if __name__ == '__main__':
     main()

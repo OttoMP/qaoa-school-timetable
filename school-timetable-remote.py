@@ -352,17 +352,6 @@ def color_graph_greedy_random(G, alpha):
 
     return color_by_node, colors
  
-def create_graphv2(nodes, edges):
-    G = nx.Graph()
-    G.add_nodes_from([(num, {'color' : None}) for num in nodes])
-
-    for e, row in enumerate(edges):
-        for f, column in enumerate(row):
-            if column == 1:
-                G.add_edge(nodes[e],nodes[f])
-
-    return G
-
 def create_graph(events):
     G = nx.Graph()
     G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
@@ -781,7 +770,6 @@ def main():
     #school = "Bra"
     #school = "Min"
 
-    #G = create_graphv2(lectures, lectureConflict)
     G = create_graph(events)
     #G = minimal_example()
 
@@ -791,14 +779,15 @@ def main():
     print("\nGraph information")
 
     #print("Nodes = ", G.nodes)
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
+    #coloring = [G.nodes[node]['color'] for node in G.nodes]
     #print("\nPre-coloring", coloring)
 
-    degree = [deg for (node, deg) in G.degree()]
+    #degree = [deg for (node, deg) in G.degree()]
     #print("\nDegree of each node", degree)
 
-    #color_graph_greedy_random(G, 0.7)
-    # Finding suitable initial coloring
+    # Greedy coloring to be used in cases where a trivial coloring cannot be
+    # found
+    # ---------------------------------------------------------------------
     #pair = None, G.number_of_nodes(), 0
     #it = 0
     #for i in range (1, 10000):
@@ -809,7 +798,6 @@ def main():
     # Coloring Graph
     #for key, value in pair[0].items(): 
     #    G.nodes[key]['color'] = value
-    
 
     #num_colors = pair[1] #Denmark colors
     num_colors = 5 #Denmark colors
@@ -818,32 +806,36 @@ def main():
     
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
+    # -----------------------------------------------------------------
     color_graph_num(G, num_colors)
 
     # Minimal example Coloring
     #color_graph_coloring(G, [0,1,2,3,4])
 
+    # Verifying Graph consistency
+    #----------------------------
     #for i in G.nodes:
     #    print("\nNode",i)
     #    print("Neighbours", G[i])
-
     #for i in G.nodes:
     #    print("\nNode",i,"Color", G.nodes[i]['color'])
     #    neighbours = [G.nodes[neighbour]['color'] for neighbour in G[i]]
     #    print("Neighbours Colors", neighbours)
-    
+    #nx.draw(G, with_labels=True, font_weight='bold')
+    #plt.show()
+
+    # Initial Values
+    # -------------- 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
-
     initial_function_value = initial_cost_function_den_25pts(G)
     print("\nInitial Function Value Max 25:", initial_function_value)
-
     initial_function_value = initial_cost_function_den_4pts(G)
     print("\nInitial Function Value Max 4:", initial_function_value)
 
-    #nx.draw(G, with_labels=True, font_weight='bold')
-    #plt.show()
-    
+    # -------------
+    # Starting QAOA
+    # ------------- 
     print("Running QAOA")
     number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
     print("Necessary number of qubits: ", number_of_qubits)
