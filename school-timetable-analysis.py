@@ -14,7 +14,6 @@ from binarytree import build
 # We import plotting tools
 import pandas as pd
 import matplotlib.pyplot as plt
-from qiskit.visualization import plot_histogram
 
 # Import tools for running QAOA
 import random
