@@ -14,7 +14,6 @@ from binarytree import build
 # We import plotting tools
 import pandas as pd
 import matplotlib.pyplot as plt
-from qiskit.visualization import plot_histogram
 
 # Import tools for running QAOA
 import random
@@ -22,14 +21,6 @@ from scipy.optimize import minimize
 from ket import *
 from ket.lib import swap, within
 from ket.gates.more import u3
-
-# Parallelization tools
-import ray
-import multiprocessing
-
-num_cores = multiprocessing.cpu_count()
-#num_cores = 4
-ray.init(num_cpus=num_cores)
 
 # Compute the value of the cost function
 def cost_function_timetable(x, G, num_colors, list_students):
@@ -327,7 +318,7 @@ def color_graph_greedy_random(G, alpha):
     #lista de cores
     colors = []
     
-    #vértices ordenadas por degree decrescente
+    #vertices ordenadas por degree decrescente
     nodes_ordered = sorted(G.degree, key=lambda x: x[1], reverse=True)
     
     
@@ -653,7 +644,6 @@ def qaoa_4pts(par, p, G, num_colors):
 
     return expectation_value
 
-@ray.remote
 def minimization_process_4pts(p, G, num_colors, school):
     data = []
     
@@ -672,8 +662,6 @@ def minimization_process_4pts(p, G, num_colors, school):
 
     data.append([res['fun'], p, res['x']])
     save_csv(data, "results/"+school+"p"+str(p)+".csv" )
-
-    return [['fun'], p, res['x']]
 
 def qaoa_25pts(par, p, G, num_colors):
     # QAOA parameters
@@ -716,7 +704,6 @@ def qaoa_25pts(par, p, G, num_colors):
 
     return expectation_value
 
-@ray.remote
 def minimization_process_25pts(p, G, num_colors, school):
     data = []
     
@@ -735,8 +722,6 @@ def minimization_process_25pts(p, G, num_colors, school):
 
     data.append([res['fun'], p, res['x']])
     save_csv(data, "results/"+school+"p"+str(p)+".csv" )
-
-    return [['fun'], p, res['x']]
 
 def minimal_example():
     nodes = [('Event1', {'color': None}),
@@ -868,10 +853,12 @@ def main():
 
     # Parallel task using ray
     # Minimizing Denmark 4pts
-    expected_value_sample = ray.get([minimization_process_4pts.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(10))])
+    for iteration in progressbar.progressbar(range(10)):
+        minimization_process_4pts(p, G, num_colors, school)
 
     # Minimizing Denmark 25pts
-    expected_value_sample = ray.get([minimization_process_25pts.remote(p, G, num_colors, school) for iteration in progressbar.progressbar(range(10))])
+    for iteration in progressbar.progressbar(range(10)):
+        minimization_process_25pts(p, G, num_colors, school)
 
 if __name__ == '__main__':
     main()
