@@ -600,6 +600,8 @@ def qaoa_4pts(par, p, G, num_colors):
     gamma = new_par[:middle]
     beta = new_par[middle:]
 
+    print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
+
     num_nodes = G.number_of_nodes()
 
     # Dictionary for keeping the results of the simulation
@@ -647,7 +649,7 @@ def minimization_process_4pts(p, G, num_colors, school):
     print("\nMinimizing function\n")
     res = minimize(qaoa_4pts, qaoa_par, args=qaoa_args, method='Nelder-Mead',
             options={'maxiter': 300, 'disp': True, 'adaptive':True})
-    #print(res)
+    print(res)
 
     data.append([res['fun'], p, res['x']])
     save_csv(data, "results/"+school+"p"+str(p)+".csv" )
@@ -660,6 +662,8 @@ def qaoa_25pts(par, p, G, num_colors):
     gamma = new_par[:middle]
     beta = new_par[middle:]
 
+    print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
+    
     num_nodes = G.number_of_nodes()
 
     # Dictionary for keeping the results of the simulation
@@ -707,7 +711,7 @@ def minimization_process_25pts(p, G, num_colors, school):
     print("\nMinimizing function\n")
     res = minimize(qaoa_25pts, qaoa_par, args=qaoa_args, method='Nelder-Mead',
             options={'maxiter': 300, 'disp': True, 'adaptive':True})
-    #print(res)
+    print(res)
 
     data.append([res['fun'], p, res['x']])
     save_csv(data, "results/"+school+"p"+str(p)+".csv" )
@@ -843,13 +847,14 @@ def main():
     # QAOA parameter
     p = 1
 
-    # Parallel task using ray
     # Minimizing Denmark 4pts
-    for iteration in progressbar.progressbar(range(10)):
+    print("Running minimization process for 4 points")
+    for iteration in progressbar.progressbar(range(5)):
         minimization_process_4pts(p, G, num_colors, school)
 
     # Minimizing Denmark 25pts
-    for iteration in progressbar.progressbar(range(10)):
+    print("Running minimization process for 25 points")
+    for iteration in progressbar.progressbar(range(5)):
         minimization_process_25pts(p, G, num_colors, school)
 
 if __name__ == '__main__':
