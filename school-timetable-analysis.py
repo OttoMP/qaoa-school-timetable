@@ -771,7 +771,7 @@ def main():
     print("Total Number of Measurements", total_counts)
     expected_value = avr_C/total_counts
     print("Expected Value = ", expected_value)
-    print("\nObjective Function Distribution")
+    print("Objective Function Distribution")
     pp.pprint(hist)
 
     # -----------------------------------------------------
@@ -779,8 +779,8 @@ def main():
     # -----------------------------------------------------
     measurement_number = 10000
     measurement = np.random.choice(states, measurement_number, p=probabilities)
-    unique, counts = np.unique(measurement, return_counts=True)
-    analysis = dict(zip(unique, counts))
+    unique, repet = np.unique(measurement, return_counts=True)
+    analysis = dict(zip(unique, repet))
 
     avr_C       = 0
     hist        = {}
@@ -796,10 +796,10 @@ def main():
         hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + analysis[sample]
 
     
-    print("Total Number of Measurements", measurement_number)
+    print("\nTotal Number of Measurements", measurement_number)
     expected_value = avr_C/measurement_number
     print("Expected Value = ", expected_value)
-    print("\nObjective Function Distribution")
+    print("Objective Function Distribution")
     pp.pprint(hist)
     
     # -----------------------------------------------------
