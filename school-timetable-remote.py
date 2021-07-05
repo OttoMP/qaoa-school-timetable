@@ -620,8 +620,8 @@ def qaoa_4pts(par, p, G, num_colors):
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
             x       = [int(num) for num in list(sample)]
-            tmp_eng = cost_function_den_4pts(x, G, num_colors)
-            #tmp_eng = cost_function_min(x, G, num_colors)
+            #tmp_eng = cost_function_den_4pts(x, G, num_colors)
+            tmp_eng = cost_function_min(x, G, num_colors)
 
             # compute the expectation value and energy distribution
             avr_C     = avr_C    + counts[sample]*tmp_eng
@@ -716,12 +716,215 @@ def minimization_process_25pts(p, G, num_colors, school):
     data.append([res['fun'], p, res['x']])
     save_csv(data, "results/"+school+"p"+str(p)+".csv" )
 
+def create_graphv2(nodes, edges):
+    G = nx.Graph()
+    G.add_nodes_from([(tuple, {'color' : None}) for tuple in nodes])
+
+    for e, row in enumerate(edges):
+        for f, column in enumerate(row):
+            if column == 1:
+               G.add_edge(nodes[e],nodes[f])
+
+    return G
+
+def cost_function_timetable(x, G, num_colors, list_students):
+    coloring = []
+
+    for i in range(len(G)):
+        for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                coloring.append(pos)
+
+    color_graph_coloring(G, coloring)
+
+    C = 0
+    lectures = G.nodes
+    for student in list_students:
+        lecture_student = [(j,k,l) for (j,k,l) in lectures if l == student]
+        timeslots = [G.nodes[key]['color'] for key in list(lecture_student)]
+        timeslots.sort()
+        new_timeslots = [x%num_colors for x in timeslots]
+
+        # Students shouldn't have lectures at the last time of the day
+        for time in new_timeslots:
+            if time % num_colors == num_colors-1:
+                C += 1
+
+        day = []
+        last_lecture = -np.inf
+        for time in new_timeslots:
+            if last_lecture >= time:
+                # Students shouldn't have only one lecture in a day
+                if len(day) == 1:
+                    C += 1
+                #Students shouldn't have many consecutive lectures
+                else:
+                    for index, lect in enumerate(day):
+                        if index+1 < len(day) and day[index+1] == lect+1:
+                            C += 1
+                day = []
+
+            last_lecture = time
+            day.append(last_lecture)
+        for index, lect in enumerate(day):
+            if index+1 < len(day) and day[index+1] == lect+1:
+                C += 1
+
+    return C
+
+def qaoa_first(par, p, G, num_colors, students_list):
+    # QAOA parameters
+    beta0 = par[0]
+    new_par = np.delete(par, 0)
+    middle = int(len(par)/2)
+    gamma = new_par[:middle]
+    beta = new_par[middle:]
+
+    print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
+
+    num_nodes = G.number_of_nodes()
+
+    # Dictionary for keeping the results of the simulation
+    counts = {}
+    # run on local simulator
+    result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
+    for i in result.get_states():
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        counts[binary] = int(2**20*result.probability(i))
+
+    # Evaluate the data from the simulator
+    avr_C       = 0
+    min_C       = [0, np.inf]
+
+    for sample in list(counts.keys()):
+        if counts[sample] > 0:
+            # use sampled bit string x to compute f(x)
+            x       = [int(num) for num in list(sample)]
+            tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
+
+            # compute the expectation value and energy distribution
+            avr_C     = avr_C    + counts[sample]*tmp_eng
+
+            # save best bit string
+            if( min_C[1] > tmp_eng):
+                min_C[0] = sample
+                min_C[1] = tmp_eng
+
+    expectation_value = avr_C/sum(counts.values())
+
+    return expectation_value
+
+def minimization_process_first(p, G, num_colors, school, students_list):
+    data = []
+    
+    # Initializing QAOA Parameters 
+    gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
+    beta0 = random.uniform(0, np.pi)
+    beta  = [random.uniform(0, np.pi) for _ in range(p)]
+
+    # Packing and Sending to minimize
+    qaoa_par = [beta0]+gamma+beta
+    qaoa_args = p, G, num_colors, students_list
+    print("\nMinimizing function\n")
+    res = minimize(qaoa_first, qaoa_par, args=qaoa_args, method='Nelder-Mead',
+            options={'maxiter': 300, 'disp': True, 'adaptive':True})
+    print(res)
+
+    data.append([res['fun'], p, res['x']])
+    save_csv(data, "results/"+school+"p"+str(p)+".csv" )
+
+def first_example():
+    # Problem variables
+    num_weeks = 1
+    num_days = 1 #5
+    num_periods = 6
+    num_timeslots = num_days*num_periods
+
+    # Each subject has only one teacher
+    # Each teacher teaches only one subject
+    num_subjects = 3
+    num_teachers = num_subjects
+    num_students = 2
+    num_rooms = 3
+
+    # Number of features in a room
+    # Ex.: has computers, has >40 chairs...
+    num_features = 2
+
+    teachers_list = [teacher for teacher in range(num_teachers)]
+    students_list = [student for student in range(num_students)]
+
+    #roomFeatures = np.matrix([[0 for feature in range(num_rooms)] for event in range(num_features)])
+    roomFeatures = np.matrix([[0, 1, 1],
+                             [1, 0, 0]])
+    #subjectFeatures = np.matrix([[0 for feature in range(num_features)] for event in range(num_subjects)])
+    subjectFeatures = np.matrix([[1, 0],
+                                [1, 0],
+                                [0, 1]])
+    suitableRoom = subjectFeatures*roomFeatures
+
+    # Allocate rooms
+    # Each subject will be allocated to the least busy room
+    allocations = []
+    num_allocations = [0 for room in range(num_rooms)]
+
+    for subject_index, subject in enumerate(suitableRoom.tolist()):
+        possible_allocations = []
+        for index, room in enumerate(subject):
+            if room == 1:
+                possible_allocations.append(index)
+        print("Subject", subject_index)
+        print("Possible Allocations", possible_allocations)
+
+        min_allocations = np.inf
+        allocated_room = np.inf
+        for alloc_index in possible_allocations:
+            if num_allocations[alloc_index] < min_allocations:
+                allocated_room = alloc_index
+                min_allocations = num_allocations[allocated_room]
+        allocations.append((subject_index, allocated_room))
+        num_allocations[allocated_room] += 1
+
+    print("\nNumber of Allocations for each Room", num_allocations)
+    print("Allocations", allocations)
+
+    # Pair subjects with students
+    # lecture = (subject, room, student)
+    lectures = [(j,k,l) for j,k in allocations for l in students_list]
+
+    # Generate the lectureConflict Matrix
+    # The hard constraints of the problem are included in the matrix
+    lectureConflict = [[0 for feature in range(len(lectures))] for event in range(len(lectures))]
+
+    # If two lectures are allocated to the same room,
+    # share a student or have the same teacher they
+    # cannot be assigned to the same timeslot
+    for e, j in enumerate(lectures):
+        subject,room,student = j
+        for f,a in enumerate(lectures[e+1:]):
+            subject2,room2,student2 = a
+            if subject == subject2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+            if student == student2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+            if room == room2:
+                lectureConflict[e][e+1+f] = 1
+                lectureConflict[e+1+f][e] = 1
+
+    G = create_graphv2(lectures, lectureConflict)
+
+    return G, students_list
+
 def minimal_example():
     nodes = [('Event1', {'color': None}),
              ('Event2', {'color': None}),
              ('Event3', {'color': None}),
              ('Event4', {'color': None}),
              ('Event5', {'color': None}),
+             ('Event6', {'color': None}),
+             ('Event7', {'color': None}),
     ]
     edges = [('Event1', 'Event2'),
              ('Event1', 'Event3'),
@@ -732,12 +935,40 @@ def minimal_example():
              ('Event2', 'Event5'),
              ('Event3', 'Event4'),
              ('Event3', 'Event5'),
-             ('Event4', 'Event5')]
+             ('Event4', 'Event5'),
+             ('Event1', 'Event6'),
+             ('Event2', 'Event6'),
+             ('Event3', 'Event6'),
+             ('Event4', 'Event6'),
+             ('Event5', 'Event6'),
+             ('Event1', 'Event7'),
+             ('Event2', 'Event7'),
+             ('Event3', 'Event7'),
+             ('Event4', 'Event7'),
+             ('Event5', 'Event7')
+    ]
+
     G = nx.Graph()
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
 
     return G
+
+def initial_cost_function_min(G):
+    C = 0
+    
+    if G.nodes["Event1"]['color'] != 1:
+        C += 1
+    if G.nodes["Event2"]['color'] != 2:
+        C += 1
+    if G.nodes["Event3"]['color'] != 3:
+        C += 1
+    if G.nodes["Event4"]['color'] != 4:
+        C += 1
+    if G.nodes["Event5"]['color'] != 0:
+        C += 1
+    
+    return C
 
 def cost_function_min(x, G, num_colors):
     coloring = []
@@ -770,12 +1001,14 @@ def main():
     events = parseXML('dataset/den-smallschool.xml')
     #events = parseXML('dataset/bra-instance01.xml')
 
-    school = "Den"
+    #school = "Den"
     #school = "Bra"
     #school = "Min"
+    school = "CEC"
 
-    G = create_graph(events)
+    #G = create_graph(events)
     #G = minimal_example()
+    G, students_list = first_example()
 
     # --------------------------
     #  Preparing Conflict Graph
@@ -804,17 +1037,21 @@ def main():
     #    G.nodes[key]['color'] = value
 
     #num_colors = pair[1] #Denmark colors
-    num_colors = 5 #Denmark colors
+    num_colors = 6 #First example colors
+    #num_colors = 7 #Denmark colors
     #num_colors = 25 #Brazil colors
     print("\nNumber of colors", num_colors)
     
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
-    color_graph_num(G, num_colors)
+    #color_graph_num(G, num_colors)
 
     # Minimal example Coloring
     #color_graph_coloring(G, [0,1,2,3,4])
+    
+    # First example Coloring
+    color_graph_coloring(G, [0,3,1,4,2,5])
 
     # Verifying Graph consistency
     #----------------------------
@@ -832,10 +1069,12 @@ def main():
     # -------------- 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
-    initial_function_value = initial_cost_function_den_25pts(G)
-    print("\nInitial Function Value Max 25:", initial_function_value)
-    initial_function_value = initial_cost_function_den_4pts(G)
-    print("\nInitial Function Value Max 4:", initial_function_value)
+    #initial_function_value = initial_cost_function_den_25pts(G)
+    #print("\nInitial Function Value Max 25:", initial_function_value)
+    #initial_function_value = initial_cost_function_den_4pts(G)
+    #print("\nInitial Function Value Max 4:", initial_function_value)
+    #initial_function_value = initial_cost_function_min(G)
+    #print("\nInitial Function Value Max 5:", initial_function_value)
 
     # -------------
     # Starting QAOA
@@ -847,15 +1086,20 @@ def main():
     # QAOA parameter
     p = 1
 
+    # Minimizing Example CEC
+    print("Running minimization process")
+    for iteration in progressbar.progressbar(range(1)):
+        minimization_process_first(p, G, num_colors, school, students_list)
+    
     # Minimizing Denmark 4pts
-    print("Running minimization process for 4 points")
-    for iteration in progressbar.progressbar(range(5)):
-        minimization_process_4pts(p, G, num_colors, school)
+    #print("Running minimization process for 4 points")
+    #for iteration in progressbar.progressbar(range(1)):
+    #    minimization_process_4pts(p, G, num_colors, school)
 
     # Minimizing Denmark 25pts
-    print("Running minimization process for 25 points")
-    for iteration in progressbar.progressbar(range(5)):
-        minimization_process_25pts(p, G, num_colors, school)
+    #print("Running minimization process for 25 points")
+    #for iteration in progressbar.progressbar(range(5)):
+    #    minimization_process_25pts(p, G, num_colors, school)
 
 if __name__ == '__main__':
     main()
