@@ -19,8 +19,7 @@ import matplotlib.pyplot as plt
 import random
 from scipy.optimize import minimize
 from ket import *
-from ket.lib import swap, within
-from ket.gates.more import u3
+from ket.lib import swap
 
 # Compute the value of the cost function
 def cost_function_timetable(x, G, num_colors, list_students):
@@ -996,16 +995,19 @@ def cost_function_min(x, G, num_colors):
 def main():
     print("Starting program\n")
 
+    # --------------------------
     # School Instances
-    # Parse XML file
-    events = parseXML('dataset/den-smallschool.xml')
-    #events = parseXML('dataset/bra-instance01.xml')
-
+    # --------------------------
+ 
     #school = "Den"
     #school = "Bra"
     #school = "Min"
     school = "CEC"
 
+    # Parse XML file
+    #events = parseXML('dataset/den-smallschool.xml')
+    #events = parseXML('dataset/bra-instance01.xml')
+ 
     #G = create_graph(events)
     #G = minimal_example()
     G, students_list = first_example()
@@ -1036,12 +1038,12 @@ def main():
     #for key, value in pair[0].items(): 
     #    G.nodes[key]['color'] = value
 
-    #num_colors = pair[1] #Denmark colors
-    num_colors = 6 #First example colors
-    #num_colors = 7 #Denmark colors
-    #num_colors = 25 #Brazil colors
+    #num_colors = pair[1] # Greed coloring colors
+    num_colors = 6        # CEC example colors
+    #num_colors = 7       # Denmark colors
+    #num_colors = 25      # Brazil colors
     print("\nNumber of colors", num_colors)
-    
+
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
@@ -1049,7 +1051,6 @@ def main():
 
     # Minimal example Coloring
     #color_graph_coloring(G, [0,1,2,3,4])
-    
     # First example Coloring
     color_graph_coloring(G, [0,3,1,4,2,5])
 
@@ -1080,7 +1081,8 @@ def main():
     # Starting QAOA
     # ------------- 
     print("Running QAOA")
-    number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
+    num_nodes = G.number_of_nodes()
+    number_of_qubits = num_nodes*num_colors+num_nodes
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter

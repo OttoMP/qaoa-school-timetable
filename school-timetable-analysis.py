@@ -8,7 +8,6 @@ import networkx as nx
 from xml_parser import parseXML
 from itertools import combinations
 import pprint as pp
-import progressbar
 from binarytree import build
 
 # We import plotting tools
@@ -19,9 +18,7 @@ import matplotlib.pyplot as plt
 import random
 from scipy.optimize import minimize
 from ket import *
-from ket.plugins import matrix
-from ket.lib import swap, within
-from ket.gates.more import u3
+from ket.lib import swap
 
 def cost_function_timetable(x, G, num_colors, list_students):
 
@@ -798,16 +795,15 @@ def main():
     print()
     
     print("Min Expected Value")
-    print(2.611631631210287)
     #print(min_expected_value)
     
     #beta0 = float(min_qaoa_par.pop(0))
-    beta0 = 2.44659719
+    beta0 = 1.72702
     #middle = int(len(min_qaoa_par)/2)
     #gamma = [float(par) for par in min_qaoa_par[:middle]]
-    gamma = [3.39951541]
+    gamma = [0.83095731]
     #beta  = [float(par) for par in min_qaoa_par[middle:]]
-    beta = [2.53164603]
+    beta = [1.43513672]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -847,10 +843,10 @@ def main():
     #for key, value in pair[0].items(): 
     #    G.nodes[key]['color'] = value
     
-    #num_colors = pair[1] #Denmark colors
-    num_colors = 6 #CEC example colors
-    #num_colors = 7 #Denmark colors
-    #num_colors = 25 #Brazil colors
+    #num_colors = pair[1] # Greed coloring colors
+    num_colors = 6        # CEC example colors
+    #num_colors = 7       # Denmark colors
+    #num_colors = 25      # Brazil colors
     print("\nNumber of colors", num_colors)
     
     # If a suitable coloring can be found without the greedy method use
@@ -875,7 +871,6 @@ def main():
     #nx.draw(G, with_labels=True, font_weight='bold')
     #plt.show()
 
-
     # Initial Values
     # -------------- 
     coloring = [G.nodes[node]['color'] for node in G.nodes]
@@ -888,10 +883,10 @@ def main():
     # Starting QAOA
     # ------------- 
     print("\nRunning QAOA")
-    number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
+    num_nodes = G.number_of_nodes()
+    number_of_qubits = num_nodes*num_colors+num_nodes
     print("Necessary number of qubits: ", number_of_qubits)
     
-    num_nodes = G.number_of_nodes()
     # Dictionary for keeping the results of the simulation
     counts = {}
     # run on local simulator
@@ -908,7 +903,7 @@ def main():
         counts[binary] = prob
  
     print("Number of States", len(counts))
-    pp.pprint(counts)
+    #pp.pprint(counts)
 
     print("==Result==")
 
@@ -921,18 +916,18 @@ def main():
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
             x         = [int(num) for num in list(sample)]
-            #tmp_eng = cost_function_den(x, G, num_colors)
-            #tmp_eng = cost_function_min(x, G, num_colors)
-            tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
+            #fx = cost_function_den(x, G, num_colors)
+            #fx = cost_function_min(x, G, num_colors)
+            fx = cost_function_timetable(x, G, num_colors, students_list)
 
             # compute the expectation value and energy distribution
-            avr_C     = avr_C    + counts[sample]*tmp_eng
-            hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + counts[sample]
+            avr_C     = avr_C    + counts[sample]*fx
+            hist[str(round(fx))] = hist.get(str(round(fx)),0) + counts[sample]
 
             # save best bit string
-            if( min_C[1] > tmp_eng):
+            if( min_C[1] > fx):
                 min_C[0] = sample
-                min_C[1] = tmp_eng
+                min_C[1] = fx
 
     print('\n --- SIMULATION RESULTS ---')
     print(' --- Function Distribution  ---\n')
@@ -956,13 +951,13 @@ def main():
     for sample in list(analysis.keys()):
         # use sampled bit string x to compute f(x)
         x         = [int(num) for num in list(sample)]
-        #tmp_eng = cost_function_den(x, G, num_colors)
-        #tmp_eng = cost_function_min(x, G, num_colors)
-        tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
+        #fx = cost_function_den(x, G, num_colors)
+        #fx = cost_function_min(x, G, num_colors)
+        fx = cost_function_timetable(x, G, num_colors, students_list)
 
         # compute the expectation value and energy distribution
-        avr_C     = avr_C    + analysis[sample]*tmp_eng
-        hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + analysis[sample]
+        avr_C     = avr_C    + analysis[sample]*fx
+        hist[str(round(fx))] = hist.get(str(round(fx)),0) + analysis[sample]
 
     
     print("\nTotal Number of Measurements", measurement_number)
@@ -998,19 +993,20 @@ def main():
     print("Most commom result found: ", max_counts)
     print("Number of times result showed: ", counts[max_counts])
     print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
-    #max_value = cost_function_den(x, G, num_colors)
-    max_value = cost_function_min(x, G, num_colors)
-    print("Objective function value: ", max_value)
+    #common_value = cost_function_den(max_counts, G, num_colors)
+    #common_value = cost_function_min(max_counts, G, num_colors)
+    common_value = cost_function_timetable(max_counts, G, num_colors, students_list)
+    print("Objective function value: ", common_value)
 
     list_qubits = max_counts
-    maximum_coloring = []
+    common_coloring = []
     for i in range(len(G)):
         for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
             if int(char):
                 # color = pos
-                maximum_coloring.append(pos)
+                common_coloring.append(pos)
 
-    print("\nMost Common Coloring",maximum_coloring)
+    print("\nMost Common Coloring",common_coloring)
     #print("\nMost Common Coloring Qudits values")
     #for i in range(len(G)):
     #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])

@@ -374,7 +374,7 @@ def qaoa_first(par, p, G, num_colors, students_list):
     gamma = new_par[:middle]
     beta = new_par[middle:]
 
-    print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
+    #print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
 
     num_nodes = G.number_of_nodes()
 
@@ -426,22 +426,25 @@ def minimization_process_first(p, G, num_colors, school, students_list):
     qaoa_par = [beta0]+gamma+beta
     qaoa_args = p, G, num_colors, students_list
     print("\nMinimizing function\n")
-    print(lower_bounds)
-    print(upper_bounds)
     opts = {'maxiter': 2,'bounds' : [lower_bounds, upper_bounds], } # 'maxfevals': 300}
     sigma0 = 1
     #es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     #es.optimize(qaoa_first, args=qaoa_args)
     #res = es.result
 
-    res = cma.fmin(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
-    print("Optimal Result", res[0])
-    print("Respective Function Value", res[1])
-    print("Respective Function Evaluations", res[2])
-    print("Overall Function Evaluations", res[3])
-    print("Overall Iterations", res[4])
-    print("Mean Result", res[5])
-    print("Standard Deviation Final Sample", res[6])
+    #res = cma.fmin(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
+    xopt, es = cma.fmin2(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
+    print("-------------------------------")
+    print("X Optimal", xopt)
+    #print("Optimal Result", res[0])
+    #print("Respective Function Value", res[1])
+    #print("Respective Function Evaluations", res[2])
+    #print("Overall Function Evaluations", res[3])
+    #print("Overall Iterations", res[4])
+    #print("Mean Result", res[5])
+    #print("Standard Deviation Final Sample", res[6])
+
+    cma.plot()
 
 def first_example():
     # Problem variables
