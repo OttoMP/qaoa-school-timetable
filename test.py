@@ -13,13 +13,11 @@ import random
 import cma
 from scipy.optimize import minimize
 from ket import *
-from ket.lib import swap, within
-from ket.gates.more import u3
+from ket.lib import swap
 
 # We import plotting tools
 import pandas as pd
 import matplotlib.pyplot as plt
-from qiskit.visualization import plot_histogram
 
 def create_graphv1(events):
     G = nx.Graph()
@@ -227,10 +225,10 @@ def partial_mixer(qc, neighbour, ancilla, target, beta):
                 ctrl(neighbour, X, ancilla)
 
     with around(outer):
-        with around([H, ctrl(0, X, target=1)], target):
+        with around([H, ctrl(0, X, 1)], target):
             ctrl(ancilla, RZ, 2*beta, target[1])
         
-        with around([RX(-np.pi/2), ctrl(0, X, target=1)], target):
+        with around([RX(-np.pi/2), ctrl(0, X, 1)], target):
             ctrl(ancilla, RZ, 2*beta, target[1])
 
 def neighbourhood(G, num_colors, node, color, list_nodes):
@@ -384,7 +382,7 @@ def qaoa_first(par, p, G, num_colors, students_list):
     result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
-        counts[binary] = int(2**20*result.probability(i))
+        counts[binary] = int((2**20)*result.probability(i))
 
     # Evaluate the data from the simulator
     avr_C       = 0
@@ -426,23 +424,24 @@ def minimization_process_first(p, G, num_colors, school, students_list):
     qaoa_par = [beta0]+gamma+beta
     qaoa_args = p, G, num_colors, students_list
     print("\nMinimizing function\n")
-    opts = {'maxiter': 2,'bounds' : [lower_bounds, upper_bounds], } # 'maxfevals': 300}
-    sigma0 = 1
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 2, } #'maxfevals': 300}
+
+    sigma0 = 2
     #es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     #es.optimize(qaoa_first, args=qaoa_args)
     #res = es.result
 
-    #res = cma.fmin(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
-    xopt, es = cma.fmin2(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
+    res = cma.fmin(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
+    #xopt, es = cma.fmin2(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
     print("-------------------------------")
-    print("X Optimal", xopt)
-    #print("Optimal Result", res[0])
-    #print("Respective Function Value", res[1])
-    #print("Respective Function Evaluations", res[2])
-    #print("Overall Function Evaluations", res[3])
-    #print("Overall Iterations", res[4])
-    #print("Mean Result", res[5])
-    #print("Standard Deviation Final Sample", res[6])
+    #print("X Optimal", xopt)
+    print("Optimal Result", res[0])
+    print("Respective Function Value", res[1])
+    print("Respective Function Evaluations", res[2])
+    print("Overall Function Evaluations", res[3])
+    print("Overall Iterations", res[4])
+    print("Mean Result", res[5])
+    print("Standard Deviation Final Sample", res[6])
 
     cma.plot()
 

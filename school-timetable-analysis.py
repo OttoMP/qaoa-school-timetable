@@ -798,12 +798,12 @@ def main():
     #print(min_expected_value)
     
     #beta0 = float(min_qaoa_par.pop(0))
-    beta0 = 1.72702
+    beta0 = 0.56589682
     #middle = int(len(min_qaoa_par)/2)
     #gamma = [float(par) for par in min_qaoa_par[:middle]]
-    gamma = [0.83095731]
+    gamma = [3.71214212]
     #beta  = [float(par) for par in min_qaoa_par[middle:]]
-    beta = [1.43513672]
+    beta = [2.50417844]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -909,7 +909,7 @@ def main():
 
     # Evaluate the data from the simulator
     avr_C       = 0
-    min_C       = [0, 9999]
+    min_C       = [0, np.inf]
     hist        = {}
 
     for sample in list(counts.keys()):
