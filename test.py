@@ -1,5 +1,11 @@
-# We import the tools to handle general Graphs
+# Import tools for running QAOA
+import random
+import cma
+from ket import *
 import networkx as nx
+from ket.lib import swap
+
+# We import the tools to handle general Graphs
 
 import numpy as np
 import pprint as pp
@@ -7,13 +13,6 @@ import pprint as pp
 # Import miscellaneous tools
 from xml_parser import parseXML
 from itertools import combinations
-
-# Import tools for running QAOA
-import random
-import cma
-from scipy.optimize import minimize
-from ket import *
-from ket.lib import swap
 
 # We import plotting tools
 import pandas as pd
@@ -425,13 +424,26 @@ def minimization_process_first(p, G, num_colors, school, students_list):
     qaoa_args = p, G, num_colors, students_list
     print("\nMinimizing function\n")
     opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 2, } #'maxfevals': 300}
-
     sigma0 = 2
-    #es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
+    
+    es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
+    while not es.stop():
+        solutions = es.ask()
+        es.tell(solutions, [qaoa_first(s, p, G, num_colors, students_list) for s in solutions])
+        res = es.result
+        print("Optimal Result", res[0])
+        print("Respective Function Value", res[1])
+        print("Respective Function Evaluations", res[2])
+        print("Overall Function Evaluations", res[3])
+        print("Overall Iterations", res[4])
+        print("Mean Result", res[5])
+        print("Standard Deviation Final Sample", res[6])
+        es.disp()
+    es.result_pretty()
     #es.optimize(qaoa_first, args=qaoa_args)
-    #res = es.result
+    res = es.result
 
-    res = cma.fmin(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
+    #res = cma.fmin(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
     #xopt, es = cma.fmin2(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
     print("-------------------------------")
     #print("X Optimal", xopt)
@@ -443,7 +455,7 @@ def minimization_process_first(p, G, num_colors, school, students_list):
     print("Mean Result", res[5])
     print("Standard Deviation Final Sample", res[6])
 
-    cma.plot()
+    #cma.plot()
 
 def first_example():
     # Problem variables
