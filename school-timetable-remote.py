@@ -1,3 +1,10 @@
+# Import tools for running QAOA
+import random
+import cma
+from scipy.optimize import minimize
+from ket import *
+from ket.lib import swap
+
 #import math tools
 import numpy as np
 
@@ -8,18 +15,11 @@ import networkx as nx
 from xml_parser import parseXML
 from itertools import combinations
 import pprint as pp
-import progressbar
 from binarytree import build
 
 # We import plotting tools
 import pandas as pd
 import matplotlib.pyplot as plt
-
-# Import tools for running QAOA
-import random
-from scipy.optimize import minimize
-from ket import *
-from ket.lib import swap
 
 # Compute the value of the cost function
 def cost_function_timetable(x, G, num_colors, list_students):
@@ -779,7 +779,7 @@ def qaoa_first(par, p, G, num_colors, students_list):
     gamma = new_par[:middle]
     beta = new_par[middle:]
 
-    print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
+    #print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
 
     num_nodes = G.number_of_nodes()
 
@@ -814,23 +814,43 @@ def qaoa_first(par, p, G, num_colors, students_list):
     return expectation_value
 
 def minimization_process_first(p, G, num_colors, school, students_list):
-    data = []
-    
     # Initializing QAOA Parameters 
     gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
     beta0 = random.uniform(0, np.pi)
     beta  = [random.uniform(0, np.pi) for _ in range(p)]
 
+    lower_bounds = [0] * ((2*p)+1)
+    upper_bounds_beta0 = [np.pi]
+    upper_bounds_gamma = [2*np.pi]*p
+    upper_bounds_beta  = [np.pi]*p
+    upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
+
     # Packing and Sending to minimize
     qaoa_par = [beta0]+gamma+beta
     qaoa_args = p, G, num_colors, students_list
     print("\nMinimizing function\n")
-    res = minimize(qaoa_first, qaoa_par, args=qaoa_args, method='Nelder-Mead',
-            options={'maxiter': 300, 'disp': True, 'adaptive':True})
-    print(res)
-
-    data.append([res['fun'], p, res['x']])
-    save_csv(data, "results/"+school+"p"+str(p)+".csv" )
+    opts = {'bounds' : [lower_bounds, upper_bounds]}#, 'maxiter': 2, } #'maxfevals': 300}
+    sigma0 = 2
+    
+    es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
+    while not es.stop():
+        solutions = es.ask()
+        es.tell(solutions, [qaoa_first(s, p, G, num_colors, students_list) for s in solutions])
+        res = es.result
+        print("Saving Results")
+        save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
+        #es.disp()
+    print("---------------------------")
+    es.result_pretty()
+    res = es.result
+    print("---------------------------")
+    print("Optimal Result", res[0])
+    print("Respective Function Value", res[1])
+    print("Respective Function Evaluations", res[2])
+    print("Overall Function Evaluations", res[3])
+    print("Overall Iterations", res[4])
+    print("Mean Result", res[5])
+    print("Standard Deviation Final Sample", res[6])
 
 def first_example():
     # Problem variables
@@ -1090,18 +1110,15 @@ def main():
 
     # Minimizing Example CEC
     print("Running minimization process")
-    for iteration in progressbar.progressbar(range(1)):
-        minimization_process_first(p, G, num_colors, school, students_list)
+    minimization_process_first(p, G, num_colors, school, students_list)
     
     # Minimizing Denmark 4pts
     #print("Running minimization process for 4 points")
-    #for iteration in progressbar.progressbar(range(1)):
-    #    minimization_process_4pts(p, G, num_colors, school)
+    #minimization_process_4pts(p, G, num_colors, school)
 
     # Minimizing Denmark 25pts
     #print("Running minimization process for 25 points")
-    #for iteration in progressbar.progressbar(range(5)):
-    #    minimization_process_25pts(p, G, num_colors, school)
+    #minimization_process_25pts(p, G, num_colors, school)
 
 if __name__ == '__main__':
     main()
