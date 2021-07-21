@@ -240,8 +240,8 @@ def minimization_process(p, G, num_colors, school, students_list):
     upper_bounds_gamma = [2*np.pi]*p
     upper_bounds_beta  = [np.pi]*p
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 2, } #'maxfevals': 300}
-    sigma0 = 2
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
+    sigma0 = 1
     
     es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     while not es.stop():
@@ -378,11 +378,6 @@ def main():
     # School Instances
     # --------------------------
     school = "CEC"
-
-    # --------------------------
-    # Parse XML file
-    # --------------------------
-    #events = parseXML('dataset/den-smallschool.xml')
 
     # --------------------------
     #  Preparing Conflict Graph
