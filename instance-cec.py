@@ -19,16 +19,7 @@ def save_csv(data, nome_csv):
 
     return
 
-def cost_function_timetable(x, G, num_colors, list_students):
-
-    coloring = []
-    for i in range(len(G)):
-        for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
-            if int(char):
-                coloring.append(pos)
-
-    color_graph_from_coloring(G, coloring)
-
+def cost_function_timetable(G, num_colors, list_students):
     C = 0
     lectures = G.nodes
     for student in list_students:
@@ -196,7 +187,16 @@ def qaoa(par, p, G, num_colors, students_list):
         if counts[sample] > 0:
             # use sampled bit string x to compute f(x)
             x       = [int(num) for num in list(sample)]
-            fx = cost_function_timetable(x, G, num_colors, students_list)
+
+            coloring = []
+            for i in range(len(G)):
+                for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+                    if int(char):
+                        coloring.append(pos)
+
+            color_graph_from_coloring(G, coloring)
+
+            fx = cost_function_timetable(G, num_colors, students_list)
 
             # compute the expectation value and energy distribution
             avr_function_value = avr_function_value + counts[sample]*fx

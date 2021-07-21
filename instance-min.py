@@ -341,30 +341,6 @@ def color_graph_from_num(graph, num_color):
 
     return
 
-def create_graph_from_events(events):
-    G = nx.Graph()
-    G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
-
-    comb = combinations(events, 2)
-    for i in comb:
-        res0 = set(i[0]['Resources'])
-        res1 = i[1]['Resources']
-        intersection = [value for value in res0 if value in res1]
-        if intersection:
-            G.add_edge(i[0]['Id'], i[1]['Id'])
-    return G
-
-def create_graph_from_list(nodes, edges):
-    G = nx.Graph()
-    G.add_nodes_from([(tuple, {'color' : None}) for tuple in nodes])
-
-    for e, row in enumerate(edges):
-        for f, column in enumerate(row):
-            if column == 1:
-               G.add_edge(nodes[e],nodes[f])
-
-    return G
-
 def minimal_example():
     nodes = [('Event1', {'color': None}),
              ('Event2', {'color': None}),
