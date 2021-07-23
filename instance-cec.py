@@ -144,7 +144,7 @@ def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
-def qaoa(par, p, G, num_colors, students_list):
+def qaoa(par, p, initial_G, num_colors, students_list):
     # --------------------------
     # Unpacking QAOA parameters
     # --------------------------
@@ -153,7 +153,7 @@ def qaoa(par, p, G, num_colors, students_list):
     middle = int(len(par)/2)
     gamma = new_par[:middle]
     beta = new_par[middle:]
-    num_nodes = G.number_of_nodes()
+    num_nodes = initial_G.number_of_nodes()
 
     # --------------------------
     # Verifying Parameters
@@ -163,8 +163,13 @@ def qaoa(par, p, G, num_colors, students_list):
     # --------------------------
     # Running QAOA on simulator
     # --------------------------
-    # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta)
+    G = nx.Graph()
+    G.add_nodes_from(initial_G)
+    G.add_edges_from(initial_G.edges)
+    initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+    color_graph_from_coloring(G, initial_coloring)
+    
+    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
 
     #print("Number of States", len(result.get_states()))
     #print("State Vector", result.show('b6:b6:b6:b6:b6:b6'))
@@ -182,6 +187,7 @@ def qaoa(par, p, G, num_colors, students_list):
     # --------------------------
     avr_function_value = 0
     min_function_value = [0, np.inf]
+    hist        = {}
 
     for sample in list(counts.keys()):
         if counts[sample] > 0:
@@ -200,6 +206,7 @@ def qaoa(par, p, G, num_colors, students_list):
 
             # compute the expectation value and energy distribution
             avr_function_value = avr_function_value + counts[sample]*fx
+            hist[str(round(fx))] = hist.get(str(round(fx)),0) + counts[sample]
 
             # save best bit string
             if( min_function_value[1] > fx):
@@ -208,6 +215,9 @@ def qaoa(par, p, G, num_colors, students_list):
 
     expectation_value = avr_function_value/sum(counts.values())
 
+    #pp.pprint(hist)
+    #print("Expectation value", expectation_value)
+    #print("---")
     return expectation_value
 
 def minimization_process(p, G, num_colors, school, students_list):
@@ -240,14 +250,16 @@ def minimization_process(p, G, num_colors, school, students_list):
     upper_bounds_gamma = [2*np.pi]*p
     upper_bounds_beta  = [np.pi]*p
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
     sigma0 = 1
     
     es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     while not es.stop():
         solutions = es.ask()
         #print("Solutions", solutions)
-        es.tell(solutions, [qaoa(s, p, G, num_colors, students_list) for s in solutions])
+        solutions = [[2.63574875,1.45662914,0.37091666], [0.58190073,1.49797252,0.83586777], [0.91654425,4.97392364,0.93827827], [0.0114341, 0.11804643,1.62091289], [1.79148574,0.39528664,3.12463608], [2.09910703,3.55717639,2.71926089], [2.59870167,0.70084449,2.51127752]]
+        function_values = [qaoa(s, p, G, num_colors, students_list) for s in solutions]
+        es.tell(solutions, function_values)
         res = es.result
         #print("Saving Results")
         save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
@@ -431,6 +443,6 @@ def main():
     # Minimizing Example CEC
     print("Running minimization process")
     minimization_process(p, G, num_colors, school, students_list)
-
+    
 if __name__ == '__main__':
     main()

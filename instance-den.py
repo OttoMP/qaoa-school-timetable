@@ -188,7 +188,7 @@ def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
-def qaoa(par, p, G, num_colors):
+def qaoa(par, p, initial_G, num_colors):
     # --------------------------
     # Unpacking QAOA parameters
     # --------------------------
@@ -197,7 +197,7 @@ def qaoa(par, p, G, num_colors):
     middle = int(len(par)/2)
     gamma = new_par[:middle]
     beta = new_par[middle:]
-    num_nodes = G.number_of_nodes()
+    num_nodes = initial_G.number_of_nodes()
 
     # --------------------------
     # Verifying Parameters
@@ -207,8 +207,13 @@ def qaoa(par, p, G, num_colors):
     # --------------------------
     # Running QAOA on simulator
     # --------------------------
-    # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta)
+    G = nx.Graph()
+    G.add_nodes_from(initial_G)
+    G.add_edges_from(initial_G.edges)
+    initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+    color_graph_from_coloring(G, initial_coloring)
+    
+    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
 
     #print("Number of States", len(result.get_states()))
     #print("State Vector", result.show('b6:b6:b6:b6:b6:b6'))

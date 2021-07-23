@@ -62,7 +62,6 @@ def mixer(qc, G, beta, num_nodes, num_colors):
                             beta)
 
 def phase_separator(qc, gamma, num_nodes, num_colors):
-    #qubits2color(qc, num_nodes, num_colors)
     for node in range(num_colors*num_nodes):
         X(qc[node])
     for k in range(num_colors):
@@ -74,7 +73,6 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
         ctrl(control, RZ, 2*gamma, target)
     for node in range(num_colors*num_nodes):
         X(qc[node])
-    #color2qubits(qc, num_nodes, num_colors)
 
 def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
     # --------------------------
@@ -492,24 +490,24 @@ def main():
     # QAOA parameter
     p = 1
 
-    school = "Den"
+    #school = "Den"
     #school = "Min"
-    #school = "CEC"
+    school = "CEC"
     print("Analysing instance: ", school)
 
     if school == "CEC":
         # --------------------------
         #  Preparing Conflict Graph
         # --------------------------
-        G, students_list = first_example()
+        initial_G, students_list = first_example()
         
         # --------------------------
         #  Coloring Conflict Graph
         # --------------------------
-        color_graph_from_coloring(G, [0,3,1,4,2,5])
-        initial_coloring = [G.nodes[node]['color'] for node in G.nodes]
+        color_graph_from_coloring(initial_G, [0,3,1,4,2,5])
+        initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
         num_colors = len(set(initial_coloring))
-        initial_function_value = cost_function_timetable(G, num_colors, students_list)
+        initial_function_value = cost_function_timetable(initial_G, num_colors, students_list)
         print("\nInitial Function Value", initial_function_value)
     elif school == "Den":
         # --------------------------
@@ -520,7 +518,7 @@ def main():
         # --------------------------
         #  Preparing Conflict Graph
         # --------------------------
-        G = create_graph_from_events(events)
+        initial_G = create_graph_from_events(events)
         # --------------------------
         #  Coloring Conflict Graph
         # --------------------------
@@ -528,37 +526,37 @@ def main():
         # Greedy coloring to be used in cases where a trivial coloring cannot be
         # found
         # -----------------------------------------------------------------
-        #color_graph_greedy(G)
+        #color_graph_greedy(initial_G)
         
         # If a suitable coloring can be found without the greedy method use
         # the color_graph_num method
         # -----------------------------------------------------------------
         num_colors = 5 # Denmark colors
-        color_graph_from_num(G, num_colors)
-        initial_coloring = [G.nodes[node]['color'] for node in G.nodes]
+        color_graph_from_num(initial_G, num_colors)
+        initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
         
-        #initial_function_value = cost_function_den_25pts(G)
-        initial_function_value = cost_function_den_4pts(G)
+        #initial_function_value = cost_function_den_25pts(initial_G)
+        initial_function_value = cost_function_den_4pts(initial_G)
         print("\nInitial Function Value", initial_function_value)
     elif school == "Min":
         # --------------------------
         #  Preparing Conflict Graph
         # --------------------------
-        G = minimal_example()
+        initial_G = minimal_example()
         # --------------------------
         #  Coloring Conflict Graph
         # --------------------------
         # Minimal example Coloring
-        color_graph_from_coloring(G, [0,1,2,3,4,5,6])
-        initial_coloring = [G.nodes[node]['color'] for node in G.nodes]
+        color_graph_from_coloring(initial_G, [0,1,2,3,4,5,6])
+        initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
         
-        initial_function_value = cost_function_min(G)
+        initial_function_value = cost_function_min(initial_G)
         print("\nInitial Function Value Max 5:", initial_function_value)
     
     print("--------------------------")
     print("Graph information\n")
-    print("Nodes = ", G.nodes)
-    degree = [deg for (node, deg) in G.degree()]
+    print("Nodes = ", initial_G.nodes)
+    degree = [deg for (node, deg) in initial_G.degree()]
     print("\nDegree of each node", degree)
     num_colors = len(set(initial_coloring))
     print("\nNumber of colors", num_colors)
@@ -569,9 +567,9 @@ def main():
     #---------------------------
     print("----------------------------")
     print("Verifying Graph consistency")
-    for e,i in enumerate(G.nodes):
-        print("\nNode",e,"Color", G.nodes[i]['color'])
-        color_and_neighbour = [(neighbour, G.nodes[neighbour]['color']) for neighbour in G[i]]
+    for e,i in enumerate(initial_G.nodes):
+        print("\nNode",e,"Color", initial_G.nodes[i]['color'])
+        color_and_neighbour = [(neighbour, initial_G.nodes[neighbour]['color']) for neighbour in initial_G[i]]
         print("Neighbours | Color")
         for pair in color_and_neighbour:
             print(pair)
@@ -597,15 +595,16 @@ def main():
     #print("Beta0|Gamma|Beta")
     #pp.pprint(qaoa_par_list)
     
-    print("\nMin Expected Value: ", min_expected_value)
+    #print("\nMin Expected Value: ", min_expected_value)
+    print("\nMin Expected Value: ", 2.6686424169119634)
     
-    beta0 = float(min_qaoa_par.pop(0))
-    middle = int(len(min_qaoa_par)/2)
-    gamma = [float(par) for par in min_qaoa_par[:middle]]
-    beta  = [float(par) for par in min_qaoa_par[middle:]]
-    #beta0 = 0.953669637290268
-    #gamma = [3.62268844]
-    #beta = [2.56569005]
+    #beta0 = float(min_qaoa_par.pop(0))
+    #middle = int(len(min_qaoa_par)/2)
+    #gamma = [float(par) for par in min_qaoa_par[:middle]]
+    #beta  = [float(par) for par in min_qaoa_par[middle:]]
+    beta0 = 0.58190073
+    gamma = [1.49797252]
+    beta = [0.83586777]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -615,33 +614,40 @@ def main():
     # Starting QAOA
     # ------------- 
     print("\nRunning QAOA")
-    num_nodes = G.number_of_nodes()
+    num_nodes = initial_G.number_of_nodes()
     number_of_qubits = num_nodes*num_colors+num_nodes
     print("Necessary number of qubits: ", number_of_qubits)
-    # Dictionary for keeping the results of the simulation
-    counts = {}
-    # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta)
-    # Probabilities list to be used at the end of the program 
+    # --------------------------
+    # Running QAOA on simulator
+    # --------------------------
+    G = nx.Graph()
+    G.add_nodes_from(initial_G)
+    G.add_edges_from(initial_G.edges)
+    color_graph_from_coloring(G, initial_coloring)
+    
+    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
+    
+    # --------------------------
+    # Counting resulting states
+    # --------------------------
+    counts = {} # Dictionary for keeping the results of the simulation
     states = []
     probabilities = []
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        counts[binary] = int((2**20)*result.probability(i))
         states.append(binary)
         probabilities.append(result.probability(i))
-        prob = int((2**20)*result.probability(i))
-        counts[binary] = prob
- 
+
     print("Number of States", len(counts))
     #pp.pprint(counts)
 
-    # -------------------
-    # Looking the Results
-    # -------------------
-    print('\n --- SIMULATION RESULTS ---')
+    # --------------------------
     # Evaluate the data from the simulator
-    avr_C       = 0
-    min_C       = [0, np.inf]
+    # --------------------------
+    print('\n --- SIMULATION RESULTS ---')
+    avr_function_value = 0
+    min_function_value = [0, np.inf]
     hist        = {}
 
     for sample in list(counts.keys()):
@@ -666,17 +672,18 @@ def main():
                 fx = cost_function_min(G)
 
             # compute the expectation value and energy distribution
-            avr_C     = avr_C    + counts[sample]*fx
+            avr_function_value = avr_function_value + counts[sample]*fx
             hist[str(round(fx))] = hist.get(str(round(fx)),0) + counts[sample]
 
             # save best bit string
-            if( min_C[1] > fx):
-                min_C[0] = sample
-                min_C[1] = fx
+            if( min_function_value[1] > fx):
+                min_function_value[0] = sample
+                min_function_value[1] = fx
+
     print('\n--- Function Distribution  ---')
     total_counts = sum(counts.values())
     print("Total Number of Measurements", total_counts)
-    expected_value = avr_C/total_counts
+    expected_value = avr_function_value/total_counts
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
@@ -689,7 +696,7 @@ def main():
     unique, repet = np.unique(measurement, return_counts=True)
     analysis = dict(zip(unique, repet))
 
-    avr_C       = 0
+    avr_function_value       = 0
     hist        = {}
     for sample in list(analysis.keys()):
         # use sampled bit string x to compute f(x)
@@ -712,25 +719,25 @@ def main():
             fx = cost_function_min(G)
 
         # compute the expectation value and energy distribution
-        avr_C     = avr_C    + analysis[sample]*fx
+        avr_function_value = avr_function_value + analysis[sample]*fx
         hist[str(round(fx))] = hist.get(str(round(fx)),0) + analysis[sample]
 
     print('\n--- Function Distribution  ---')
     print("Total Number of Measurements", measurement_number)
-    expected_value = avr_C/measurement_number
+    expected_value = avr_function_value/measurement_number
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
-    
+        
     # -----------------------------------------------------
     print('--------------------------')
     print('--- Individual States  ---\n')
-    print("Best result found: ", min_C[0])
-    print("Number of times result showed: ", counts[min_C[0]])
-    print("Percentage of times result showed: ", (counts[min_C[0]]/total_counts)*100)
-    print("Objective function value: ", min_C[1])
+    print("Best result found: ", min_function_value[0])
+    print("Number of times result showed: ", counts[min_function_value[0]])
+    print("Percentage of times result showed: ", (counts[min_function_value[0]]/total_counts)*100)
+    print("Objective function value: ", min_function_value[1])
 
-    list_qubits = min_C[0]
+    list_qubits = min_function_value[0]
     best_coloring = []
     for i in range(len(G)):
         for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
@@ -810,8 +817,8 @@ def main():
     # -------------------
     print('\n --- SIMULATION RESULTS ---')
     # Evaluate the data from the simulator
-    avr_C       = 0
-    min_C       = [0, np.inf]
+    avr_function_value = 0
+    min_function_value = [0, np.inf]
     hist        = {}
 
     for sample in list(counts.keys()):
@@ -836,17 +843,18 @@ def main():
                 fx = cost_function_min(G)
 
             # compute the expectation value and energy distribution
-            avr_C     = avr_C    + counts[sample]*fx
+            avr_function_value = avr_function_value + counts[sample]*fx
             hist[str(round(fx))] = hist.get(str(round(fx)),0) + counts[sample]
 
             # save best bit string
-            if( min_C[1] > fx):
-                min_C[0] = sample
-                min_C[1] = fx
+            if( min_function_value[1] > fx):
+                min_function_value[0] = sample
+                min_function_value[1] = fx
+
     print('\n--- Function Distribution  ---')
     total_counts = sum(counts.values())
     print("Total Number of Measurements", total_counts)
-    expected_value = avr_C/total_counts
+    expected_value = avr_function_value/total_counts
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
