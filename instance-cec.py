@@ -250,14 +250,12 @@ def minimization_process(p, G, num_colors, school, students_list):
     upper_bounds_gamma = [2*np.pi]*p
     upper_bounds_beta  = [np.pi]*p
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
-    sigma0 = 1
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
+    sigma0 = 2
     
     es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     while not es.stop():
         solutions = es.ask()
-        #print("Solutions", solutions)
-        solutions = [[2.63574875,1.45662914,0.37091666], [0.58190073,1.49797252,0.83586777], [0.91654425,4.97392364,0.93827827], [0.0114341, 0.11804643,1.62091289], [1.79148574,0.39528664,3.12463608], [2.09910703,3.55717639,2.71926089], [2.59870167,0.70084449,2.51127752]]
         function_values = [qaoa(s, p, G, num_colors, students_list) for s in solutions]
         es.tell(solutions, function_values)
         res = es.result
@@ -416,6 +414,8 @@ def main():
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
 
+    initial_function_value = cost_function_timetable(G, num_colors, students_list)
+    print("\nInitial Function Value", initial_function_value)
     # ---------------------------
     # Verifying Graph consistency
     #----------------------------
@@ -438,7 +438,7 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    p = 1
+    p = 2
 
     # Minimizing Example CEC
     print("Running minimization process")

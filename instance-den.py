@@ -88,10 +88,10 @@ def cost_function_den_4pts(G):
     if G.nodes["Event18"]['color'] != 0:
         C += 1
     #PreferTimes_4
-    if G.nodes["Event19"]['color'] != 2:
+    if G.nodes["Event19"]['color'] != 1:
         C += 1
     #PreferTimes_5
-    if G.nodes["Event20"]['color'] != 1:
+    if G.nodes["Event20"]['color'] != 2:
         C += 1
     #PreferTimes_6
     if G.nodes["Event21"]['color'] != 3:
@@ -277,7 +277,7 @@ def minimization_process(p, G, num_colors, school):
     upper_bounds_gamma = [2*np.pi]*p
     upper_bounds_beta  = [np.pi]*p
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
     sigma0 = 2
     
     es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
@@ -470,9 +470,10 @@ def main():
     print("\nNumber of colors", num_colors)
     print("\nInitial coloring", coloring)
 
-    #initial_function_value = cost_function_den_25pts(G)
+    initial_function_value = cost_function_den_25pts(G)
+    print("\nInitial Function Value Max 25", initial_function_value)
     initial_function_value = cost_function_den_4pts(G)
-    print("\nInitial Function Value", initial_function_value)
+    print("\nInitial Function Value Max 4", initial_function_value)
 
     # ---------------------------
     # Verifying Graph consistency
