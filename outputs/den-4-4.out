@@ -1,0 +1,272 @@
+Starting program
+
+--------------------------
+Graph information
+
+Nodes =  ['Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6', 'Event7', 'Event8', 'Event9', 'Event10', 'Event11', 'Event12', 'Event13', 'Event14', 'Event15', 'Event16', 'Event17', 'Event18', 'Event19', 'Event20', 'Event21', 'Event22', 'Event23', 'Event24', 'Event25']
+
+Pre-coloring [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
+
+Degree of each node [6, 8, 8, 7, 5, 7, 4, 6, 5, 9, 6, 5, 5, 7, 7, 7, 4, 8, 5, 6, 5, 3, 9, 7, 7]
+
+Number of colors 4
+
+Initial coloring [1, 2, 3, 0, 2, 3, 3, 2, 1, 0, 1, 3, 2, 0, 1, 2, 3, 1, 2, 0, 3, 0, 1, 3, 0]
+
+Initial Function Value Max 25 12
+
+Initial Function Value Max 4 3
+----------------------------
+Verifying Graph consistency
+
+Node 0 Color 1
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event4', 0)
+('Event13', 2)
+('Event22', 0)
+('Event24', 3)
+
+Node 1 Color 2
+Neighbours | Color
+('Event1', 1)
+('Event3', 3)
+('Event4', 0)
+('Event14', 0)
+('Event20', 0)
+('Event23', 1)
+('Event24', 3)
+('Event25', 0)
+
+Node 2 Color 3
+Neighbours | Color
+('Event1', 1)
+('Event2', 2)
+('Event4', 0)
+('Event13', 2)
+('Event14', 0)
+('Event15', 1)
+('Event23', 1)
+('Event25', 0)
+
+Node 3 Color 0
+Neighbours | Color
+('Event1', 1)
+('Event2', 2)
+('Event3', 3)
+('Event5', 2)
+('Event11', 1)
+('Event23', 1)
+('Event24', 3)
+
+Node 4 Color 2
+Neighbours | Color
+('Event4', 0)
+('Event6', 3)
+('Event10', 0)
+('Event11', 1)
+('Event24', 3)
+
+Node 5 Color 3
+Neighbours | Color
+('Event5', 2)
+('Event10', 0)
+('Event11', 1)
+('Event13', 2)
+('Event15', 1)
+('Event16', 2)
+('Event25', 0)
+
+Node 6 Color 3
+Neighbours | Color
+('Event8', 2)
+('Event9', 1)
+('Event10', 0)
+('Event16', 2)
+
+Node 7 Color 2
+Neighbours | Color
+('Event7', 3)
+('Event9', 1)
+('Event10', 0)
+('Event14', 0)
+('Event18', 1)
+('Event20', 0)
+
+Node 8 Color 1
+Neighbours | Color
+('Event7', 3)
+('Event8', 2)
+('Event10', 0)
+('Event13', 2)
+('Event21', 3)
+
+Node 9 Color 0
+Neighbours | Color
+('Event5', 2)
+('Event6', 3)
+('Event7', 3)
+('Event8', 2)
+('Event9', 1)
+('Event15', 1)
+('Event16', 2)
+('Event18', 1)
+('Event23', 1)
+
+Node 10 Color 1
+Neighbours | Color
+('Event4', 0)
+('Event5', 2)
+('Event6', 3)
+('Event12', 3)
+('Event24', 3)
+('Event25', 0)
+
+Node 11 Color 3
+Neighbours | Color
+('Event11', 1)
+('Event14', 0)
+('Event15', 1)
+('Event16', 2)
+('Event18', 1)
+
+Node 12 Color 2
+Neighbours | Color
+('Event1', 1)
+('Event3', 3)
+('Event6', 3)
+('Event9', 1)
+('Event14', 0)
+
+Node 13 Color 0
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event8', 2)
+('Event12', 3)
+('Event13', 2)
+('Event18', 1)
+('Event19', 2)
+
+Node 14 Color 1
+Neighbours | Color
+('Event3', 3)
+('Event6', 3)
+('Event10', 0)
+('Event12', 3)
+('Event16', 2)
+('Event17', 3)
+('Event21', 3)
+
+Node 15 Color 2
+Neighbours | Color
+('Event6', 3)
+('Event7', 3)
+('Event10', 0)
+('Event12', 3)
+('Event15', 1)
+('Event17', 3)
+('Event23', 1)
+
+Node 16 Color 3
+Neighbours | Color
+('Event15', 1)
+('Event16', 2)
+('Event23', 1)
+('Event25', 0)
+
+Node 17 Color 1
+Neighbours | Color
+('Event8', 2)
+('Event10', 0)
+('Event12', 3)
+('Event14', 0)
+('Event19', 2)
+('Event20', 0)
+('Event21', 3)
+('Event22', 0)
+
+Node 18 Color 2
+Neighbours | Color
+('Event14', 0)
+('Event18', 1)
+('Event20', 0)
+('Event21', 3)
+('Event22', 0)
+
+Node 19 Color 0
+Neighbours | Color
+('Event2', 2)
+('Event8', 2)
+('Event18', 1)
+('Event19', 2)
+('Event21', 3)
+('Event23', 1)
+
+Node 20 Color 3
+Neighbours | Color
+('Event9', 1)
+('Event15', 1)
+('Event18', 1)
+('Event19', 2)
+('Event20', 0)
+
+Node 21 Color 0
+Neighbours | Color
+('Event1', 1)
+('Event18', 1)
+('Event19', 2)
+
+Node 22 Color 1
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event4', 0)
+('Event10', 0)
+('Event16', 2)
+('Event17', 3)
+('Event20', 0)
+('Event24', 3)
+('Event25', 0)
+
+Node 23 Color 3
+Neighbours | Color
+('Event1', 1)
+('Event2', 2)
+('Event4', 0)
+('Event5', 2)
+('Event11', 1)
+('Event23', 1)
+('Event25', 0)
+
+Node 24 Color 0
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event6', 3)
+('Event11', 1)
+('Event17', 3)
+('Event23', 1)
+('Event24', 3)
+----------------------------
+Running QAOA
+Necessary number of qubits:  125
+Running minimization process
+(3_w,7)-aCMA-ES (mu_w=2.3,w_1=58%) in dimension 3 (seed=357520, Mon Jul 26 13:17:41 2021)
+Iterat #Fevals   function value  axis ratio  sigma  min&max std  t[m:s]
+    1      7 3.000000000000000e+00 1.0e+00 2.57e+00  2e+00  3e+00 0:12.2
+---------------------------
+termination on tolfun=1e-11
+final/bestever f-value = 3.000000e+00 3.000000e+00
+incumbent solution: [1.420803050627591, 1.712555437937517, 0.6988279992589113]
+std deviation: [2.7500870017249945, 2.7516644011260105, 2.441349456016633]
+---------------------------
+Optimal Result [1.77094459 3.50938347 1.64603902]
+Respective Function Value 3.0
+Respective Function Evaluations 1
+Overall Function Evaluations 7
+Overall Iterations 1
+Mean Result [1.42080305 1.71255544 0.698828  ]
+Standard Deviation Final Sample [2.750087   2.7516644  2.44134946]
+Saving Final Results

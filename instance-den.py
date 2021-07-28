@@ -245,8 +245,8 @@ def qaoa(par, p, initial_G, num_colors):
                         coloring.append(pos)
             color_graph_from_coloring(G, coloring)
 
-            #fx = cost_function_den_25pts(G)
-            fx = cost_function_den_4pts(G)
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
 
             # compute the expectation value and energy distribution
             avr_function_value = avr_function_value + counts[sample]*fx

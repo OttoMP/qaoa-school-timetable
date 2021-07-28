@@ -1,0 +1,305 @@
+Starting program
+
+Analysing instance:  Den
+
+Initial Function Value 12
+--------------------------
+Graph information
+
+Nodes =  ['Event1', 'Event2', 'Event3', 'Event4', 'Event5', 'Event6', 'Event7', 'Event8', 'Event9', 'Event10', 'Event11', 'Event12', 'Event13', 'Event14', 'Event15', 'Event16', 'Event17', 'Event18', 'Event19', 'Event20', 'Event21', 'Event22', 'Event23', 'Event24', 'Event25']
+
+Degree of each node [6, 8, 8, 7, 5, 7, 4, 6, 5, 9, 6, 5, 5, 7, 7, 7, 4, 8, 5, 6, 5, 3, 9, 7, 7]
+
+Number of colors 4
+
+Initial coloring [1, 2, 3, 0, 2, 3, 3, 2, 1, 0, 1, 3, 2, 0, 1, 2, 3, 1, 2, 0, 3, 0, 1, 3, 0]
+----------------------------
+Verifying Graph consistency
+
+Node 0 Color 1
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event4', 0)
+('Event13', 2)
+('Event22', 0)
+('Event24', 3)
+
+Node 1 Color 2
+Neighbours | Color
+('Event1', 1)
+('Event3', 3)
+('Event4', 0)
+('Event14', 0)
+('Event20', 0)
+('Event23', 1)
+('Event24', 3)
+('Event25', 0)
+
+Node 2 Color 3
+Neighbours | Color
+('Event1', 1)
+('Event2', 2)
+('Event4', 0)
+('Event13', 2)
+('Event14', 0)
+('Event15', 1)
+('Event23', 1)
+('Event25', 0)
+
+Node 3 Color 0
+Neighbours | Color
+('Event1', 1)
+('Event2', 2)
+('Event3', 3)
+('Event5', 2)
+('Event11', 1)
+('Event23', 1)
+('Event24', 3)
+
+Node 4 Color 2
+Neighbours | Color
+('Event4', 0)
+('Event6', 3)
+('Event10', 0)
+('Event11', 1)
+('Event24', 3)
+
+Node 5 Color 3
+Neighbours | Color
+('Event5', 2)
+('Event10', 0)
+('Event11', 1)
+('Event13', 2)
+('Event15', 1)
+('Event16', 2)
+('Event25', 0)
+
+Node 6 Color 3
+Neighbours | Color
+('Event8', 2)
+('Event9', 1)
+('Event10', 0)
+('Event16', 2)
+
+Node 7 Color 2
+Neighbours | Color
+('Event7', 3)
+('Event9', 1)
+('Event10', 0)
+('Event14', 0)
+('Event18', 1)
+('Event20', 0)
+
+Node 8 Color 1
+Neighbours | Color
+('Event7', 3)
+('Event8', 2)
+('Event10', 0)
+('Event13', 2)
+('Event21', 3)
+
+Node 9 Color 0
+Neighbours | Color
+('Event5', 2)
+('Event6', 3)
+('Event7', 3)
+('Event8', 2)
+('Event9', 1)
+('Event15', 1)
+('Event16', 2)
+('Event18', 1)
+('Event23', 1)
+
+Node 10 Color 1
+Neighbours | Color
+('Event4', 0)
+('Event5', 2)
+('Event6', 3)
+('Event12', 3)
+('Event24', 3)
+('Event25', 0)
+
+Node 11 Color 3
+Neighbours | Color
+('Event11', 1)
+('Event14', 0)
+('Event15', 1)
+('Event16', 2)
+('Event18', 1)
+
+Node 12 Color 2
+Neighbours | Color
+('Event1', 1)
+('Event3', 3)
+('Event6', 3)
+('Event9', 1)
+('Event14', 0)
+
+Node 13 Color 0
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event8', 2)
+('Event12', 3)
+('Event13', 2)
+('Event18', 1)
+('Event19', 2)
+
+Node 14 Color 1
+Neighbours | Color
+('Event3', 3)
+('Event6', 3)
+('Event10', 0)
+('Event12', 3)
+('Event16', 2)
+('Event17', 3)
+('Event21', 3)
+
+Node 15 Color 2
+Neighbours | Color
+('Event6', 3)
+('Event7', 3)
+('Event10', 0)
+('Event12', 3)
+('Event15', 1)
+('Event17', 3)
+('Event23', 1)
+
+Node 16 Color 3
+Neighbours | Color
+('Event15', 1)
+('Event16', 2)
+('Event23', 1)
+('Event25', 0)
+
+Node 17 Color 1
+Neighbours | Color
+('Event8', 2)
+('Event10', 0)
+('Event12', 3)
+('Event14', 0)
+('Event19', 2)
+('Event20', 0)
+('Event21', 3)
+('Event22', 0)
+
+Node 18 Color 2
+Neighbours | Color
+('Event14', 0)
+('Event18', 1)
+('Event20', 0)
+('Event21', 3)
+('Event22', 0)
+
+Node 19 Color 0
+Neighbours | Color
+('Event2', 2)
+('Event8', 2)
+('Event18', 1)
+('Event19', 2)
+('Event21', 3)
+('Event23', 1)
+
+Node 20 Color 3
+Neighbours | Color
+('Event9', 1)
+('Event15', 1)
+('Event18', 1)
+('Event19', 2)
+('Event20', 0)
+
+Node 21 Color 0
+Neighbours | Color
+('Event1', 1)
+('Event18', 1)
+('Event19', 2)
+
+Node 22 Color 1
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event4', 0)
+('Event10', 0)
+('Event16', 2)
+('Event17', 3)
+('Event20', 0)
+('Event24', 3)
+('Event25', 0)
+
+Node 23 Color 3
+Neighbours | Color
+('Event1', 1)
+('Event2', 2)
+('Event4', 0)
+('Event5', 2)
+('Event11', 1)
+('Event23', 1)
+('Event25', 0)
+
+Node 24 Color 0
+Neighbours | Color
+('Event2', 2)
+('Event3', 3)
+('Event6', 3)
+('Event11', 1)
+('Event17', 3)
+('Event23', 1)
+('Event24', 3)
+
+Min Expected Value:  14.0
+Using Following parameters:
+Beta0: 0.40474732
+Gamma: [3.1548333]
+Beta: [2.84563501]
+
+Running QAOA
+Necessary number of qubits:  125
+Number of States 2
+
+ --- SIMULATION RESULTS ---
+
+--- Function Distribution  ---
+Total Number of Measurements 1048575
+Expected Value =  11.953402474787211
+Objective Function Distribution
+{'11': 48861, '12': 999714}
+
+--- Function Distribution  ---
+Total Number of Measurements 10000
+Expected Value =  11.9559
+Objective Function Distribution
+{'11': 441, '12': 9559}
+--------------------------
+--- Individual States  ---
+
+Best result found:  01000010000110000010000100010010010010000100000100101000010000100001010000101000000100010100000110000000000000000000000000000
+Number of times result showed:  48861
+Percentage of times result showed:  4.659752521278879
+Objective function value:  11
+Best Coloring [1, 2, 3, 0, 2, 3, 3, 2, 1, 0, 1, 3, 2, 0, 1, 2, 3, 1, 2, 0, 3, 3, 1, 3, 0]
+
+
+Most commom result found:  01000010000110000010000100010010010010000100000100101000010000100001010000101000000110000100000110000000000000000000000000000
+Number of times result showed:  999714
+Percentage of times result showed:  95.34024747872112
+Objective function value:  12
+
+Most Common Coloring [1, 2, 3, 0, 2, 3, 3, 2, 1, 0, 1, 3, 2, 0, 1, 2, 3, 1, 2, 0, 3, 0, 1, 3, 0]
+-----------------------------
+Repeating QAOA
+
+Necessary number of qubits:  125
+Using Following parameters:
+Beta0: 0.40474732
+Gamma: [3.1548333]
+Beta: [2.84563501]
+Number of States 2
+
+ --- SIMULATION RESULTS ---
+
+--- Function Distribution  ---
+Total Number of Measurements 1048575
+Expected Value =  11.953402474787211
+Objective Function Distribution
+{'11': 48861, '12': 999714}
