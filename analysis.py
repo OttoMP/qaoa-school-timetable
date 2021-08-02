@@ -490,9 +490,9 @@ def main():
     # QAOA parameter
     p = 1
 
-    #school = "Den"
+    school = "Den"
     #school = "Min"
-    school = "CEC"
+    #school = "CEC"
     print("Analysing instance: ", school)
 
     if school == "CEC":
@@ -534,6 +534,8 @@ def main():
         num_colors = 5 # Denmark colors
         color_graph_from_num(initial_G, num_colors)
         initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+        #initial_coloring = [1, 2, 3, 0, 2, 3, 3, 2, 1, 0, 1, 3, 2, 0, 1, 2, 3, 1, 2, 0, 3, 0, 1, 3, 0]
+        #color_graph_from_coloring(initial_G, initial_coloring)
         
         #initial_function_value = cost_function_den_25pts(initial_G)
         initial_function_value = cost_function_den_4pts(initial_G)
@@ -585,9 +587,9 @@ def main():
     expected_value_list = list(result_list["Expected Value"])
     qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
     min_expected_value = min(expected_value_list)
-    min_expected_value_index = expected_value_list.index(min_expected_value)
+    #min_expected_value_index = expected_value_list.index(min_expected_value)
     # When looking for a specific entry set the index below
-    #min_expected_value_index = -1
+    min_expected_value_index = -1
     min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
     
     #print("Expected Value List")
@@ -595,16 +597,16 @@ def main():
     #print("Beta0|Gamma|Beta")
     #pp.pprint(qaoa_par_list)
     
-    #print("\nMin Expected Value: ", min_expected_value)
-    print("\nMin Expected Value: ", 2.6686424169119634)
+    print("\nMin Expected Value: ", min_expected_value)
+    #print("\nMin Expected Value: ", 2.6686424169119634)
     
-    #beta0 = float(min_qaoa_par.pop(0))
-    #middle = int(len(min_qaoa_par)/2)
-    #gamma = [float(par) for par in min_qaoa_par[:middle]]
-    #beta  = [float(par) for par in min_qaoa_par[middle:]]
-    beta0 = 0.58190073
-    gamma = [1.49797252]
-    beta = [0.83586777]
+    beta0 = float(min_qaoa_par.pop(0))
+    middle = int(len(min_qaoa_par)/2)
+    gamma = [float(par) for par in min_qaoa_par[:middle]]
+    beta  = [float(par) for par in min_qaoa_par[middle:]]
+    #beta0 = 0.58190073
+    #gamma = [1.49797252]
+    #beta = [0.83586777]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
