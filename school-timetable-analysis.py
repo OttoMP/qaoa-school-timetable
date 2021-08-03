@@ -21,8 +21,8 @@ from ket import *
 from ket.lib import swap
 
 def cost_function_timetable(x, G, num_colors, list_students):
-
     coloring = []
+    
     for i in range(len(G)):
         for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
             if int(char):
@@ -30,6 +30,42 @@ def cost_function_timetable(x, G, num_colors, list_students):
 
     color_graph_coloring(G, coloring)
 
+    C = 0
+    lectures = G.nodes
+    for student in list_students:
+        lecture_student = [(j,k,l) for (j,k,l) in lectures if l == student]
+        timeslots = [G.nodes[key]['color'] for key in list(lecture_student)]
+        timeslots.sort()
+        new_timeslots = [x%num_colors for x in timeslots]
+
+        # Students shouldn't have lectures at the last time of the day
+        for time in new_timeslots:
+            if time % num_colors == num_colors-1:
+                C += 1
+
+        day = []
+        last_lecture = -np.inf
+        for time in new_timeslots:
+            if last_lecture >= time:
+                # Students shouldn't have only one lecture in a day
+                if len(day) == 1:
+                    C += 1
+                #Students shouldn't have many consecutive lectures
+                else:
+                    for index, lect in enumerate(day):
+                        if index+1 < len(day) and day[index+1] == lect+1:
+                            C += 1
+                day = []
+
+            last_lecture = time
+            day.append(last_lecture)
+        for index, lect in enumerate(day):
+            if index+1 < len(day) and day[index+1] == lect+1:
+                C += 1
+
+    return C
+
+def initial_cost_function_timetable(G, num_colors, list_students):
     C = 0
     lectures = G.nodes
     for student in list_students:
@@ -778,15 +814,15 @@ def main():
     school = "CEC"
 
     # Reading values from CSV file
-    #result_list = pd.read_csv("results/"+school+"p"+str(p)+".csv", header=0)
+    result_list = pd.read_csv("results/"+school+"p"+str(p)+".csv", header=0)
 
     # Parsing necessary values
-    #expected_value_list = list(result_list["Expected Value"])
-    #qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
-    #min_expected_value = min(expected_value_list)
-    #min_expected_value_index = expected_value_list.index(min_expected_value)
+    expected_value_list = list(result_list["Expected Value"])
+    qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
+    min_expected_value = min(expected_value_list)
+    min_expected_value_index = expected_value_list.index(min_expected_value)
     #min_expected_value_index = -1
-    #min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
+    min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
     
     print("Expected Value List")
     #pp.pprint(expected_value_list)
@@ -795,15 +831,16 @@ def main():
     print()
     
     print("Min Expected Value")
-    #print(min_expected_value)
+    #print(2.588391639424852)
+    print(min_expected_value)
     
     #beta0 = float(min_qaoa_par.pop(0))
-    beta0 = 0.56589682
+    beta0 = 0.953669637290268
     #middle = int(len(min_qaoa_par)/2)
     #gamma = [float(par) for par in min_qaoa_par[:middle]]
-    gamma = [3.71214212]
+    gamma = [3.62268844]
     #beta  = [float(par) for par in min_qaoa_par[middle:]]
-    beta = [2.50417844]
+    beta = [2.56569005]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -877,7 +914,8 @@ def main():
     print("\nInitial coloring", coloring)
     #initial_function_value = initial_cost_function_den(G)
     #initial_function_value = initial_cost_function_min(G)
-    #print("\nInitial Function Value", initial_function_value)
+    initial_function_value = initial_cost_function_timetable(G, num_colors, students_list)
+    print("\nInitial Function Value", initial_function_value)
 
     # -------------
     # Starting QAOA
@@ -1011,6 +1049,62 @@ def main():
     #for i in range(len(G)):
     #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
     #-----------------------------
+
+    print("Using Following parameters:")
+    print("Beta0:", beta0)
+    print("Gamma:", gamma)
+    print("Beta:", beta)
+    print("\nNumber of colors", num_colors)
+    # Dictionary for keeping the results of the simulation
+    counts = {}
+    # run on local simulator
+    result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
+
+    # Probabilities list to be used at the end of the program 
+    states = []
+    probabilities = []
+    for i in result.get_states():
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        states.append(binary)
+        probabilities.append(result.probability(i))
+        prob = int((2**20)*result.probability(i))
+        counts[binary] = prob
+ 
+    print("Number of States", len(counts))
+    #pp.pprint(counts)
+
+    print("==Result==")
+
+    # Evaluate the data from the simulator
+    avr_C       = 0
+    min_C       = [0, np.inf]
+    hist        = {}
+
+    for sample in list(counts.keys()):
+        if counts[sample] > 0:
+            # use sampled bit string x to compute f(x)
+            x         = [int(num) for num in list(sample)]
+            #fx = cost_function_den(x, G, num_colors)
+            #fx = cost_function_min(x, G, num_colors)
+            fx = cost_function_timetable(x, G, num_colors, students_list)
+
+            # compute the expectation value and energy distribution
+            avr_C     = avr_C    + counts[sample]*fx
+            hist[str(round(fx))] = hist.get(str(round(fx)),0) + counts[sample]
+
+            # save best bit string
+            if( min_C[1] > fx):
+                min_C[0] = sample
+                min_C[1] = fx
+
+    print('\n --- SIMULATION RESULTS ---')
+    print(' --- Function Distribution  ---\n')
+    total_counts = sum(counts.values())
+    print("Total Number of Measurements", total_counts)
+    expected_value = avr_C/total_counts
+    print("Expected Value = ", expected_value)
+    print("Objective Function Distribution")
+    pp.pprint(hist)
 
 
 if __name__ == '__main__':

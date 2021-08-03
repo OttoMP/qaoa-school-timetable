@@ -779,7 +779,7 @@ def qaoa_first(par, p, G, num_colors, students_list):
     gamma = new_par[:middle]
     beta = new_par[middle:]
 
-    #print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
+    print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
 
     num_nodes = G.number_of_nodes()
 
@@ -787,6 +787,8 @@ def qaoa_first(par, p, G, num_colors, students_list):
     counts = {}
     # run on local simulator
     result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
+    #print("Number of States", len(result.get_states()))
+    #print("State Vector", result.show('b6:b6:b6:b6:b6:b6'))
     for i in result.get_states():
         binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
         counts[binary] = int(2**20*result.probability(i))
@@ -811,6 +813,7 @@ def qaoa_first(par, p, G, num_colors, students_list):
 
     expectation_value = avr_C/sum(counts.values())
 
+    print("Valor Esperado individual", expectation_value)
     return expectation_value
 
 def minimization_process_first(p, G, num_colors, school, students_list):
@@ -826,20 +829,27 @@ def minimization_process_first(p, G, num_colors, school, students_list):
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
 
     # Packing and Sending to minimize
+    data = []
     qaoa_par = [beta0]+gamma+beta
     qaoa_args = p, G, num_colors, students_list
-    print("\nMinimizing function\n")
-    opts = {'bounds' : [lower_bounds, upper_bounds]}#, 'maxiter': 2, } #'maxfevals': 300}
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 2, } #'maxfevals': 300}
     sigma0 = 2
-    
+    res = minimize(qaoa_first, qaoa_par, args=qaoa_args, method='Nelder-Mead',
+            options={'maxiter': 1, 'disp': True, 'adaptive':True})
+    print(res)
+
+    data.append([res['fun'], p, res['x']])
+    save_csv(data, "results/"+school+"p"+str(p)+".csv" )
+    ''' 
     es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     while not es.stop():
         solutions = es.ask()
+        print("Solutions", solutions)
         es.tell(solutions, [qaoa_first(s, p, G, num_colors, students_list) for s in solutions])
         res = es.result
-        print("Saving Results")
+        #print("Saving Results")
         save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
-        #es.disp()
+        es.disp()
     print("---------------------------")
     es.result_pretty()
     res = es.result
@@ -851,6 +861,10 @@ def minimization_process_first(p, G, num_colors, school, students_list):
     print("Overall Iterations", res[4])
     print("Mean Result", res[5])
     print("Standard Deviation Final Sample", res[6])
+    
+    print("Saving Final Results")
+    save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
+    '''
 
 def first_example():
     # Problem variables
