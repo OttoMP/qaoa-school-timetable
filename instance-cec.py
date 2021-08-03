@@ -10,6 +10,7 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
+import sys
 import pprint as pp
 import pandas as pd
 
@@ -250,8 +251,9 @@ def minimization_process(p, G, num_colors, school, students_list):
     upper_bounds_gamma = [2*np.pi]*p
     upper_bounds_beta  = [np.pi]*p
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
-    sigma0 = 2
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
+    sigma0 = 0.3*(2*np.pi)
+    print("Initial Step =", sigma0)
     
     es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     while not es.stop():
@@ -438,11 +440,14 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    p = 2
+    p = int(sys.argv[1])
 
     # Minimizing Example CEC
-    print("Running minimization process")
+    print("Running minimization process with p-value", p)
     minimization_process(p, G, num_colors, school, students_list)
-    
+
+    print("Program End")
+    print("----------------------------")
+
 if __name__ == '__main__':
     main()

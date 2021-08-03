@@ -278,7 +278,8 @@ def minimization_process(p, G, num_colors, school):
     upper_bounds_beta  = [np.pi]*p
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
     opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
-    sigma0 = 2
+    sigma0 = 0.3*(2*np.pi)
+    print("Initial Step =", sigma0)
     
     es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
     while not es.stop():
@@ -497,11 +498,14 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    p = 1
+    p = int(sys.argv[1])
 
     # Minimizing Example CEC
     print("Running minimization process")
     minimization_process(p, G, num_colors, school)
+    
+    print("Program End")
+    print("----------------------------")
 
 if __name__ == '__main__':
     main()
