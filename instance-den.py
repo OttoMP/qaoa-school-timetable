@@ -10,6 +10,7 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
+import sys
 from xml_parser import parseXML
 from itertools import combinations
 import pprint as pp
@@ -458,15 +459,18 @@ def main():
     # Greedy coloring to be used in cases where a trivial coloring cannot be
     # found
     # -----------------------------------------------------------------
-    #color_graph_greedy(G)
+    color_graph_greedy(G)
     
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
-    num_colors = 5 # Denmark colors
-    color_graph_from_num(G, num_colors)
+    #num_colors = 5 # Denmark colors
+    #color_graph_from_num(G, num_colors)
     
     coloring = [G.nodes[node]['color'] for node in G.nodes]
+    #coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    color_graph_from_coloring(G, coloring)
+    
     num_colors = len(set(coloring))
     print("\nNumber of colors", num_colors)
     print("\nInitial coloring", coloring)
