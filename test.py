@@ -1,59 +1,435 @@
 # Import tools for running QAOA
 import random
-import cma
 from ket import *
-import networkx as nx
-from ket.lib import swap
+
+#import math tools
+import numpy as np
 
 # We import the tools to handle general Graphs
-
-import numpy as np
-import pprint as pp
+import networkx as nx
 
 # Import miscellaneous tools
+from pympler import asizeof, muppy, summary, tracker, refbrowser
+import os, psutil
+from guppy import hpy
+import objgraph
+import datetime
+import gc
+import sys
 from xml_parser import parseXML
 from itertools import combinations
+import pprint as pp
 
-# We import plotting tools
-import pandas as pd
-import matplotlib.pyplot as plt
+def dump_heap(h, i):
+   '''
+   @param h: The heap (from hp = hpy(), h = hp.heap())
+   @param i: Identifier str
+   '''
+  
+   print("Dumping stats at: {0}".format(i))
+   print("Memory usage: {0} (MB)".format(psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2))
+   print("Most common types:")
+   objgraph.show_most_common_types()
+  
+   print("heap is:")
+   print("{0}".format(h))
+  
+   #by_refs = h.byrcs
+   #print("by references: {0}".format(by_refs))
+  
+   #print("More stats for top element..")
+   #print("By clodo (class or dict owner): {0}".format(by_refs[0].byclodo))
+   #print("By size: {0}".format(by_refs[0].bysize))
+   #print("By id: {0}".format(by_refs[0].byid))
 
-def create_graphv1(events):
-    G = nx.Graph()
-    G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
+def cost_function_den_25pts(G):
+    C = 0
+    
+    if G.nodes["Event1"]['color'] != 0:
+        C += 1
+    if G.nodes["Event2"]['color'] != 2:
+        C += 1
+    if G.nodes["Event3"]['color'] != 3:
+        C += 1
+    if G.nodes["Event4"]['color'] != 1:
+        C += 1
+    if G.nodes["Event5"]['color'] != 2:
+        C += 1
+    if G.nodes["Event6"]['color'] != 3:
+        C += 1
+    if G.nodes["Event7"]['color'] != 3:
+        C += 1
+    if G.nodes["Event8"]['color'] != 2:
+        C += 1
+    if G.nodes["Event9"]['color'] != 0:
+        C += 1
+    if G.nodes["Event10"]['color'] != 1:
+        C += 1
+    if G.nodes["Event11"]['color'] != 0:
+        C += 1
+    if G.nodes["Event12"]['color'] != 3:
+        C += 1
+    if G.nodes["Event13"]['color'] != 2:
+        C += 1
+    if G.nodes["Event14"]['color'] != 1:
+        C += 1
+    if G.nodes["Event15"]['color'] != 0:
+        C += 1
+    if G.nodes["Event16"]['color'] != 2:
+        C += 1
+    if G.nodes["Event17"]['color'] != 3:
+        C += 1
+    if G.nodes["Event22"]['color'] != 3:
+        C += 1
+    if G.nodes["Event23"]['color'] != 0:
+        C += 1
+    if G.nodes["Event24"]['color'] != 3:
+        C += 1
+    if G.nodes["Event25"]['color'] != 1:
+        C += 1
+    
+    #PreferTimes_3
+    if G.nodes["Event18"]['color'] != 0:
+        C += 1
+    #PreferTimes_4
+    if G.nodes["Event19"]['color'] != 2:
+        C += 1
+    #PreferTimes_5
+    if G.nodes["Event20"]['color'] != 1:
+        C += 1
+    #PreferTimes_6
+    if G.nodes["Event21"]['color'] != 3:
+        C += 1
 
-    comb = combinations(events, 2)
-    for i in comb:
-        res0 = set(i[0]['Resources'])
-        res1 = i[1]['Resources']
-        intersection = [value for value in res0 if value in res1]
-        if intersection:
-            G.add_edge(i[0]['Id'], i[1]['Id'])
-    return G
+    return C
 
-def create_graphv2(nodes, edges):
-    G = nx.Graph()
-    G.add_nodes_from([(tuple, {'color' : None}) for tuple in nodes])
+def cost_function_den_4pts(G):
+    C = 0
+    #PreferTimes_3
+    if G.nodes["Event18"]['color'] != 0:
+        C += 1
+    #PreferTimes_4
+    if G.nodes["Event19"]['color'] != 2:
+        C += 1
+    #PreferTimes_5
+    if G.nodes["Event20"]['color'] != 1:
+        C += 1
+    #PreferTimes_6
+    if G.nodes["Event21"]['color'] != 3:
+        C += 1
 
-    for e, row in enumerate(edges):
-        for f, column in enumerate(row):
-            if column == 1:
-               G.add_edge(nodes[e],nodes[f])
+    return C
 
-    return G
+def partial_mixer(qc, neighbour, ancilla, target, beta):
+    def outer():
+        if neighbour == None:
+            X(ancilla)
+        else:
+            with around(X, neighbour):
+                ctrl(neighbour, X, ancilla)
 
-def create_graphv3(nodes, edges):
-    G = nx.Graph()
-    G.add_nodes_from([(num, {'color' : None}) for num in range(len(nodes))])
+    with around(outer):
+        with around([H, ctrl(0, X, target=1)], target):
+            ctrl(ancilla, RZ, 2*beta, target[1])
+        
+        with around([RX(-np.pi/2), ctrl(0, X, target=1)], target):
+            ctrl(ancilla, RZ, 2*beta, target[1])
 
-    for e, row in enumerate(edges):
-        for f, column in enumerate(row):
-            if column == 1:
-                G.add_edge(e,f)
+def neighbourhood(G, num_colors, node, color, list_nodes):
+    neighbours = list(G[node])
+    neighbours_index = [list_nodes.index(neigh) for neigh in neighbours]
 
-    return G
+    neighbours_color_qubit = [color+(num_colors*u) for u in neighbours_index]
 
-def color_graph_num(graph, num_color):
+    return neighbours_color_qubit
+
+# Apply the partial mixer for each pair of colors of each node
+def mixer(qc, G, beta, num_nodes, num_colors):
+    list_nodes = list(G.nodes())
+    for u, node in enumerate(G.nodes):
+        for i in range(num_colors):
+            neighbours_i = neighbourhood(G, num_colors, node, i, list_nodes)
+            for j in range(num_colors):
+                if i < j:
+                    neighbours_j = neighbourhood(G, num_colors, node, j, list_nodes)
+                    neighbours = neighbours_i+neighbours_j
+
+                    if neighbours == []:
+                        q_neighbours = None
+                    else:
+                        q_neighbours = qc[neighbours[0]]
+                        for neigh in neighbours[1:]:
+                            q_neighbours = q_neighbours | qc[neigh]
+                    partial_mixer(
+                            qc,
+                            q_neighbours,
+                            qc[num_nodes*num_colors+u],
+                            qc[i+(num_colors*u)]|qc[j+(num_colors*u)],
+                            beta)
+
+def phase_separator_ad_hoc(qc, gamma, num_nodes, num_colors):
+    #if G.nodes["Event1"]['color'] != 0:
+    RZ(2*gamma, qc[(num_colors*0)+0])
+    #if G.nodes["Event2"]['color'] != 2:
+    RZ(2*gamma, qc[(num_colors*1)+2])
+    #if G.nodes["Event3"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*2)+3])
+    #if G.nodes["Event4"]['color'] != 1:
+    RZ(2*gamma, qc[(num_colors*3)+1])
+    #if G.nodes["Event5"]['color'] != 2:
+    RZ(2*gamma, qc[(num_colors*4)+2])
+    #if G.nodes["Event6"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*5)+3])
+    #if G.nodes["Event7"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*6)+3])
+    #if G.nodes["Event8"]['color'] != 2:
+    RZ(2*gamma, qc[(num_colors*7)+2])
+    #if G.nodes["Event9"]['color'] != 0:
+    RZ(2*gamma, qc[(num_colors*8)+0])
+    #if G.nodes["Event10"]['color'] != 1:
+    RZ(2*gamma, qc[(num_colors*9)+1])
+    #if G.nodes["Event11"]['color'] != 0:
+    RZ(2*gamma, qc[(num_colors*10)+0])
+    #if G.nodes["Event12"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*11)+3])
+    #if G.nodes["Event13"]['color'] != 2:
+    RZ(2*gamma, qc[(num_colors*12)+2])
+    #if G.nodes["Event14"]['color'] != 1:
+    RZ(2*gamma, qc[(num_colors*13)+1])
+    #if G.nodes["Event15"]['color'] != 0:
+    RZ(2*gamma, qc[(num_colors*14)+0])
+    #if G.nodes["Event16"]['color'] != 2:
+    RZ(2*gamma, qc[(num_colors*15)+2])
+    #if G.nodes["Event17"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*16)+3])
+    #if G.nodes["Event22"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*21)+3])
+    #if G.nodes["Event23"]['color'] != 0:
+    RZ(2*gamma, qc[(num_colors*22)+0])
+    #if G.nodes["Event24"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*23)+3])
+    #if G.nodes["Event25"]['color'] != 1:
+    RZ(2*gamma, qc[(num_colors*24)+1])
+    
+    #PreferTimes_3
+    #if G.nodes["Event18"]['color'] != 0:
+    RZ(2*gamma, qc[(num_colors*17)+0])
+    #PreferTimes_4
+    #if G.nodes["Event19"]['color'] != 2:
+    RZ(2*gamma, qc[(num_colors*18)+2])
+    #PreferTimes_5
+    #if G.nodes["Event20"]['color'] != 1:
+    RZ(2*gamma, qc[(num_colors*19)+1])
+    #PreferTimes_6
+    #if G.nodes["Event21"]['color'] != 3:
+    RZ(2*gamma, qc[(num_colors*20)+3])
+
+def phase_separator(qc, gamma, num_nodes, num_colors):
+    #qubits2color(qc, num_nodes, num_colors)
+    for node in range(num_colors*num_nodes):
+        X(qc[node])
+    for k in range(num_colors):
+        qubits = [node*num_colors+k for node in range(num_nodes)]
+        control = qc[qubits[0]]
+        for qub in qubits[1:-1]:
+            control = control | qc[qub]
+        target = qc[qubits[-1]]
+        ctrl(control, RZ, 2*gamma, target)
+    for node in range(num_colors*num_nodes):
+        X(qc[node])
+    #color2qubits(qc, num_nodes, num_colors)
+
+def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
+    # --------------------------
+    # Initializing qubits
+    # --------------------------
+    qc = quant((num_nodes*num_colors) + num_nodes)
+
+    # --------------------------
+    # Initial state preparation
+    # --------------------------
+    coloring = [G.nodes[node]['color'] for node in G.nodes]
+    for i, color in enumerate(coloring):
+        X(qc[(i*num_colors)+color])
+
+    # --------------------------
+    # Alternate application of operators
+    # --------------------------
+    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
+    for step in range(p):
+        phase_separator(qc, gamma[step], num_nodes, num_colors)
+        #phase_separator_ad_hoc(qc, gamma[step], num_nodes, num_colors)
+        mixer(qc, G, beta[step], num_nodes, num_colors)
+
+    # --------------------------
+    # Measurement
+    # --------------------------
+    #result = measure(qc).get()
+    return dump(qc)
+
+def counting_states(result, num_nodes, num_colors):
+    counts = {} # Dictionary for keeping the results of the simulation
+    for i in result.get_states():
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        counts[binary] = int(2**20*result.probability(i))
+
+    return counts
+
+def output_function(o):
+    return str(type(o))
+
+def qaoa(par, p, tr):
+    print("Memory Usage start qaoa call", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+    # --------------------------
+    # Unpacking QAOA parameters
+    # --------------------------
+    beta0 = par[0]
+    middle = int(len(par)/2)
+    gamma = par[1:middle+1]
+    beta = par[middle+1:]
+
+    print("Memory Usage after parameters", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+    # --------------------------
+    # Verifying Parameters
+    # --------------------------
+    #print("Using Following parameters:\nBeta0:", beta0, "\nGamma:", gamma, "\nBeta:", beta)
+
+    # --------------------------
+    # Running QAOA on simulator
+    # --------------------------
+
+    #G = nx.Graph()
+    #G.add_nodes_from(initial_G)
+    #G.add_edges_from(initial_G.edges)
+    #initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+    #color_graph_from_coloring(G, initial_coloring)
+    G, num_colors = create_full_graph(tr)
+    num_nodes = G.number_of_nodes()
+    number_of_qubits = num_nodes*num_colors+num_nodes
+    #print("Necessary number of qubits: ", number_of_qubits)
+    print("Memory Usage after graph", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+    
+    result = qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta)
+    print("Memory Usage after result", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+    
+    #print("Number of States", len(result.get_states()))
+    #print("State Vector", result.show('b6:b6:b6:b6:b6:b6'))
+
+    # --------------------------
+    # Counting resulting states
+    # --------------------------
+    counts = {} # Dictionary for keeping the results of the simulation
+    for i in result.get_states():
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        counts[binary] = int(2**20*result.probability(i))
+    #counts = counting_states(result, num_nodes, num_colors)
+    print("Memory Usage after get states", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+    # --------------------------
+    # Evaluate the data from the simulator
+    # --------------------------
+    avr_function_value = 0
+    min_function_value = [0, np.inf]
+
+    for sample in list(counts.keys()):
+        if counts[sample] > 0:
+            # use sampled bit string x to compute f(x)
+            x       = [int(num) for num in list(sample)]
+            
+            # Coloring Graph with counts[sample]
+            coloring = []
+            for i in range(len(G)):
+                for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+                    if int(char):
+                        coloring.append(pos)
+            color_graph_from_coloring(G, coloring)
+
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
+
+            # compute the expectation value and energy distribution
+            avr_function_value = avr_function_value + counts[sample]*fx
+
+            # save best bit string
+            if( min_function_value[1] > fx):
+                min_function_value[0] = sample
+                min_function_value[1] = fx
+
+    print("Memory Usage after counts", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+
+    #expected_value = avr_function_value/sum(counts.values())
+    # Return expected value
+    #cb_result = refbrowser.ConsoleBrowser(result, maxdepth=2, str_func=output_function)
+    #cb_result.print_tree() 
+    print("Memory Usage end qaoa call", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+    return avr_function_value/sum(counts.values())
+
+def color_graph_greedy(G):
+    pair = None, G.number_of_nodes(), 0
+    it = 0
+    for i in range (1, 10000):
+        color_by_node, colors = color_graph_greedy_aux(G, 0.7)
+        if pair[1] > len(colors):
+            pair = color_by_node, len(colors), it
+        it+= 1
+    # Coloring Graph
+    for key, value in pair[0].items(): 
+        G.nodes[key]['color'] = value
+
+def color_graph_greedy_aux(G, alpha):
+    
+    n = G.number_of_nodes()
+    
+    #lista de cores
+    colors = []
+    
+    #vertices ordenadas por degree decrescente
+    nodes_ordered = sorted(G.degree, key=lambda x: x[1], reverse=True)
+    
+    
+    #lista de cores proibidas
+    forbidden_colors = {}
+    for (node, d) in nodes_ordered:
+        forbidden_colors[node]=[]
+        
+    color_by_node = {}
+    while len(nodes_ordered) > 0:
+        node = None
+        i = 0
+        while i < len(nodes_ordered):
+            if random.random() <=  alpha or i == len(nodes_ordered)-1:
+                (node, d) = nodes_ordered.pop(i)
+                break
+            i+=1              
+        
+        p_colors = list(set.difference(set(colors), set(forbidden_colors[node]))) 
+        c = 0
+        if len(p_colors) > 0:
+            c = p_colors[0]
+            color_by_node[node] = c
+        else:
+            c = len(colors)
+            colors.append(c)
+            color_by_node[node] = c
+        #proibe cor para adjacentes
+        for adj in G.neighbors(node):
+            forbidden_colors[adj].append(c)
+
+    return color_by_node, colors
+ 
+def color_graph_from_coloring(graph, coloring):
+    for index,node in enumerate(graph.nodes):
+        graph.nodes[node]['color'] = coloring[index]
+
+    return
+
+def color_graph_from_num(graph, num_color):
     color_index = 0
     node_list = list(graph.nodes)
     not_allowed_color = []
@@ -98,479 +474,121 @@ def color_graph_num(graph, num_color):
             break
 
     return
+
+def create_graph_from_events(events):
+    G = nx.Graph()
+    G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
+
+    comb = combinations(events, 2)
+    for i in comb:
+        res0 = set(i[0]['Resources'])
+        res1 = i[1]['Resources']
+        intersection = [value for value in res0 if value in res1]
+        if intersection:
+            G.add_edge(i[0]['Id'], i[1]['Id'])
+    return G
+
+def create_full_graph(tr):
+    print("Memory Usage start graph", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+    # --------------------------
+    # Parse XML file
+    # --------------------------
+    events = parseXML('dataset/den-smallschool.xml')
+    print("Memory Usage after parse", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    tr.print_diff() 
+
+    # --------------------------
+    #  Preparing Conflict Graph
+    # --------------------------
+    G = create_graph_from_events(events)
     
-def color_graph_coloring(graph, coloring):
-    for index,node in enumerate(graph.nodes):
-        graph.nodes[node]['color'] = coloring[index]
+    #print("--------------------------")
+    #print("Graph information\n")
+    
+    #print("Nodes = ", G.nodes)
+    coloring = [G.nodes[node]['color'] for node in G.nodes]
+    #print("\nPre-coloring", coloring)
 
-    return
+    degree = [deg for (node, deg) in G.degree()]
+    #print("\nDegree of each node", degree)
 
-def cost_function_timetable(x, G, num_colors, list_students):
-    coloring = []
-
-    for i in range(len(G)):
-        for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
-            if int(char):
-                coloring.append(pos)
-
-    color_graph_coloring(G, coloring)
-
-    C = 0
-    lectures = G.nodes
-    for student in list_students:
-        lecture_student = [(j,k,l) for (j,k,l) in lectures if l == student]
-        timeslots = [G.nodes[key]['color'] for key in list(lecture_student)]
-        timeslots.sort()
-        new_timeslots = [x%num_colors for x in timeslots]
-
-        # Students shouldn't have lectures at the last time of the day
-        for time in new_timeslots:
-            if time % num_colors == num_colors-1:
-                C += 1
-
-        day = []
-        last_lecture = -np.inf
-        for time in new_timeslots:
-            if last_lecture >= time:
-                # Students shouldn't have only one lecture in a day
-                if len(day) == 1:
-                    C += 1
-                #Students shouldn't have many consecutive lectures
-                else:
-                    for index, lect in enumerate(day):
-                        if index+1 < len(day) and day[index+1] == lect+1:
-                            C += 1
-                day = []
-
-            last_lecture = time
-            day.append(last_lecture)
-        for index, lect in enumerate(day):
-            if index+1 < len(day) and day[index+1] == lect+1:
-                C += 1
-
-    return C
-
-def initial_cost_function_timetable(x, G, num_colors, list_students):
-
-    color_graph_coloring(G, x)
-
-    C = 0
-    lectures = G.nodes
-    for student in list_students:
-        lecture_student = [(j,k,l) for (j,k,l) in lectures if l == student]
-        timeslots = [G.nodes[key]['color'] for key in list(lecture_student)]
-        timeslots.sort()
-        new_timeslots = [x%num_colors for x in timeslots]
-
-        # Students shouldn't have lectures at the last time of the day
-        for time in new_timeslots:
-            if time % num_colors == num_colors-1:
-                C += 1
-
-        day = []
-        last_lecture = -np.inf
-        for time in new_timeslots:
-            if last_lecture >= time:
-                # Students shouldn't have only one lecture in a day
-                if len(day) == 1:
-                    C += 1
-                #Students shouldn't have many consecutive lectures
-                else:
-                    for index, lect in enumerate(day):
-                        if index+1 < len(day) and day[index+1] == lect+1:
-                            C += 1
-                day = []
-
-            last_lecture = time
-            day.append(last_lecture)
-        for index, lect in enumerate(day):
-            if index+1 < len(day) and day[index+1] == lect+1:
-                C += 1
-
-    return C
-
-def partial_mixer(qc, neighbour, ancilla, target, beta):
-    def outer():
-        if neighbour == None:
-            X(ancilla)
-        else:
-            with around(X, neighbour):
-                ctrl(neighbour, X, ancilla)
-
-    with around(outer):
-        with around([H, ctrl(0, X, target=1)], target):
-            ctrl(ancilla, RZ, 2*beta, target[1])
-        
-        with around([RX(-np.pi/2), ctrl(0, X, target=1)], target):
-            ctrl(ancilla, RZ, 2*beta, target[1])
-
-def neighbourhood(G, num_colors, node, color, list_nodes):
-    print("Neighbourhood function")
-    neighbours = list(G[node])
-    neighbours_index = [list_nodes.index(neigh) for neigh in neighbours]
-    print("Neighbours from node", node,":", neighbours)
-
-    neighbours_color_qubit = [color+(num_colors*u) for u in neighbours_index]
-    print("Neighbour qubits", neighbours_color_qubit)
-
-    return neighbours_color_qubit
-
-def partial_mixer(qc, neighbour, ancilla, target, beta):
-    def outer():
-        if neighbour == None:
-            X(ancilla)
-        else:
-            with around(X, neighbour):
-                ctrl(neighbour, X, ancilla)
-
-    with around(outer):
-        with around([H, ctrl(0, X, 1)], target):
-            ctrl(ancilla, RZ, 2*beta, target[1])
-        
-        with around([RX(-np.pi/2), ctrl(0, X, 1)], target):
-            ctrl(ancilla, RZ, 2*beta, target[1])
-
-def neighbourhood(G, num_colors, node, color, list_nodes):
-    neighbours = list(G[node])
-    neighbours_index = [list_nodes.index(neigh) for neigh in neighbours]
-
-    neighbours_color_qubit = [color+(num_colors*u) for u in neighbours_index]
-
-    return neighbours_color_qubit
-
-# Apply the partial mixer for each pair of colors of each node
-def mixer(qc, G, beta, num_nodes, num_colors):
-    list_nodes = list(G.nodes())
-    for u, node in enumerate(G.nodes):
-        for i in range(num_colors):
-            neighbours_i = neighbourhood(G, num_colors, node, i, list_nodes)
-            for j in range(num_colors):
-                if i < j:
-                    neighbours_j = neighbourhood(G, num_colors, node, j, list_nodes)
-                    neighbours = neighbours_i+neighbours_j
-
-                    if neighbours == []:
-                        q_neighbours = None
-                    else:
-                        q_neighbours = qc[neighbours[0]]
-                        for neigh in neighbours[1:]:
-                            q_neighbours = q_neighbours | qc[neigh]
-                    partial_mixer(
-                            qc,
-                            q_neighbours,
-                            qc[num_nodes*num_colors+u],
-                            qc[i+(num_colors*u)]|qc[j+(num_colors*u)],
-                            beta)
-
-def find_sequence(pos_b, start):
-        sequence = []
-        end = pos_b[start]
-        while end != start:
-            sequence.append(end)
-            end = pos_b[end]
-
-        sequence.append(start)
-        return sequence
-
-def qubits2color(qc, num_nodes, num_colors):
-    qdit_ord = []
-    color_ord = []
-    for i in range(num_nodes):
-        for j in range(num_colors):
-            pos_a = i*num_colors+j
-            pos_b = j*num_nodes+i
-            qdit_ord.append(pos_a)
-            color_ord.append(pos_b)
-
-    not_visited = set(qdit_ord)
-
-    while not_visited:
-        index = next(iter(not_visited))
-        sequence = find_sequence(color_ord, index)
-
-        for pos in sequence:
-            not_visited.remove(pos)
-
-        if len(sequence) != 1:
-            start = sequence.pop()
-            while sequence:
-                qubit_b = sequence.pop()
-                swap(qc[qubit_b], qc[start])
-                start = qubit_b
-
-def color2qubits(qc, num_nodes, num_colors):
-    qdit_ord = []
-    color_ord = []
-    for i in range(num_nodes):
-        for j in range(num_colors):
-            pos_a = i*num_colors+j
-            pos_b = j*num_nodes+i
-            qdit_ord.append(pos_a)
-            color_ord.append(pos_b)
-
-    not_visited = set(qdit_ord)
-
-    while not_visited:
-        index = next(iter(not_visited))
-        sequence = find_sequence(color_ord, index)
-
-        for pos in sequence:
-            not_visited.remove(pos)
-
-        if len(sequence) != 1:
-            start = sequence.pop(0)
-            while sequence:
-                qubit_b = sequence.pop(0)
-                swap(qc[qubit_b], qc[start])
-                start = qubit_b
-
-def phase_separator(qc, gamma, num_nodes, num_colors):
-    qubits2color(qc, num_nodes, num_colors)
-    for node in range(num_colors*num_nodes):
-        X(qc[node])
-    for k in range(num_colors):
-        qubits = [k*num_nodes+node for node in range(num_nodes)]
-        control = qc[qubits[0]]
-        for qub in qubits[1:-1]:
-            control = control | qc[qub]
-        target = qc[qubits[-1]]
-        ctrl(control, RZ, 2*gamma, target)
-        #cRz(qc, qubits, 2*gamma)
-    for node in range(num_colors*num_nodes):
-        X(qc[node])
-    color2qubits(qc, num_nodes, num_colors)
-
-def qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta):
-    num_nodes = G.number_of_nodes()
-    qc = quant((num_nodes*num_colors) + num_nodes)
-
-    # Initial state preparation
-    #for i in range(num_nodes):
-    #    w_state_preparation(qc[i*num_colors:i*num_colors+num_colors])
+    # --------------------------
+    #  Coloring Conflict Graph
+    # --------------------------
+    
+    # Greedy coloring to be used in cases where a trivial coloring cannot be
+    # found
+    # -----------------------------------------------------------------
+    #color_graph_greedy(G)
+    
+    # If a suitable coloring can be found without the greedy method use
+    # the color_graph_num method
+    # -----------------------------------------------------------------
+    num_colors = 5 # Denmark colors
+    color_graph_from_num(G, num_colors)
     
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    for i, color in enumerate(coloring):
-        X(qc[(i*num_colors)+color])
-
-    # Alternate application of operators
-    # No need for beta 0 if initial state is W
-    mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
-    for step in range(p):
-        phase_separator(qc, gamma[step], num_nodes, num_colors)
-        mixer(qc, G, beta[step], num_nodes, num_colors)
-
-    # Measurement
-    #result = measure(qc).get()
-    return dump(qc)
-
-def qaoa_first(par, p, G, num_colors, students_list):
-    # QAOA parameters
-    beta0 = par[0]
-    new_par = np.delete(par, 0)
-    middle = int(len(new_par)/2)
-    gamma = new_par[:middle]
-    beta = new_par[middle:]
-
-    #print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta)
-
-    num_nodes = G.number_of_nodes()
-
-    # Dictionary for keeping the results of the simulation
-    counts = {}
-    # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_colors, beta0, gamma, beta)
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
-        counts[binary] = int((2**20)*result.probability(i))
-
-    # Evaluate the data from the simulator
-    avr_C       = 0
-    min_C       = [0, np.inf]
-
-    for sample in list(counts.keys()):
-        if counts[sample] > 0:
-            # use sampled bit string x to compute f(x)
-            x       = [int(num) for num in list(sample)]
-            tmp_eng = cost_function_timetable(x, G, num_colors, students_list)
-
-            # compute the expectation value and energy distribution
-            avr_C     = avr_C    + counts[sample]*tmp_eng
-
-            # save best bit string
-            if( min_C[1] > tmp_eng):
-                min_C[0] = sample
-                min_C[1] = tmp_eng
-
-    expectation_value = avr_C/sum(counts.values())
-
-    return expectation_value
-
-def minimization_process_first(p, G, num_colors, school, students_list):
-    data = []
+    #coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    #coloring =  [0, 2, 3, 1, 2, 3, 3, 2, 0, 1, 0, 3, 2, 1, 0, 2, 3, 0, 2, 1, 3, 3, 0, 3, 1]
+    #color_graph_from_coloring(G, coloring)
     
-    # Initializing QAOA Parameters 
+    #num_colors = len(set(coloring))
+    #print("\nNumber of colors", num_colors)
+    #print("\nInitial coloring", coloring)
+
+    initial_function_value = cost_function_den_25pts(G)
+    #print("\nInitial Function Value Max 25", initial_function_value)
+    initial_function_value = cost_function_den_4pts(G)
+    #print("\nInitial Function Value Max 4", initial_function_value)
+
+    # ---------------------------
+    # Verifying Graph consistency
+    #----------------------------
+    #print("----------------------------")
+    #print("Verifying Graph consistency")
+    #for i in G.nodes:
+        #print("\nNode",i,"Color", G.nodes[i]['color'])
+        #color_and_neighbour = [(neighbour, G.nodes[neighbour]['color']) for neighbour in G[i]]
+        #print("Neighbours | Color")
+        #for pair in color_and_neighbour:
+            #print(pair)
+    
+    return G, num_colors
+ 
+
+def main():
+    print("Starting program\n")
+    tr = tracker.SummaryTracker()
+    tr.print_diff() 
+    # --------------------------
+    # School Instances
+    # --------------------------
+    school = "Den"
+           
+    #----------------------------
+    # Starting QAOA
+    #----------------------------
+    print("----------------------------")
+    print("Running QAOA")
+    # QAOA parameter
+    p = int(sys.argv[1])
+
     gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
     beta0 = random.uniform(0, np.pi)
     beta  = [random.uniform(0, np.pi) for _ in range(p)]
-
-    lower_bounds = [0] * ((2*p)+1)
-    upper_bounds_beta0 = [np.pi]
-    upper_bounds_gamma = [2*np.pi]*p
-    upper_bounds_beta  = [np.pi]*p
-    upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-
-    # Packing and Sending to minimize
-    qaoa_par = [beta0]+gamma+beta
-    qaoa_args = p, G, num_colors, students_list
-    print("\nMinimizing function\n")
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 2, } #'maxfevals': 300}
-    sigma0 = 2
+    s = [beta0]+gamma+beta
+    tr.print_diff() 
+    #for i in range(1):
+    print("Memory Usage before qaoa call", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    print("Muppy all objects", len(muppy.get_objects()))
+    tr.print_diff() 
+    ev = qaoa(s, p, tr)
+    print("Memory Usage after qaoa call", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    print("Muppy all objects", len(muppy.get_objects()))
+    tr.print_diff() 
     
-    es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
-    while not es.stop():
-        solutions = es.ask()
-        es.tell(solutions, [qaoa_first(s, p, G, num_colors, students_list) for s in solutions])
-        res = es.result
-        print("Optimal Result", res[0])
-        print("Respective Function Value", res[1])
-        print("Respective Function Evaluations", res[2])
-        print("Overall Function Evaluations", res[3])
-        print("Overall Iterations", res[4])
-        print("Mean Result", res[5])
-        print("Standard Deviation Final Sample", res[6])
-        es.disp()
-    es.result_pretty()
-    #es.optimize(qaoa_first, args=qaoa_args)
-    res = es.result
+    print("Program End")
 
-    #res = cma.fmin(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
-    #xopt, es = cma.fmin2(qaoa_first, qaoa_par, sigma0, args=qaoa_args, options=opts)
-    print("-------------------------------")
-    #print("X Optimal", xopt)
-    print("Optimal Result", res[0])
-    print("Respective Function Value", res[1])
-    print("Respective Function Evaluations", res[2])
-    print("Overall Function Evaluations", res[3])
-    print("Overall Iterations", res[4])
-    print("Mean Result", res[5])
-    print("Standard Deviation Final Sample", res[6])
-
-    #cma.plot()
-
-def first_example():
-    # Problem variables
-    num_weeks = 1
-    num_days = 1 #5
-    num_periods = 6
-    num_timeslots = num_days*num_periods
-
-    # Each subject has only one teacher
-    # Each teacher teaches only one subject
-    num_subjects = 3
-    num_teachers = num_subjects
-    num_students = 2
-    num_rooms = 3
-
-    # Number of features in a room
-    # Ex.: has computers, has >40 chairs...
-    num_features = 2
-
-    teachers_list = [teacher for teacher in range(num_teachers)]
-    students_list = [student for student in range(num_students)]
-
-    #roomFeatures = np.matrix([[0 for feature in range(num_rooms)] for event in range(num_features)])
-    roomFeatures = np.matrix([[0, 1, 1],
-                             [1, 0, 0]])
-    #subjectFeatures = np.matrix([[0 for feature in range(num_features)] for event in range(num_subjects)])
-    subjectFeatures = np.matrix([[1, 0],
-                                [1, 0],
-                                [0, 1]])
-    suitableRoom = subjectFeatures*roomFeatures
-
-    # Allocate rooms
-    # Each subject will be allocated to the least busy room
-    allocations = []
-    num_allocations = [0 for room in range(num_rooms)]
-
-    for subject_index, subject in enumerate(suitableRoom.tolist()):
-        possible_allocations = []
-        for index, room in enumerate(subject):
-            if room == 1:
-                possible_allocations.append(index)
-        print("Subject", subject_index)
-        print("Possible Allocations", possible_allocations)
-
-        min_allocations = np.inf
-        allocated_room = np.inf
-        for alloc_index in possible_allocations:
-            if num_allocations[alloc_index] < min_allocations:
-                allocated_room = alloc_index
-                min_allocations = num_allocations[allocated_room]
-        allocations.append((subject_index, allocated_room))
-        num_allocations[allocated_room] += 1
-
-    print("\nNumber of Allocations for each Room", num_allocations)
-    print("Allocations", allocations)
-
-    # Pair subjects with students
-    # lecture = (subject, room, student)
-    lectures = [(j,k,l) for j,k in allocations for l in students_list]
-
-    # Generate the lectureConflict Matrix
-    # The hard constraints of the problem are included in the matrix
-    lectureConflict = [[0 for feature in range(len(lectures))] for event in range(len(lectures))]
-
-    # If two lectures are allocated to the same room,
-    # share a student or have the same teacher they
-    # cannot be assigned to the same timeslot
-    for e, j in enumerate(lectures):
-        subject,room,student = j
-        for f,a in enumerate(lectures[e+1:]):
-            subject2,room2,student2 = a
-            if subject == subject2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-            if student == student2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-            if room == room2:
-                lectureConflict[e][e+1+f] = 1
-                lectureConflict[e+1+f][e] = 1
-
-    G = create_graphv2(lectures, lectureConflict)
-
-    return G, students_list
-
-def main():
-
-    school = "CEC"
-    
-    G, students_list = first_example()
-    
-    num_colors = 6 #First example colors
-    print("\nNumber of colors", num_colors)
-    
-    color_graph_coloring(G, [0,3,1,4,2,5])
-    
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
-    print("\nInitial coloring", coloring)
-
-    init_fun = initial_cost_function_timetable(coloring, G, num_colors, students_list)
-    print("Initial Function Value", init_fun)
-
-    # -------------
-    # Starting QAOA
-    # ------------- 
-    print("Running QAOA")
-    number_of_qubits = G.number_of_nodes()*num_colors+G.number_of_nodes()
-    print("Necessary number of qubits: ", number_of_qubits)
-
-    # QAOA parameter
-    p = 1
-
-    # Minimizing Example CEC
-    print("Running minimization process")
-    minimization_process_first(p, G, num_colors, school, students_list)
-    
 if __name__ == '__main__':
     main()
