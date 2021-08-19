@@ -254,7 +254,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school, students_list):
     # --------------------------
     for i in range(iterations):
         while p <= goal_p:
-        print("Running minimization process with p-value", p)
+            print("Running minimization process with p-value", p)
             # --------------------------
             # Initializing QAOA Parameters 
             # --------------------------
@@ -315,9 +315,34 @@ def minimization_process_cma(goal_p, G, num_colors, school, students_list):
     # --------------------------
     # CMA-ES Optimization 
     # --------------------------
+    local_optima_param = []
     while p <= goal_p:
-        print("\nRunning minimization process with p-value", p)
+        print("Running minimization process with p-value", p)
         #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+        # --------------------------
+        # Initializing QAOA Parameters 
+        # --------------------------
+        if p > 1:
+            # Extracting previous local optima
+            beta0 = local_optima_param[0]
+            new_local_optima_param = np.delete(local_optima_param, 0)
+            middle = int(len(local_optima_param)/2)
+            p_gamma = new_local_optima_param[:middle] # Previous gamma
+            p_beta = new_local_optima_param[middle:]  # Previous beta
+            
+            # Parameter setting strategy
+            gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
+        else:
+            beta0 = random.uniform(0, np.pi)
+            gamma = [random.uniform(0, 2*np.pi)]
+            beta  = [random.uniform(0, np.pi)]
+        #print("Using Following parameters:")
+        #print("Beta0:", beta0)
+        #print("Gamma:", gamma)
+        #print("Beta:", beta)
+        qaoa_par = [beta0]+gamma+beta
+
+        # Settings parameters bounds
         lower_bounds = [0] * ((2*p)+1)
         upper_bounds_beta0 = [np.pi]
         upper_bounds_gamma = [2*np.pi]*p
@@ -334,7 +359,7 @@ def minimization_process_cma(goal_p, G, num_colors, school, students_list):
             es.tell(solutions, function_values)
             res = es.result
             #print("Saving Results")
-            save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
+            #save_csv([[res[1], res[0]]], "results/cma/"+school+"p"+str(p)+".csv" )
             es.disp()
         print("---------------------------")
         es.result_pretty()
@@ -350,7 +375,9 @@ def minimization_process_cma(goal_p, G, num_colors, school, students_list):
         
         #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         print("Saving Final Results")
+        print("---------------------------\n")
         save_csv([[res[1], res[0]]], "results/cma/"+school+"p"+str(p)+".csv" )
+        local_optima_param = res[0]
 
         # Preparing next p-value
         p = p*2
