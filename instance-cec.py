@@ -222,6 +222,26 @@ def qaoa(par, p, initial_G, num_colors, students_list):
     #print("---")
     return expectation_value
 
+def parameter_setting(beta0, gamma, beta, p):
+    # -------------
+    # Interpolation 
+    # -------------
+    next_gamma = []
+    next_beta = []
+    for i in range(0, 2*p, 2):
+        if i == 0:
+            next_gamma.append(gamma[i])
+            next_beta.append(beta[i])
+        elif i == p:
+            next_gamma.append(gamma[i-1])
+            next_beta.append(beta[i-1])
+        else:
+            next_gamma.append((i)/p * gamma[i-1] + (p-i)/p * gamma[i])
+            next_beta.append((i)/p * beta[i-1] + (p-i)/p * beta[i])
+    
+    return next_gamma, next_beta
+
+
 def minimization_process(p, G, num_colors, school, students_list):
     # --------------------------
     # Initializing QAOA Parameters 
