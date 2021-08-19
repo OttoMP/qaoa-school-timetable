@@ -49,6 +49,84 @@ def cost_function_timetable(x, G, num_colors, list_students):
 
     return C
 
+def cost_function_den_25pts(G):
+    C = 0
+    
+    if G.nodes["Event1"]['color'] != 0:
+        C += 1
+    if G.nodes["Event2"]['color'] != 2:
+        C += 1
+    if G.nodes["Event3"]['color'] != 3:
+        C += 1
+    if G.nodes["Event4"]['color'] != 1:
+        C += 1
+    if G.nodes["Event5"]['color'] != 2:
+        C += 1
+    if G.nodes["Event6"]['color'] != 3:
+        C += 1
+    if G.nodes["Event7"]['color'] != 3:
+        C += 1
+    if G.nodes["Event8"]['color'] != 2:
+        C += 1
+    if G.nodes["Event9"]['color'] != 0:
+        C += 1
+    if G.nodes["Event10"]['color'] != 1:
+        C += 1
+    if G.nodes["Event11"]['color'] != 0:
+        C += 1
+    if G.nodes["Event12"]['color'] != 3:
+        C += 1
+    if G.nodes["Event13"]['color'] != 2:
+        C += 1
+    if G.nodes["Event14"]['color'] != 1:
+        C += 1
+    if G.nodes["Event15"]['color'] != 0:
+        C += 1
+    if G.nodes["Event16"]['color'] != 2:
+        C += 1
+    if G.nodes["Event17"]['color'] != 3:
+        C += 1
+    if G.nodes["Event22"]['color'] != 3:
+        C += 1
+    if G.nodes["Event23"]['color'] != 0:
+        C += 1
+    if G.nodes["Event24"]['color'] != 3:
+        C += 1
+    if G.nodes["Event25"]['color'] != 1:
+        C += 1
+    
+    #PreferTimes_3
+    if G.nodes["Event18"]['color'] != 0:
+        C += 1
+    #PreferTimes_4
+    if G.nodes["Event19"]['color'] != 2:
+        C += 1
+    #PreferTimes_5
+    if G.nodes["Event20"]['color'] != 1:
+        C += 1
+    #PreferTimes_6
+    if G.nodes["Event21"]['color'] != 3:
+        C += 1
+
+    return C
+
+def cost_function_den_4pts(G):
+    C = 0
+    #PreferTimes_3
+    if G.nodes["Event18"]['color'] != 0:
+        C += 1
+    #PreferTimes_4
+    if G.nodes["Event19"]['color'] != 1:
+        C += 1
+    #PreferTimes_5
+    if G.nodes["Event20"]['color'] != 2:
+        C += 1
+    #PreferTimes_6
+    if G.nodes["Event21"]['color'] != 3:
+        C += 1
+
+    return C
+
 # Function to check if it is safe to assign color `c` to vertex `v`
 def isSafe(graph, color, v, c):
     # check the color of every adjacent vertex of `v`
@@ -106,6 +184,36 @@ def create_graph_from_list(nodes, edges):
                G.add_edge(nodes[e],nodes[f])
 
     return G
+
+def create_graph_from_events(events):
+    G = nx.Graph()
+    event_list = [event['Id'] for event in events]
+    #G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
+    G.add_nodes_from([(num, {'color' : None}) for num,event in enumerate(events)])
+
+    comb = combinations(events, 2)
+    for i in comb:
+        res0 = set(i[0]['Resources'])
+        res1 = i[1]['Resources']
+        intersection = [value for value in res0 if value in res1]
+        if intersection:
+            G.add_edge(event_list.index(i[0]['Id']), event_list.index(i[1]['Id']))
+    return G
+
+def create_graph_from_events2(events):
+    G = nx.Graph()
+    event_list = [event['Id'] for event in events]
+    G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
+
+    comb = combinations(events, 2)
+    for i in comb:
+        res0 = set(i[0]['Resources'])
+        res1 = i[1]['Resources']
+        intersection = [value for value in res0 if value in res1]
+        if intersection:
+            G.add_edge(i[0]['Id'], i[1]['Id'])
+    return G
+
 
 def first_example():
     print("--------------------------")
@@ -201,94 +309,94 @@ def main():
     # --------------------------
     # School Instances
     # --------------------------
-    school = "CEC"
+    school = "Den"
 
     # --------------------------
     # Parse XML file
     # --------------------------
-    #events = parseXML('dataset/den-smallschool.xml')
+    events = parseXML('dataset/den-smallschool.xml')
 
     # --------------------------
     #  Preparing Conflict Graph
     # --------------------------
-    G, G_tuple, students_list = first_example()
-    
-    print("--------------------------")
-    print("Graph information\n")
-    
-    print("Nodes = ", G.nodes)
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
-    print("\nPre-coloring", coloring)
-
-    degree = [deg for (node, deg) in G.degree()]
-    print("\nDegree of each node", degree)
-
-    # --------------------------
-    #  Coloring Conflict Graph
-    # --------------------------
-    num_colors = 6        # CEC example colors
-    print("\nNumber of colors", num_colors)
-    
-    color_graph_from_coloring(G, [0,3,1,4,2,5])
-    initial_coloring = [G.nodes[node]['color'] for node in G.nodes]
-    print("\nInitial coloring", initial_coloring)
+    G = create_graph_from_events(events)
+    G_tuple = create_graph_from_events2(events)
 
     # ---------------------------
     # Verifying Graph consistency
     #----------------------------
     print("----------------------------")
     print("Verifying Graph consistency")
-    for e,i in enumerate(G.nodes):
-        print("\nNode",e,"Color", G.nodes[i]['color'])
+    print("Nodes = ", G.nodes)
+
+    for i in G.nodes:
+        print("\nNode", i,"Color", G.nodes[i]['color'])
         color_and_neighbour = [(neighbour, G.nodes[neighbour]['color']) for neighbour in G[i]]
         print("Neighbours | Color")
         for pair in color_and_neighbour:
             print(pair)
-            
-    tmp_eng = cost_function_timetable(initial_coloring, G_tuple, num_colors, students_list)
-    print("fun", tmp_eng)
+    print("----------------------------")
+    print("Verifying Graph consistency")
+    print("Nodes = ", G_tuple.nodes)
+
+    for i in G_tuple.nodes:
+        print("\nNode", i,"Color", G_tuple.nodes[i]['color'])
+        color_and_neighbour = [(neighbour, G_tuple.nodes[neighbour]['color']) for neighbour in G_tuple[i]]
+        print("Neighbours | Color")
+        for pair in color_and_neighbour:
+            print(pair)
+
+
+    num_colors = 5
+    print("\nNumber of colors", num_colors)
 
     # Probabilities list to be used at the end of the program 
     states = []
     color = [None] * G.number_of_nodes()
-
     # print all k–colorable configurations of the graph
     kColorable(G, color, num_colors, 0, G.number_of_nodes(), states)
 
+    print("Number of states:", len(states))
     #pp.pprint(states)
     
-    print("Running Random Distribution")
+    print("\nRunning Random Distribution")
     
     # -----------------------------------------------------
     # Evaluate the data from limited number of Measurements
     # -----------------------------------------------------
-    measurement_number = 10000
-    measurement = np.random.choice(states, measurement_number)
-    unique, repet = np.unique(measurement, return_counts=True)
-    analysis = dict(zip(unique, repet))
+    for it in range(10):
+        print("Iteration number:", it)
+        measurement_number = 10000
+        measurement = np.random.choice(states, measurement_number)
+        unique, repet = np.unique(measurement, return_counts=True)
+        analysis = dict(zip(unique, repet))
 
-    avr_C       = 0
-    hist        = {}
-    for sample in list(analysis.keys()):
-        # use sampled bit string x to compute f(x)
-        x       = [int(num) for num in list(sample.split(" "))]
-        tmp_eng = cost_function_timetable(x,G_tuple, num_colors, students_list)
+        avr_C       = 0
+        hist        = {}
 
-        # compute the expectation value and energy distribution
-        avr_C     = avr_C    + analysis[sample]*tmp_eng
-        hist[str(round(tmp_eng))] = hist.get(str(round(tmp_eng)),0) + analysis[sample]
+        for sample in list(analysis.keys()):
+            coloring = [int(num) for num in sample.split(" ")]
+            color_graph_from_coloring(G_tuple, coloring)
 
-    
-    print("\nTotal Number of Measurements", measurement_number)
-    expected_value = avr_C/measurement_number
-    print("Expected Value = ", expected_value)
-    print("Objective Function Distribution")
-    pp.pprint(hist)
-    #plt.hist(hist)
-    #plot_histogram(hist,figsize = (8,6),bar_labels = False)
-    #plt.savefig('timetabling-random.pdf') 
-    #plt.bar(list(hist.keys()), hist.values(), width=1, color='b')
-    #plt.show()
+            #fx = cost_function_den_25pts(G_tuple)
+            fx = cost_function_den_4pts(G_tuple)
+
+            # compute the expectation value and energy distribution
+            avr_C     = avr_C    + analysis[sample]*fx
+            hist[str(round(fx))] = hist.get(str(round(fx)),0) + analysis[sample]
+
+        
+        print("\nTotal Number of Measurements", measurement_number)
+        expected_value = avr_C/measurement_number
+        print("Expected Value = ", expected_value)
+        print("Objective Function Distribution")
+        pp.pprint(hist)
+        #plt.hist(hist)
+        #plot_histogram(hist,figsize = (8,6),bar_labels = False)
+        #plt.savefig('timetabling-random.pdf') 
+        #plt.bar(list(hist.keys()), hist.values(), width=1, color='b')
+        #plt.show()
+        print("----------------------------")
 
 if __name__ == '__main__':
     main()
