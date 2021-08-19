@@ -17,7 +17,7 @@ import pprint as pp
 import pandas as pd
 
 def save_csv(data, nome_csv):
-    data_points = pd.DataFrame(data, columns=['Expected Value', 'p', 'Beta0|Gamma|Beta'])
+    data_points = pd.DataFrame(data, columns=['Expected Value', 'Beta0|Gamma|Beta'])
     data_points.to_csv(nome_csv, mode='a', header=False)
 
     return
@@ -243,90 +243,81 @@ def parameter_setting(gamma, beta, p):
     
     return next_gamma, next_beta
 
-def minimization_process(p, G, num_colors, school, students_list): 
-    while p <= 4:
+def minimization_process_cobyla(goal_p, G, num_colors, school, students_list):
+    p = 1          # Start value of p
+    iterations = 50 # Number of independent runs
+    qaoa_args = p, G, num_colors, students_list
+    
+    local_optima_param = []
+    # --------------------------
+    # COBYLA Optimization
+    # --------------------------
+    for i in range(iterations):
+        while p <= goal_p:
         print("Running minimization process with p-value", p)
-        # --------------------------
-        # Initializing QAOA Parameters 
-        # --------------------------
-        if p > 1:
-            # Find local optima
-            min_x_index = data[0].index(min(data[0]))
-            local_optima_param = data[1][min_x_index]
-            beta0 = local_optima_param[0]
-            new_local_optima_param = np.delete(local_optima_param, 0)
-            middle = int(len(local_optima_param)/2)
-            p_gamma = new_local_optima_param[:middle]
-            p_beta = new_local_optima_param[middle:]
-            gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
-        else:
-            gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-            beta0 = random.uniform(0, np.pi)
-            beta  = [random.uniform(0, np.pi) for _ in range(p)]
-        
-        print("Using Following parameters:")
-        print("Beta0:", beta0)
-        print("Gamma:", gamma)
-        print("Beta:", beta)
-        
-        qaoa_par = [beta0]+gamma+beta
-        qaoa_args = p, G, num_colors, students_list
-        '''
-        # --------------------------
-        # COBYLA Optimization
-        # --------------------------
-        data = [[],[]]
-        print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-        print("Minimizing function using COBYLA\n")
-        print("Current Time:-", datetime.datetime.now())
-        beta0_bounds = [[0, np.pi]]
-        beta_bounds = [[0, np.pi]]*p
-        gamma_bounds = [[0, 2*np.pi]]*p
-        bounds = beta0_bounds+gamma_bounds+beta_bounds
-        #construct the bounds in the form of constraints
-        cons = []
-        for factor in range(len(bounds)):
-            lower, upper = bounds[factor]
-            l = {'type': 'ineq',
-                'fun': lambda x, lb=lower, i=factor: x[i] - lb}
-            u = {'type': 'ineq',
-                'fun': lambda x, ub=upper, i=factor: ub - x[i]}
-            cons.append(l)
-            cons.append(u)
-        res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
-                constraints=cons, options={'disp': True})
-        print(res)
-        print("Current Time:-", datetime.datetime.now())
-        print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-        print("Saving Final Results")
-        #save_csv([[res['fun'], p, res['x']]], "results/"+school+"p"+str(p)+".csv" )
-        data[0].append(res['fun'])
-        data[1].append(res['x'])
-        p = p*2
+            # --------------------------
+            # Initializing QAOA Parameters 
+            # --------------------------
+            if p > 1:
+                # Extracting previous local optima
+                beta0 = local_optima_param[0]
+                new_local_optima_param = np.delete(local_optima_param, 0)
+                middle = int(len(local_optima_param)/2)
+                p_gamma = new_local_optima_param[:middle] # Previous gamma
+                p_beta = new_local_optima_param[middle:]  # Previous beta
+                
+                # Parameter setting strategy
+                gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
+            else:
+                beta0 = random.uniform(0, np.pi)
+                gamma = [random.uniform(0, 2*np.pi)]
+                beta  = [random.uniform(0, np.pi)]
+            #print("Using Following parameters:")
+            #print("Beta0:", beta0)
+            #print("Gamma:", gamma)
+            #print("Beta:", beta)
+            qaoa_par = [beta0]+gamma+beta
 
-        # --------------------------
-        # Powell Optimization
-        # --------------------------
-        print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-        print("Minimizing function using Powell\n")
-        beta0_bounds = [(0, np.pi)]
-        beta_bounds = [(0, np.pi)]*p
-        gamma_bounds = [(0, 2*np.pi)]*p
-        bounds = beta0_bounds+gamma_bounds+beta_bounds
-        print("Current Time:-", datetime.datetime.now())
-        res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Powell',
-                bounds = bounds, options={'maxiter': 300, 'disp': True})
-        print(res)
-        print("Current Time:-", datetime.datetime.now())
-        print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-        print("Saving Final Results")
-        save_csv([[res['fun'], p, res['x']]], "results/"+school+"p"+str(p)+".csv" )
-        '''
-        # --------------------------
-        # CMA-ES Optimization 
-        # --------------------------
-        data = [[],[]]
-        print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+            
+            # Construct parameters bounds in the form of constraints
+            beta0_bounds = [[0, np.pi]]
+            beta_bounds = [[0, np.pi]]*p
+            gamma_bounds = [[0, 2*np.pi]]*p
+            bounds = beta0_bounds+gamma_bounds+beta_bounds
+            cons = []
+            for factor in range(len(bounds)):
+                lower, upper = bounds[factor]
+                l = {'type': 'ineq',
+                    'fun': lambda x, lb=lower, i=factor: x[i] - lb}
+                u = {'type': 'ineq',
+                    'fun': lambda x, ub=upper, i=factor: ub - x[i]}
+                cons.append(l)
+                cons.append(u)
+            
+            #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+            print("Minimizing function using COBYLA")
+            print("Current Time:-", datetime.datetime.now())
+            res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
+                    constraints=cons, options={'disp': False})
+            print(res)
+            print("Current Time:-", datetime.datetime.now())
+            #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+            print("Saving Results\n")
+            save_csv([[res['fun'], res['x']]], "results/cobyla/"+school+"p"+str(p)+".csv" )
+            local_optima_param = res['x']
+            
+            # Preparing next p-value
+            p = p*2
+
+def minimization_process_cma(goal_p, G, num_colors, school, students_list): 
+    p = 1          # Start value of p
+    
+    # --------------------------
+    # CMA-ES Optimization 
+    # --------------------------
+    while p <= goal_p:
+        print("\nRunning minimization process with p-value", p)
+        #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         lower_bounds = [0] * ((2*p)+1)
         upper_bounds_beta0 = [np.pi]
         upper_bounds_gamma = [2*np.pi]*p
@@ -357,11 +348,11 @@ def minimization_process(p, G, num_colors, school, students_list):
         print("Mean Result", res[5])
         print("Standard Deviation Final Sample", res[6])
         
-        print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+        #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         print("Saving Final Results")
-        #save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
-        data[0].append(res[1])
-        data[1].append(res[0])
+        save_csv([[res[1], res[0]]], "results/cma/"+school+"p"+str(p)+".csv" )
+
+        # Preparing next p-value
         p = p*2
 
 def color_graph_from_coloring(graph, coloring):
@@ -525,10 +516,11 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    p = int(sys.argv[1])
+    goal_p = 8
 
     # Minimizing Example CEC
-    minimization_process(p, G, num_colors, school, students_list)
+    minimization_process_cobyla(goal_p, G, num_colors, school, students_list)
+    minimization_process_cma(goal_p, G, num_colors, school, students_list)
 
     print("Program End")
     print("----------------------------")
