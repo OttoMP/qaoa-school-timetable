@@ -10,7 +10,8 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
-import sys
+from scipy.optimize import minimize
+import sys, os, psutil, datetime
 import pprint as pp
 import pandas as pd
 
@@ -179,8 +180,8 @@ def qaoa(par, p, initial_G, num_colors, students_list):
     # Counting resulting states
     # --------------------------
     counts = {} # Dictionary for keeping the results of the simulation
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+    for i in result.states:
+        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
         counts[binary] = int(2**20*result.probability(i))
 
     # --------------------------
@@ -231,27 +232,67 @@ def minimization_process(p, G, num_colors, school, students_list):
     qaoa_par = [beta0]+gamma+beta
     qaoa_args = p, G, num_colors, students_list
 
-    '''
-    # --------------------------
-    # Nelder-Mead Optimization
-    # --------------------------
-    data = []
-    res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Nelder-Mead',
-            options={'maxiter': 1, 'disp': True, 'adaptive':True})
-    print(res)
+    print("Using Following parameters:")
+    print("Beta0:", beta0)
+    print("Gamma:", gamma)
+    print("Beta:", beta)
 
-    data.append([res['fun'], p, res['x']])
-    save_csv(data, "results/"+school+"p"+str(p)+".csv" )
-    '''
+    # --------------------------
+    # COBYLA Optimization
+    # --------------------------
+    print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    print("Minimizing function using COBYLA\n")
+    print("Current Time:-", datetime.datetime.now())
+    beta0_bounds = [[0, np.pi]]
+    beta_bounds = [[0, np.pi]]*p
+    gamma_bounds = [[0, 2*np.pi]]*p
+    bounds = beta0_bounds+gamma_bounds+beta_bounds
+    #construct the bounds in the form of constraints
+    cons = []
+    for factor in range(len(bounds)):
+        lower, upper = bounds[factor]
+        l = {'type': 'ineq',
+            'fun': lambda x, lb=lower, i=factor: x[i] - lb}
+        u = {'type': 'ineq',
+            'fun': lambda x, ub=upper, i=factor: ub - x[i]}
+        cons.append(l)
+        cons.append(u)
+    res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
+            constraints=cons, options={'maxiter': 300, 'disp': True})
+    print(res)
+    print("Current Time:-", datetime.datetime.now())
+    print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    print("Saving Final Results")
+    save_csv([[res['fun'], p, res['x']]], "results/"+school+"p"+str(p)+".csv" )
+
+    # --------------------------
+    # Powell Optimization
+    # --------------------------
+    print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    print("Minimizing function using Powell\n")
+    beta0_bounds = [(0, np.pi)]
+    beta_bounds = [(0, np.pi)]*p
+    gamma_bounds = [(0, 2*np.pi)]*p
+    bounds = beta0_bounds+gamma_bounds+beta_bounds
+    print("Current Time:-", datetime.datetime.now())
+    res = minimize(qaoa, qaoa_par, args=qaoa_args, method='Powell',
+            bounds = bounds, options={'maxiter': 300, 'disp': True})
+    print(res)
+    print("Current Time:-", datetime.datetime.now())
+    print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+    print("Saving Final Results")
+    save_csv([[res['fun'], p, res['x']]], "results/"+school+"p"+str(p)+".csv" )
+
     # --------------------------
     # CMA-ES Optimization 
     # --------------------------
+    print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     lower_bounds = [0] * ((2*p)+1)
     upper_bounds_beta0 = [np.pi]
     upper_bounds_gamma = [2*np.pi]*p
     upper_bounds_beta  = [np.pi]*p
     upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
+    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
     sigma0 = 0.3*(2*np.pi)
     print("Initial Step =", sigma0)
     
@@ -276,6 +317,7 @@ def minimization_process(p, G, num_colors, school, students_list):
     print("Mean Result", res[5])
     print("Standard Deviation Final Sample", res[6])
     
+    print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
     print("Saving Final Results")
     save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
 

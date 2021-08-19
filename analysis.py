@@ -8,7 +8,7 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
-import random
+import random, sys
 from xml_parser import parseXML
 from itertools import combinations
 import pandas as pd
@@ -488,11 +488,11 @@ def main():
     print("Starting program\n")
 
     # QAOA parameter
-    p = 1
+    p = int(sys.argv[1])
 
-    school = "Den"
+    #school = "Den"
     #school = "Min"
-    #school = "CEC"
+    school = "CEC"
     print("Analysing instance: ", school)
 
     if school == "CEC":
@@ -531,14 +531,16 @@ def main():
         # If a suitable coloring can be found without the greedy method use
         # the color_graph_num method
         # -----------------------------------------------------------------
-        num_colors = 5 # Denmark colors
-        color_graph_from_num(initial_G, num_colors)
-        initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+        #num_colors = 5 # Denmark colors
+        #color_graph_from_num(initial_G, num_colors)
+        #initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+        initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+        # Optimal Coloring
         #initial_coloring = [1, 2, 3, 0, 2, 3, 3, 2, 1, 0, 1, 3, 2, 0, 1, 2, 3, 1, 2, 0, 3, 0, 1, 3, 0]
-        #color_graph_from_coloring(initial_G, initial_coloring)
+        color_graph_from_coloring(initial_G, initial_coloring)
         
-        #initial_function_value = cost_function_den_25pts(initial_G)
-        initial_function_value = cost_function_den_4pts(initial_G)
+        initial_function_value = cost_function_den_25pts(initial_G)
+        #initial_function_value = cost_function_den_4pts(initial_G)
         print("\nInitial Function Value", initial_function_value)
     elif school == "Min":
         # --------------------------
@@ -597,16 +599,16 @@ def main():
     #print("Beta0|Gamma|Beta")
     #pp.pprint(qaoa_par_list)
     
-    print("\nMin Expected Value: ", min_expected_value)
-    #print("\nMin Expected Value: ", 2.6686424169119634)
+    #print("\nMin Expected Value: ", min_expected_value)
+    print("\nMin Expected Value: ", 2.741989)
     
-    beta0 = float(min_qaoa_par.pop(0))
-    middle = int(len(min_qaoa_par)/2)
-    gamma = [float(par) for par in min_qaoa_par[:middle]]
-    beta  = [float(par) for par in min_qaoa_par[middle:]]
-    #beta0 = 0.58190073
-    #gamma = [1.49797252]
-    #beta = [0.83586777]
+    #beta0 = float(min_qaoa_par.pop(0))
+    #middle = int(len(min_qaoa_par)/2)
+    #gamma = [float(par) for par in min_qaoa_par[:middle]]
+    #beta  = [float(par) for par in min_qaoa_par[middle:]]
+    beta0 = 0.35929472
+    gamma = [3.15810917]
+    beta = [0.06589716]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -644,8 +646,7 @@ def main():
     print("Number of States", len(counts))
     #pp.pprint(counts)
 
-    # --------------------------
-    # Evaluate the data from the simulator
+    # ------------------------- Evaluate the data from the simulator
     # --------------------------
     print('\n --- SIMULATION RESULTS ---')
     avr_function_value = 0
@@ -668,8 +669,8 @@ def main():
             if school == "CEC":
                 fx = cost_function_timetable(G, num_colors, students_list)
             elif school == "Den":
-                #fx = cost_function_den_25pts(G)
-                fx = cost_function_den_4pts(G)
+                fx = cost_function_den_25pts(G)
+                #fx = cost_function_den_4pts(G)
             elif school == "Min":
                 fx = cost_function_min(G)
 
@@ -715,8 +716,8 @@ def main():
         if school == "CEC":
             fx = cost_function_timetable(G, num_colors, students_list)
         elif school == "Den":
-            #fx = cost_function_den_25pts(G)
-            fx = cost_function_den_4pts(G)
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
         elif school == "Min":
             fx = cost_function_min(G)
 
@@ -769,8 +770,8 @@ def main():
     if school == "CEC":
         common_value = cost_function_timetable(G, num_colors, students_list)
     elif school == "Den":
-        #common_value = cost_function_den_25pts(G)
-        common_value = cost_function_den_4pts(G)
+        common_value = cost_function_den_25pts(G)
+        #common_value = cost_function_den_4pts(G)
     elif school == "Min":
         common_value = cost_function_min(G)
     print("Objective function value: ", common_value)
@@ -839,8 +840,8 @@ def main():
             if school == "CEC":
                 fx = cost_function_timetable(G, num_colors, students_list)
             elif school == "Den":
-                #fx = cost_function_den_25pts(G)
-                fx = cost_function_den_4pts(G)
+                fx = cost_function_den_25pts(G)
+                #fx = cost_function_den_4pts(G)
             elif school == "Min":
                 fx = cost_function_min(G)
 
