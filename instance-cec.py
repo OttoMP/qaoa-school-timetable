@@ -222,24 +222,26 @@ def qaoa(par, p, initial_G, num_colors, students_list):
     #print("---")
     return expectation_value
 
-def parameter_setting(beta0, gamma, beta, p):
+def parameter_setting(gamma, beta, p):
     # -------------
     # Interpolation 
     # -------------
-    next_gamma = []
-    next_beta = []
-    for i in range(0, 2*p, 2):
-        if i == 0:
-            next_gamma.append(gamma[i])
-            next_beta.append(beta[i])
-        elif i == p:
-            next_gamma.append(gamma[i-1])
-            next_beta.append(beta[i-1])
-        else:
-            next_gamma.append((i)/p * gamma[i-1] + (p-i)/p * gamma[i])
-            next_beta.append((i)/p * beta[i-1] + (p-i)/p * beta[i])
+    next_gamma = [0]*(2*p)
+    next_beta = [0]*(2*p)
+    
+    next_gamma[0] = gamma[0]
+    next_beta[0] = beta[0]
+    next_gamma[-1] = gamma[-1]
+    next_beta[-1] = beta[-1]
+    if p > 1:
+        for i in range(1,2*p-1,2):
+            next_gamma[i]   = (ceil(i/2)/p) * gamma[int(i/2)+1] + (floor(p-(i/2))/p) * gamma[int(i/2)]
+            next_gamma[i+1] = (ceil(i/2)/p) * gamma[int(i/2)]   + (floor(p-(i/2))/p) * gamma[int(i/2)+1]
+            next_beta[i]    = (ceil(i/2)/p) * beta[int(i/2)+1]  + (floor(p-(i/2))/p) * beta[int(i/2)]
+            next_beta[i+1]  = (ceil(i/2)/p) * beta[int(i/2)]    + (floor(p-(i/2))/p) * beta[int(i/2)+1]
     
     return next_gamma, next_beta
+
 
 
 def minimization_process(p, G, num_colors, school, students_list):
