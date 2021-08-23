@@ -203,7 +203,7 @@ def qaoa(par, p, initial_G, num_colors, students_list):
                 for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
                     if int(char):
                         coloring.append(pos)
-            if len(coloring) < 6:
+            if len(coloring) < num_nodes:
                 print("Probability", counts[sample])
                 print("Coloring", coloring)
                 print("Qubits values", x)
@@ -248,15 +248,15 @@ def parameter_setting(gamma, beta, p):
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school, students_list):
-    p = 1          # Start value of p
     iterations = 50 # Number of independent runs
-    qaoa_args = p, G, num_colors, students_list
     
     local_optima_param = []
     # --------------------------
     # COBYLA Optimization
     # --------------------------
     for i in range(iterations):
+        p = 1          # Start value of p
+        qaoa_args = p, G, num_colors, students_list
         while p <= goal_p:
             print("Running minimization process with p-value", p)
             # --------------------------
@@ -314,12 +314,11 @@ def minimization_process_cobyla(goal_p, G, num_colors, school, students_list):
             p = p*2
 
 def minimization_process_cma(goal_p, G, num_colors, school, students_list): 
-    p = 1          # Start value of p
-    
     # --------------------------
     # CMA-ES Optimization 
     # --------------------------
     local_optima_param = []
+    p = 1          # Start value of p
     while p <= goal_p:
         print("Running minimization process with p-value", p)
         #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)

@@ -242,16 +242,36 @@ def qaoa(par, p, initial_G, num_colors):
 
     return expectation_value
 
+def parameter_setting(gamma, beta, p):
+    # -------------
+    # Interpolation 
+    # -------------
+    next_gamma = [0]*(2*p)
+    next_beta = [0]*(2*p)
+    
+    next_gamma[0] = gamma[0]
+    next_beta[0] = beta[0]
+    next_gamma[-1] = gamma[-1]
+    next_beta[-1] = beta[-1]
+    if p > 1:
+        for i in range(1,2*p-1,2):
+            next_gamma[i]   = (ceil(i/2)/p) * gamma[int(i/2)+1] + (floor(p-(i/2))/p) * gamma[int(i/2)]
+            next_gamma[i+1] = (ceil(i/2)/p) * gamma[int(i/2)]   + (floor(p-(i/2))/p) * gamma[int(i/2)+1]
+            next_beta[i]    = (ceil(i/2)/p) * beta[int(i/2)+1]  + (floor(p-(i/2))/p) * beta[int(i/2)]
+            next_beta[i+1]  = (ceil(i/2)/p) * beta[int(i/2)]    + (floor(p-(i/2))/p) * beta[int(i/2)+1]
+    
+    return next_gamma, next_beta
+
 def minimization_process_cobyla(goal_p, G, num_colors, school):
-    p = 1          # Start value of p
     iterations = 50 # Number of independent runs
-    qaoa_args = p, G, num_colors
     
     local_optima_param = []
     # --------------------------
     # COBYLA Optimization
     # --------------------------
     for i in range(iterations):
+        p = 1          # Start value of p
+        qaoa_args = p, G, num_colors
         while p <= goal_p:
             print("Running minimization process with p-value", p)
             # --------------------------
@@ -309,12 +329,11 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             p = p*2
 
 def minimization_process_cma(goal_p, G, num_colors, school): 
-    p = 1          # Start value of p
-    
     # --------------------------
     # CMA-ES Optimization 
     # --------------------------
     local_optima_param = []
+    p = 1          # Start value of p
     while p <= goal_p:
         print("Running minimization process with p-value", p)
         #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
