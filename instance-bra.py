@@ -366,7 +366,7 @@ def minimization_process_cma(goal_p, G, num_colors, school):
         upper_bounds_gamma = [2*np.pi]*p
         upper_bounds_beta  = [np.pi]*p
         upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-        opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
+        opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
         sigma0 = 0.3*(2*np.pi)
         print("Initial Step =", sigma0)
         
