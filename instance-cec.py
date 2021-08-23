@@ -182,7 +182,8 @@ def qaoa(par, p, initial_G, num_colors, students_list):
     # --------------------------
     counts = {} # Dictionary for keeping the results of the simulation
     for i in result.states:
-        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
+        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+        #binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
         counts[binary] = int(2**20*result.probability(i))
 
     # --------------------------
@@ -202,7 +203,10 @@ def qaoa(par, p, initial_G, num_colors, students_list):
                 for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
                     if int(char):
                         coloring.append(pos)
-
+            if len(coloring) < 6:
+                print("Probability", counts[sample])
+                print("Coloring", coloring)
+                print("Qubits values", x)
             color_graph_from_coloring(G, coloring)
 
             fx = cost_function_timetable(G, num_colors, students_list)

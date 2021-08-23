@@ -10,16 +10,16 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
-import datetime
 from scipy.optimize import minimize
-import sys
+from math import floor, ceil
+import sys, os, psutil, datetime
 from xml_parser import parseXML
 from itertools import combinations
 import pprint as pp
 import pandas as pd
 
 def save_csv(data, nome_csv):
-    data_points = pd.DataFrame(data, columns=['Expected Value', 'p', 'Beta0|Gamma|Beta'])
+    data_points = pd.DataFrame(data, columns=['Expected Value', 'Beta0|Gamma|Beta'])
     data_points.to_csv(nome_csv, mode='a', header=False)
 
     return
@@ -321,7 +321,7 @@ def qaoa(par, p, initial_G, num_colors):
 
 def minimization_process_cobyla(goal_p, G, num_colors, school):
     p = 1          # Start value of p
-    iterations = 1 # Number of independent runs
+    iterations = 50 # Number of independent runs
     qaoa_args = p, G, num_colors
     
     local_optima_param = []
@@ -658,8 +658,8 @@ def main():
     goal_p = 8
 
     # Minimizing Example DEN
-    minimization_process_cobyla(goal_p, G, num_colors, school, students_list)
-    minimization_process_cma(goal_p, G, num_colors, school, students_list)
+    minimization_process_cobyla(goal_p, G, num_colors, school)
+    minimization_process_cma(goal_p, G, num_colors, school)
 
     print("Program End")
     print("----------------------------")
