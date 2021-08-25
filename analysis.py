@@ -484,114 +484,109 @@ def minimal_example():
 
     return G
 
-def main():
-    print("Starting program\n")
-
-    # QAOA parameter
-    p = int(sys.argv[1])
-
-    #school = "Den"
-    #school = "Min"
-    school = "CEC"
-    print("Analysing instance: ", school)
-
-    if school == "CEC":
-        # --------------------------
-        #  Preparing Conflict Graph
-        # --------------------------
-        initial_G, students_list = first_example()
-        
-        # --------------------------
-        #  Coloring Conflict Graph
-        # --------------------------
-        color_graph_from_coloring(initial_G, [0,3,1,4,2,5])
-        initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
-        num_colors = len(set(initial_coloring))
-        initial_function_value = cost_function_timetable(initial_G, num_colors, students_list)
-        print("\nInitial Function Value", initial_function_value)
-    elif school == "Den":
-        # --------------------------
-        # Parse XML file
-        # --------------------------
-        events = parseXML('dataset/den-smallschool.xml')
-
-        # --------------------------
-        #  Preparing Conflict Graph
-        # --------------------------
-        initial_G = create_graph_from_events(events)
-        # --------------------------
-        #  Coloring Conflict Graph
-        # --------------------------
-        
-        # Greedy coloring to be used in cases where a trivial coloring cannot be
-        # found
-        # -----------------------------------------------------------------
-        #color_graph_greedy(initial_G)
-        
-        # If a suitable coloring can be found without the greedy method use
-        # the color_graph_num method
-        # -----------------------------------------------------------------
-        #num_colors = 5 # Denmark colors
-        #color_graph_from_num(initial_G, num_colors)
-        #initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
-        initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
-        # Optimal Coloring
-        #initial_coloring = [1, 2, 3, 0, 2, 3, 3, 2, 1, 0, 1, 3, 2, 0, 1, 2, 3, 1, 2, 0, 3, 0, 1, 3, 0]
-        color_graph_from_coloring(initial_G, initial_coloring)
-        
-        initial_function_value = cost_function_den_25pts(initial_G)
-        #initial_function_value = cost_function_den_4pts(initial_G)
-        print("\nInitial Function Value", initial_function_value)
-    elif school == "Min":
-        # --------------------------
-        #  Preparing Conflict Graph
-        # --------------------------
-        initial_G = minimal_example()
-        # --------------------------
-        #  Coloring Conflict Graph
-        # --------------------------
-        # Minimal example Coloring
-        color_graph_from_coloring(initial_G, [0,1,2,3,4,5,6])
-        initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
-        
-        initial_function_value = cost_function_min(initial_G)
-        print("\nInitial Function Value Max 5:", initial_function_value)
+def instance_cec():
+    # --------------------------
+    #  Preparing Conflict Graph
+    # --------------------------
+    initial_G, students_list = first_example()
     
-    print("--------------------------")
-    print("Graph information\n")
-    print("Nodes = ", initial_G.nodes)
-    degree = [deg for (node, deg) in initial_G.degree()]
-    print("\nDegree of each node", degree)
-    num_colors = len(set(initial_coloring))
-    print("\nNumber of colors", num_colors)
-    print("\nInitial coloring", initial_coloring)
+    # --------------------------
+    #  Coloring Conflict Graph
+    # --------------------------
+    color_graph_from_coloring(initial_G, [0,3,1,4,2,5])
     
-    #----------------------------
-    # Verifying Graph consistency
-    #---------------------------
-    print("----------------------------")
-    print("Verifying Graph consistency")
-    for e,i in enumerate(initial_G.nodes):
-        print("\nNode",e,"Color", initial_G.nodes[i]['color'])
-        color_and_neighbour = [(neighbour, initial_G.nodes[neighbour]['color']) for neighbour in initial_G[i]]
-        print("Neighbours | Color")
-        for pair in color_and_neighbour:
-            print(pair)
+    initial_function_value = cost_function_timetable(initial_G, num_colors, students_list)
+    print("\nInitial Function Value", initial_function_value)
+    
+    return initial_G, students_list
 
+def instance_den4():
+    # --------------------------
+    # Parse XML file
+    # --------------------------
+    events = parseXML('dataset/den-smallschool.xml')
 
+    # --------------------------
+    #  Preparing Conflict Graph
+    # --------------------------
+    initial_G = create_graph_from_events(events)
+    # --------------------------
+    #  Coloring Conflict Graph
+    # --------------------------
+    #color_graph_greedy(initial_G)
+
+    # Coloring 23 points 
+    initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    color_graph_from_coloring(initial_G, initial_coloring)
+    
+    initial_function_value = cost_function_den_25pts(initial_G)
+    print("\nInitial Function Value Max 25", initial_function_value)
+    initial_function_value = cost_function_den_4pts(initial_G)
+    print("\nInitial Function Value Max 4", initial_function_value)
+
+    return initial_G
+
+def instance_den5():
+    # --------------------------
+    # Parse XML file
+    # --------------------------
+    events = parseXML('dataset/den-smallschool.xml')
+
+    # --------------------------
+    #  Preparing Conflict Graph
+    # --------------------------
+    initial_G = create_graph_from_events(events)
+    # --------------------------
+    #  Coloring Conflict Graph
+    # --------------------------
+    
+    # Greedy coloring to be used in cases where a trivial coloring cannot be
+    # found
+    # -----------------------------------------------------------------
+    #color_graph_greedy(initial_G)
+    
+    # If a suitable coloring can be found without the greedy method use
+    # the color_graph_num method
+    # -----------------------------------------------------------------
+    num_colors = 5 
+    color_graph_from_num(G, num_colors)
+    
+    initial_function_value = cost_function_den_25pts(initial_G)
+    print("\nInitial Function Value Max 25", initial_function_value)
+    initial_function_value = cost_function_den_4pts(initial_G)
+    print("\nInitial Function Value Max 4", initial_function_value)
+
+    return initial_G
+
+def instance_min():
+    # --------------------------
+    #  Preparing Conflict Graph
+    # --------------------------
+    initial_G = minimal_example()
+    # --------------------------
+    #  Coloring Conflict Graph
+    # --------------------------
+    # Minimal example Coloring
+    color_graph_from_coloring(initial_G, [0,1,2,3,4,5,6])
+    initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+    
+    initial_function_value = cost_function_min(initial_G)
+    print("\nInitial Function Value Max 5:", initial_function_value)
+
+    return initial_G
+
+def show_results_cobyla(school, p, initial_G, num_colors):
     #----------------------------
     # Loading QAOA parameters 
     #----------------------------
     # Reading values from CSV file
-    result_list = pd.read_csv("results/"+school+"p"+str(p)+".csv", header=0)
+    result_list = pd.read_csv("results/cobyla/"+school+"p"+str(p)+".csv", header=0)
 
     # Parsing necessary values
     expected_value_list = list(result_list["Expected Value"])
     qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
     min_expected_value = min(expected_value_list)
-    #min_expected_value_index = expected_value_list.index(min_expected_value)
-    # When looking for a specific entry set the index below
-    min_expected_value_index = -1
+    min_expected_value_index = expected_value_list.index(min_expected_value)
     min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
     
     #print("Expected Value List")
@@ -599,16 +594,12 @@ def main():
     #print("Beta0|Gamma|Beta")
     #pp.pprint(qaoa_par_list)
     
-    #print("\nMin Expected Value: ", min_expected_value)
-    print("\nMin Expected Value: ", 2.741989)
+    print("\nMin Expected Value: ", min_expected_value)
     
-    #beta0 = float(min_qaoa_par.pop(0))
-    #middle = int(len(min_qaoa_par)/2)
-    #gamma = [float(par) for par in min_qaoa_par[:middle]]
-    #beta  = [float(par) for par in min_qaoa_par[middle:]]
-    beta0 = 0.35929472
-    gamma = [3.15810917]
-    beta = [0.06589716]
+    beta0 = float(min_qaoa_par.pop(0))
+    middle = int(len(min_qaoa_par)/2)
+    gamma = [float(par) for par in min_qaoa_par[:middle]]
+    beta  = [float(par) for par in min_qaoa_par[middle:]]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -637,8 +628,8 @@ def main():
     counts = {} # Dictionary for keeping the results of the simulation
     states = []
     probabilities = []
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+    for i in result.states:
+        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
         counts[binary] = int((2**20)*result.probability(i))
         states.append(binary)
         probabilities.append(result.probability(i))
@@ -646,7 +637,8 @@ def main():
     print("Number of States", len(counts))
     #pp.pprint(counts)
 
-    # ------------------------- Evaluate the data from the simulator
+    # ------------------------- 
+    # Evaluate the data from the simulator
     # --------------------------
     print('\n --- SIMULATION RESULTS ---')
     avr_function_value = 0
@@ -668,7 +660,10 @@ def main():
 
             if school == "CEC":
                 fx = cost_function_timetable(G, num_colors, students_list)
-            elif school == "Den":
+            elif school == "Den4":
+                fx = cost_function_den_25pts(G)
+                #fx = cost_function_den_4pts(G)
+            elif school == "Den5":
                 fx = cost_function_den_25pts(G)
                 #fx = cost_function_den_4pts(G)
             elif school == "Min":
@@ -715,7 +710,10 @@ def main():
 
         if school == "CEC":
             fx = cost_function_timetable(G, num_colors, students_list)
-        elif school == "Den":
+        elif school == "Den4":
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
+        elif school == "Den5":
             fx = cost_function_den_25pts(G)
             #fx = cost_function_den_4pts(G)
         elif school == "Min":
@@ -769,7 +767,10 @@ def main():
 
     if school == "CEC":
         common_value = cost_function_timetable(G, num_colors, students_list)
-    elif school == "Den":
+    elif school == "Den4":
+        common_value = cost_function_den_25pts(G)
+        #common_value = cost_function_den_4pts(G)
+    elif school == "Den5":
         common_value = cost_function_den_25pts(G)
         #common_value = cost_function_den_4pts(G)
     elif school == "Min":
@@ -788,38 +789,74 @@ def main():
     #print("\nMost Common Coloring Qudits values")
     #for i in range(len(G)):
     #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
-    #-----------------------------
-    print('-----------------------------')
-    print("Repeating QAOA\n")
-    color_graph_from_coloring(G, initial_coloring)
-    num_nodes = G.number_of_nodes()
-    number_of_qubits = num_nodes*num_colors+num_nodes
-    print("Necessary number of qubits: ", number_of_qubits)
+
+def show_results_cma(school, p, initial_G, num_colors):
+    #----------------------------
+    # Loading QAOA parameters 
+    #----------------------------
+    # Reading values from CSV file
+    result_list = pd.read_csv("results/cma/"+school+"p"+str(p)+".csv", header=0)
+
+    # Parsing necessary values
+    expected_value_list = list(result_list["Expected Value"])
+    qaoa_par_list = list(result_list["Beta0|Gamma|Beta"])
+    min_expected_value = min(expected_value_list)
+    min_expected_value_index = expected_value_list.index(min_expected_value)
+    min_qaoa_par = qaoa_par_list[min_expected_value_index][1:-1].split()
+    
+    #print("Expected Value List")
+    #pp.pprint(expected_value_list)
+    #print("Beta0|Gamma|Beta")
+    #pp.pprint(qaoa_par_list)
+    
+    #print("\nMin Expected Value: ", min_expected_value)
+    print("\nMin Expected Value: ", 22.0)
+    
+    beta0 = float(min_qaoa_par.pop(0))
+    middle = int(len(min_qaoa_par)/2)
+    gamma = [float(par) for par in min_qaoa_par[:middle]]
+    beta  = [float(par) for par in min_qaoa_par[middle:]]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
     print("Beta:", beta)
-    # Dictionary for keeping the results of the simulation
-    counts = {}
-    # run on local simulator
-    result = qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta)
-    # Probabilities list to be used at the end of the program 
+
+    # -------------
+    # Starting QAOA
+    # ------------- 
+    print("\nRunning QAOA")
+    num_nodes = initial_G.number_of_nodes()
+    number_of_qubits = num_nodes*num_colors+num_nodes
+    print("Necessary number of qubits: ", number_of_qubits)
+    # --------------------------
+    # Running QAOA on simulator
+    # --------------------------
+    G = nx.Graph()
+    G.add_nodes_from(initial_G)
+    G.add_edges_from(initial_G.edges)
+    color_graph_from_coloring(G, initial_coloring)
+    
+    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
+    
+    # --------------------------
+    # Counting resulting states
+    # --------------------------
+    counts = {} # Dictionary for keeping the results of the simulation
     states = []
     probabilities = []
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+    for i in result.states:
+        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
+        counts[binary] = int((2**20)*result.probability(i))
         states.append(binary)
         probabilities.append(result.probability(i))
-        prob = int((2**20)*result.probability(i))
-        counts[binary] = prob
- 
+
     print("Number of States", len(counts))
     #pp.pprint(counts)
-    # -------------------
-    # Looking the Results
-    # -------------------
-    print('\n --- SIMULATION RESULTS ---')
+
+    # ------------------------- 
     # Evaluate the data from the simulator
+    # --------------------------
+    print('\n --- SIMULATION RESULTS ---')
     avr_function_value = 0
     min_function_value = [0, np.inf]
     hist        = {}
@@ -839,7 +876,10 @@ def main():
 
             if school == "CEC":
                 fx = cost_function_timetable(G, num_colors, students_list)
-            elif school == "Den":
+            elif school == "Den4":
+                fx = cost_function_den_25pts(G)
+                #fx = cost_function_den_4pts(G)
+            elif school == "Den5":
                 fx = cost_function_den_25pts(G)
                 #fx = cost_function_den_4pts(G)
             elif school == "Min":
@@ -861,6 +901,358 @@ def main():
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
+    
+    # -----------------------------------------------------
+    # Evaluate the data from limited number of Measurements
+    # -----------------------------------------------------
+    measurement_number = 10000
+    measurement = np.random.choice(states, measurement_number, p=probabilities)
+    unique, repet = np.unique(measurement, return_counts=True)
+    analysis = dict(zip(unique, repet))
+
+    avr_function_value       = 0
+    hist        = {}
+    for sample in list(analysis.keys()):
+        # use sampled bit string x to compute f(x)
+        x = [int(num) for num in list(sample)]
+        
+        # Coloring Graph with counts[sample]
+        coloring = []
+        for i in range(len(G)):
+            for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+                if int(char):
+                    coloring.append(pos)
+        color_graph_from_coloring(G, coloring)
+
+        if school == "CEC":
+            fx = cost_function_timetable(G, num_colors, students_list)
+        elif school == "Den4":
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
+        elif school == "Den5":
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
+        elif school == "Min":
+            fx = cost_function_min(G)
+
+        # compute the expectation value and energy distribution
+        avr_function_value = avr_function_value + analysis[sample]*fx
+        hist[str(round(fx))] = hist.get(str(round(fx)),0) + analysis[sample]
+
+    print('\n--- Function Distribution  ---')
+    print("Total Number of Measurements", measurement_number)
+    expected_value = avr_function_value/measurement_number
+    print("Expected Value = ", expected_value)
+    print("Objective Function Distribution")
+    pp.pprint(hist)
+        
+    # -----------------------------------------------------
+    print('--------------------------')
+    print('--- Individual States  ---\n')
+    print("Best result found: ", min_function_value[0])
+    print("Number of times result showed: ", counts[min_function_value[0]])
+    print("Percentage of times result showed: ", (counts[min_function_value[0]]/total_counts)*100)
+    print("Objective function value: ", min_function_value[1])
+
+    list_qubits = min_function_value[0]
+    best_coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                # color = pos
+                best_coloring.append(pos)
+
+    print("Best Coloring",best_coloring)
+    #print("Best Coloring Qudits values")
+    #for i in range(len(G)):
+    #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
+    print('\n')
+    
+    #-----------------------------
+    max_counts = max(counts, key=lambda key: counts[key])
+    print("Most commom result found: ", max_counts)
+    print("Number of times result showed: ", counts[max_counts])
+    print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
+    # Coloring Graph with max_counts
+    coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(max_counts[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                coloring.append(pos)
+    color_graph_from_coloring(G, coloring)
+
+    if school == "CEC":
+        common_value = cost_function_timetable(G, num_colors, students_list)
+    elif school == "Den4":
+        common_value = cost_function_den_25pts(G)
+        #common_value = cost_function_den_4pts(G)
+    elif school == "Den5":
+        common_value = cost_function_den_25pts(G)
+        #common_value = cost_function_den_4pts(G)
+    elif school == "Min":
+        common_value = cost_function_min(G)
+    print("Objective function value: ", common_value)
+
+    list_qubits = max_counts
+    common_coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                # color = pos
+                common_coloring.append(pos)
+
+    print("\nMost Common Coloring",common_coloring)
+    #print("\nMost Common Coloring Qudits values")
+    #for i in range(len(G)):
+    #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
+
+def show_results_manual(school, p, initial_G, num_colors):
+    #----------------------------
+    # Loading QAOA parameters 
+    #----------------------------
+    print("\nMin Expected Value: ", 22.0)
+    
+    beta0 = 2.65589313
+    gamma = [3.20952357, 3.20952357, 3.20952357, 3.20952357]
+    beta = [1.27138231, 1.27138231, 1.27138231, 1.27138231]
+    print("Using Following parameters:")
+    print("Beta0:", beta0)
+    print("Gamma:", gamma)
+    print("Beta:", beta)
+
+    # -------------
+    # Starting QAOA
+    # ------------- 
+    print("\nRunning QAOA")
+    num_nodes = initial_G.number_of_nodes()
+    number_of_qubits = num_nodes*num_colors+num_nodes
+    print("Necessary number of qubits: ", number_of_qubits)
+    # --------------------------
+    # Running QAOA on simulator
+    # --------------------------
+    G = nx.Graph()
+    G.add_nodes_from(initial_G)
+    G.add_edges_from(initial_G.edges)
+    color_graph_from_coloring(G, initial_coloring)
+    
+    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
+    
+    # --------------------------
+    # Counting resulting states
+    # --------------------------
+    counts = {} # Dictionary for keeping the results of the simulation
+    states = []
+    probabilities = []
+    for i in result.states:
+        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
+        counts[binary] = int((2**20)*result.probability(i))
+        states.append(binary)
+        probabilities.append(result.probability(i))
+
+    print("Number of States", len(counts))
+    #pp.pprint(counts)
+
+    # ------------------------- Evaluate the data from the simulator
+    # --------------------------
+    print('\n --- SIMULATION RESULTS ---')
+    avr_function_value = 0
+    min_function_value = [0, np.inf]
+    hist        = {}
+
+    for sample in list(counts.keys()):
+        if counts[sample] > 0:
+            # use sampled bit string x to compute f(x)
+            x = [int(num) for num in list(sample)]
+            
+            # Coloring Graph with counts[sample]
+            coloring = []
+            for i in range(len(G)):
+                for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+                    if int(char):
+                        coloring.append(pos)
+            color_graph_from_coloring(G, coloring)
+
+            if school == "CEC":
+                fx = cost_function_timetable(G, num_colors, students_list)
+            elif school == "Den4":
+                fx = cost_function_den_25pts(G)
+                #fx = cost_function_den_4pts(G)
+            elif school == "Den5":
+                fx = cost_function_den_25pts(G)
+                #fx = cost_function_den_4pts(G)
+            elif school == "Min":
+                fx = cost_function_min(G)
+
+            # compute the expectation value and energy distribution
+            avr_function_value = avr_function_value + counts[sample]*fx
+            hist[str(round(fx))] = hist.get(str(round(fx)),0) + counts[sample]
+
+            # save best bit string
+            if( min_function_value[1] > fx):
+                min_function_value[0] = sample
+                min_function_value[1] = fx
+
+    print('\n--- Function Distribution  ---')
+    total_counts = sum(counts.values())
+    print("Total Number of Measurements", total_counts)
+    expected_value = avr_function_value/total_counts
+    print("Expected Value = ", expected_value)
+    print("Objective Function Distribution")
+    pp.pprint(hist)
+    
+    # -----------------------------------------------------
+    # Evaluate the data from limited number of Measurements
+    # -----------------------------------------------------
+    measurement_number = 10000
+    measurement = np.random.choice(states, measurement_number, p=probabilities)
+    unique, repet = np.unique(measurement, return_counts=True)
+    analysis = dict(zip(unique, repet))
+
+    avr_function_value       = 0
+    hist        = {}
+    for sample in list(analysis.keys()):
+        # use sampled bit string x to compute f(x)
+        x = [int(num) for num in list(sample)]
+        
+        # Coloring Graph with counts[sample]
+        coloring = []
+        for i in range(len(G)):
+            for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
+                if int(char):
+                    coloring.append(pos)
+        color_graph_from_coloring(G, coloring)
+
+        if school == "CEC":
+            fx = cost_function_timetable(G, num_colors, students_list)
+        elif school == "Den4":
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
+        elif school == "Den5":
+            fx = cost_function_den_25pts(G)
+            #fx = cost_function_den_4pts(G)
+        elif school == "Min":
+            fx = cost_function_min(G)
+
+        # compute the expectation value and energy distribution
+        avr_function_value = avr_function_value + analysis[sample]*fx
+        hist[str(round(fx))] = hist.get(str(round(fx)),0) + analysis[sample]
+
+    print('\n--- Function Distribution  ---')
+    print("Total Number of Measurements", measurement_number)
+    expected_value = avr_function_value/measurement_number
+    print("Expected Value = ", expected_value)
+    print("Objective Function Distribution")
+    pp.pprint(hist)
+        
+    # -----------------------------------------------------
+    print('--------------------------')
+    print('--- Individual States  ---\n')
+    print("Best result found: ", min_function_value[0])
+    print("Number of times result showed: ", counts[min_function_value[0]])
+    print("Percentage of times result showed: ", (counts[min_function_value[0]]/total_counts)*100)
+    print("Objective function value: ", min_function_value[1])
+
+    list_qubits = min_function_value[0]
+    best_coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                # color = pos
+                best_coloring.append(pos)
+
+    print("Best Coloring",best_coloring)
+    #print("Best Coloring Qudits values")
+    #for i in range(len(G)):
+    #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
+    print('\n')
+    
+    #-----------------------------
+    max_counts = max(counts, key=lambda key: counts[key])
+    print("Most commom result found: ", max_counts)
+    print("Number of times result showed: ", counts[max_counts])
+    print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
+    # Coloring Graph with max_counts
+    coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(max_counts[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                coloring.append(pos)
+    color_graph_from_coloring(G, coloring)
+
+    if school == "CEC":
+        common_value = cost_function_timetable(G, num_colors, students_list)
+    elif school == "Den4":
+        common_value = cost_function_den_25pts(G)
+        #common_value = cost_function_den_4pts(G)
+    elif school == "Den5":
+        common_value = cost_function_den_25pts(G)
+        #common_value = cost_function_den_4pts(G)
+    elif school == "Min":
+        common_value = cost_function_min(G)
+    print("Objective function value: ", common_value)
+
+    list_qubits = max_counts
+    common_coloring = []
+    for i in range(len(G)):
+        for pos, char in enumerate(list_qubits[i*num_colors:(i*num_colors+num_colors)]):
+            if int(char):
+                # color = pos
+                common_coloring.append(pos)
+
+    print("\nMost Common Coloring",common_coloring)
+    #print("\nMost Common Coloring Qudits values")
+    #for i in range(len(G)):
+    #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
+
+def print_graph_info(initial_G):
+    print("--------------------------")
+    print("Graph information\n")
+    print("Nodes = ", initial_G.nodes)
+    degree = [deg for (node, deg) in initial_G.degree()]
+    print("\nDegree of each node", degree)
+    initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+    print("\nInitial coloring", initial_coloring)
+    num_colors = len(set(initial_coloring))
+    print("\nNumber of colors", num_colors)
+    
+    #----------------------------
+    # Verifying Graph consistency
+    #---------------------------
+    print("----------------------------")
+    print("Verifying Graph consistency")
+    for e,i in enumerate(initial_G.nodes):
+        print("\nNode",e,"Color", initial_G.nodes[i]['color'])
+        color_and_neighbour = [(neighbour, initial_G.nodes[neighbour]['color']) for neighbour in initial_G[i]]
+        print("Neighbours | Color")
+        for pair in color_and_neighbour:
+            print(pair)
+
+def main():
+    print("Starting program\n")
+
+    # QAOA parameter
+    p = int(sys.argv[1])
+
+    school = "Den4"
+    #school = "Den5"
+    #school = "Min"
+    #school = "CEC"
+    print("Analysing instance: ", school)
+
+    if school == "CEC":
+        initial_G, students_list = instance_cec()
+    elif school == "Den4":
+        initial_G = instance_den4()
+    elif school == "Den5":
+        initial_G = instance_den4()
+    elif school == "Min":
+        initial_G = instance_min
+
+    print_graph_info(initial_G) 
+
+    show_results_manual()
+    #show_results_cma()
+    #show_results_cobyla() 
 
 if __name__ == '__main__':
     main()
