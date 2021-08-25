@@ -344,7 +344,7 @@ def parameter_setting(gamma, beta, p):
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school):
-    iterations = 10 # Number of independent runs
+    iterations = 1 # Number of independent runs
     
     local_optima_param = []
     # --------------------------
@@ -372,10 +372,10 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
                 beta0 = random.uniform(0, np.pi)
                 gamma = [random.uniform(0, 2*np.pi)]
                 beta  = [random.uniform(0, np.pi)]
-            #print("Using Following parameters:")
-            #print("Beta0:", beta0)
-            #print("Gamma:", gamma)
-            #print("Beta:", beta)
+            print("Using Following parameters:")
+            print("Beta0:", beta0)
+            print("Gamma:", gamma)
+            print("Beta:", beta)
             qaoa_par = [beta0]+gamma+beta
 
             
@@ -435,10 +435,10 @@ def minimization_process_cma(goal_p, G, num_colors, school):
             beta0 = random.uniform(0, np.pi)
             gamma = [random.uniform(0, 2*np.pi)]
             beta  = [random.uniform(0, np.pi)]
-        #print("Using Following parameters:")
-        #print("Beta0:", beta0)
-        #print("Gamma:", gamma)
-        #print("Beta:", beta)
+        print("Using Following parameters:")
+        print("Beta0:", beta0)
+        print("Gamma:", gamma)
+        print("Beta:", beta)
         qaoa_par = [beta0]+gamma+beta
 
         # Settings parameters bounds
@@ -447,7 +447,7 @@ def minimization_process_cma(goal_p, G, num_colors, school):
         upper_bounds_gamma = [2*np.pi]*p
         upper_bounds_beta  = [np.pi]*p
         upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-        opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
+        opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
         sigma0 = 0.3*(2*np.pi)
         print("Initial Step =", sigma0)
         
@@ -597,6 +597,7 @@ def create_graph_from_events(events):
         intersection = [value for value in res0 if value in res1]
         if intersection:
             G.add_edge(i[0]['Id'], i[1]['Id'])
+   
     return G
 
 def main():
@@ -639,17 +640,19 @@ def main():
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
-    num_colors = 5 # Denmark colors
-    color_graph_from_num(G, num_colors)
-    
-    coloring = [G.nodes[node]['color'] for node in G.nodes]
-    #coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    #num_colors = 5 # Denmark colors
+    #color_graph_from_num(G, num_colors)
+
+    # Coloring 23 points 
+    coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    # Optimal Coloring
     #coloring =  [0, 2, 3, 1, 2, 3, 3, 2, 0, 1, 0, 3, 2, 1, 0, 2, 3, 0, 2, 1, 3, 3, 0, 3, 1]
-    #color_graph_from_coloring(G, coloring)
+    color_graph_from_coloring(G, coloring)
+    num_colors = len(set(coloring))
     
-    #num_colors = len(set(coloring))
-    print("\nNumber of colors", num_colors)
+    #coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
+    print("\nNumber of colors", num_colors)
 
     initial_function_value = cost_function_den_25pts(G)
     print("\nInitial Function Value Max 25", initial_function_value)
@@ -659,6 +662,17 @@ def main():
     # ---------------------------
     # Verifying Graph consistency
     #----------------------------
+    # #Adding Auxiliary nodes for mixing 
+    nodes = [('Aux1', {'color': num_colors+1}),
+             ('Aux2', {'color': num_colors+2}),
+    ]
+    G.add_nodes_from(nodes)
+    
+    for n in G.nodes:
+        if n != 'Aux1' and n != 'Aux2':
+            G.add_edge(n, 'Aux1')
+            G.add_edge(n, 'Aux2')
+
     print("----------------------------")
     print("Verifying Graph consistency")
     for i in G.nodes:
@@ -674,6 +688,9 @@ def main():
     print("----------------------------")
     print("Running QAOA")
     num_nodes = G.number_of_nodes()
+    coloring = [G.nodes[node]['color'] for node in G.nodes]
+    num_colors = len(set(coloring))
+    
     number_of_qubits = num_nodes*num_colors+num_nodes
     print("Necessary number of qubits: ", number_of_qubits)
 
@@ -682,7 +699,7 @@ def main():
 
     # Minimizing Example DEN
     minimization_process_cobyla(goal_p, G, num_colors, school)
-    minimization_process_cma(goal_p, G, num_colors, school)
+    #minimization_process_cma(goal_p, G, num_colors, school)
 
     print("Program End")
     print("----------------------------")

@@ -10,6 +10,9 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
+from scipy.optimize import minimize
+from math import floor, ceil
+import sys, os, psutil, datetime
 from xml_parser import parseXML
 from itertools import combinations
 import pprint as pp
@@ -160,8 +163,8 @@ def qaoa(par, p, initial_G, num_colors):
     # Counting resulting states
     # --------------------------
     counts = {} # Dictionary for keeping the results of the simulation
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+    for i in result.states:
+        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
         counts[binary] = int(2**20*result.probability(i))
 
     # --------------------------
@@ -197,50 +200,163 @@ def qaoa(par, p, initial_G, num_colors):
 
     return expectation_value
 
-def minimization_process(p, G, num_colors, school):
-    # --------------------------
-    # Initializing QAOA Parameters 
-    # --------------------------
-    gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-    beta0 = random.uniform(0, np.pi)
-    beta  = [random.uniform(0, np.pi) for _ in range(p)]
-    qaoa_par = [beta0]+gamma+beta
+def parameter_setting(gamma, beta, p):
+    # -------------
+    # Interpolation 
+    # -------------
+    next_gamma = [0]*(2*p)
+    next_beta = [0]*(2*p)
+    
+    next_gamma[0] = gamma[0]
+    next_beta[0] = beta[0]
+    next_gamma[-1] = gamma[-1]
+    next_beta[-1] = beta[-1]
+    if p > 1:
+        for i in range(1,2*p-1,2):
+            next_gamma[i]   = (ceil(i/2)/p) * gamma[int(i/2)+1] + (floor(p-(i/2))/p) * gamma[int(i/2)]
+            next_gamma[i+1] = (ceil(i/2)/p) * gamma[int(i/2)]   + (floor(p-(i/2))/p) * gamma[int(i/2)+1]
+            next_beta[i]    = (ceil(i/2)/p) * beta[int(i/2)+1]  + (floor(p-(i/2))/p) * beta[int(i/2)]
+            next_beta[i+1]  = (ceil(i/2)/p) * beta[int(i/2)]    + (floor(p-(i/2))/p) * beta[int(i/2)+1]
+    
+    return next_gamma, next_beta
 
+def minimization_process_cobyla(goal_p, G, num_colors, school):
+    iterations = 1 # Number of independent runs
+    
+    local_optima_param = []
+    # --------------------------
+    # COBYLA Optimization
+    # --------------------------
+    for i in range(iterations):
+        p = 1          # Start value of p
+        qaoa_args = p, G, num_colors
+        while p <= goal_p:
+            print("Running minimization process with p-value", p)
+            # --------------------------
+            # Initializing QAOA Parameters 
+            # --------------------------
+            if p > 1:
+                # Extracting previous local optima
+                beta0 = local_optima_param[0]
+                new_local_optima_param = np.delete(local_optima_param, 0)
+                middle = int(len(local_optima_param)/2)
+                p_gamma = new_local_optima_param[:middle] # Previous gamma
+                p_beta = new_local_optima_param[middle:]  # Previous beta
+                
+                # Parameter setting strategy
+                gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
+            else:
+                beta0 = random.uniform(0, np.pi)
+                gamma = [random.uniform(0, 2*np.pi)]
+                beta  = [random.uniform(0, np.pi)]
+            print("Using Following parameters:")
+            print("Beta0:", beta0)
+            print("Gamma:", gamma)
+            print("Beta:", beta)
+            qaoa_par = [beta0]+gamma+beta
+
+            
+            # Construct parameters bounds in the form of constraints
+            beta0_bounds = [[0, np.pi]]
+            beta_bounds = [[0, np.pi]]*p
+            gamma_bounds = [[0, 2*np.pi]]*p
+            bounds = beta0_bounds+gamma_bounds+beta_bounds
+            cons = []
+            for factor in range(len(bounds)):
+                lower, upper = bounds[factor]
+                l = {'type': 'ineq',
+                    'fun': lambda x, lb=lower, i=factor: x[i] - lb}
+                u = {'type': 'ineq',
+                    'fun': lambda x, ub=upper, i=factor: ub - x[i]}
+                cons.append(l)
+                cons.append(u)
+            
+            #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+            print("Minimizing function using COBYLA")
+            print("Current Time:-", datetime.datetime.now())
+            res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
+                    constraints=cons, options={'disp': False})
+            print(res)
+            print("Current Time:-", datetime.datetime.now())
+            #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+            print("Saving Results\n")
+            #save_csv([[res['fun'], res['x']]], "results/cobyla/"+school+"p"+str(p)+".csv" )
+            local_optima_param = res['x']
+            
+            # Preparing next p-value
+            p = p*2
+
+def minimization_process_cma(goal_p, G, num_colors, school): 
     # --------------------------
     # CMA-ES Optimization 
     # --------------------------
-    lower_bounds = [0] * ((2*p)+1)
-    upper_bounds_beta0 = [np.pi]
-    upper_bounds_gamma = [2*np.pi]*p
-    upper_bounds_beta  = [np.pi]*p
-    upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-    opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
-    sigma0 = 0.3*(2*np.pi)
-    print("Initial Step =", sigma0)
-    
-    es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
-    while not es.stop():
-        solutions = es.ask()
-        #print("Solutions", solutions)
-        es.tell(solutions, [qaoa(s, p, G, num_colors) for s in solutions])
+    local_optima_param = []
+    p = 1          # Start value of p
+    while p <= goal_p:
+        print("Running minimization process with p-value", p)
+        #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+        # --------------------------
+        # Initializing QAOA Parameters 
+        # --------------------------
+        if p > 1:
+            # Extracting previous local optima
+            beta0 = local_optima_param[0]
+            new_local_optima_param = np.delete(local_optima_param, 0)
+            middle = int(len(local_optima_param)/2)
+            p_gamma = new_local_optima_param[:middle] # Previous gamma
+            p_beta = new_local_optima_param[middle:]  # Previous beta
+            
+            # Parameter setting strategy
+            gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
+        else:
+            beta0 = random.uniform(0, np.pi)
+            gamma = [random.uniform(0, 2*np.pi)]
+            beta  = [random.uniform(0, np.pi)]
+        print("Using Following parameters:")
+        print("Beta0:", beta0)
+        print("Gamma:", gamma)
+        print("Beta:", beta)
+        qaoa_par = [beta0]+gamma+beta
+
+        # Settings parameters bounds
+        lower_bounds = [0] * ((2*p)+1)
+        upper_bounds_beta0 = [np.pi]
+        upper_bounds_gamma = [2*np.pi]*p
+        upper_bounds_beta  = [np.pi]*p
+        upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
+        opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
+        sigma0 = 0.3*(2*np.pi)
+        print("Initial Step =", sigma0)
+        
+        es = cma.CMAEvolutionStrategy(qaoa_par, sigma0, opts)
+        while not es.stop():
+            solutions = es.ask()
+            function_values = [qaoa(s, p, G, num_colors) for s in solutions]
+            es.tell(solutions, function_values)
+            res = es.result
+            #print("Saving Results")
+            #save_csv([[res[1], res[0]]], "results/cma/"+school+"p"+str(p)+".csv" )
+            es.disp()
+        print("---------------------------")
+        es.result_pretty()
         res = es.result
-        #print("Saving Results")
-        save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
-        es.disp()
-    print("---------------------------")
-    es.result_pretty()
-    res = es.result
-    print("---------------------------")
-    print("Optimal Result", res[0])
-    print("Respective Function Value", res[1])
-    print("Respective Function Evaluations", res[2])
-    print("Overall Function Evaluations", res[3])
-    print("Overall Iterations", res[4])
-    print("Mean Result", res[5])
-    print("Standard Deviation Final Sample", res[6])
-    
-    print("Saving Final Results")
-    save_csv([[res[1], p, res[0]]], "results/"+school+"p"+str(p)+".csv" )
+        print("---------------------------")
+        print("Optimal Result", res[0])
+        print("Respective Function Value", res[1])
+        print("Respective Function Evaluations", res[2])
+        print("Overall Function Evaluations", res[3])
+        print("Overall Iterations", res[4])
+        print("Mean Result", res[5])
+        print("Standard Deviation Final Sample", res[6])
+        
+        #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
+        print("Saving Final Results")
+        print("---------------------------\n")
+        save_csv([[res[1], res[0]]], "results/cma/"+school+"p"+str(p)+".csv" )
+        local_optima_param = res[0]
+
+        # Preparing next p-value
+        p = p*2
 
 def color_graph_greedy(G):
     pair = None, G.number_of_nodes(), 0
@@ -443,11 +559,11 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    p = int(sys.argv[1])
+    goal_p = 8
 
-    # Minimizing Example CEC
-    print("Running minimization process")
-    minimization_process(p, G, num_colors, school)
+    # Minimizing Example DEN
+    minimization_process_cobyla(goal_p, G, num_colors, school)
+    minimization_process_cma(goal_p, G, num_colors, school)
     
     print("Program End")
     print("----------------------------")
