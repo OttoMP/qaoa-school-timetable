@@ -9,6 +9,7 @@ import numpy as np
 import networkx as nx
 
 # Import miscellaneous tools
+from math import floor, ceil
 import gc
 import os
 import psutil
@@ -648,61 +649,113 @@ def first_example():
 
     return G, students_list
 
+def parameter_setting(gamma, beta, p):
+    # -------------
+    # Interpolation 
+    # -------------
+    next_gamma = [0]*(2*p)
+    next_beta = [0]*(2*p)
+
+    next_gamma[0] = gamma[0]
+    next_beta[0] = beta[0]
+    next_gamma[-1] = gamma[-1]
+    next_beta[-1] = beta[-1]
+    if p > 1:
+        for i in range(1,2*p-1,2):
+            print("iteration i", i, "int(i/2)", int(i/2), "int(i/2)+1", int(i/2)+1)
+            next_gamma[i]   = (ceil(i/2)/p) * gamma[int(i/2)+1] + (floor(p-(i/2))/p) * gamma[int(i/2)]
+            next_gamma[i+1] = (ceil(i/2)/p) * gamma[int(i/2)]   + (floor(p-(i/2))/p) * gamma[int(i/2)+1]
+            next_beta[i]    = (ceil(i/2)/p) * beta[int(i/2)+1]  + (floor(p-(i/2))/p) * beta[int(i/2)]
+            next_beta[i+1]  = (ceil(i/2)/p) * beta[int(i/2)]    + (floor(p-(i/2))/p) * beta[int(i/2)+1]
+    
+    return next_gamma, next_beta
+
+def fourier_ps(u_B, v_B, R):
+    u_0 = []
+    v_0 = []
+
+    #print("normal_values_u")
+    #pp.pprint(normal_values_u)
+    #print("normal_values_v")
+    #pp.pprint(normal_values_v)
+
+    for r in range(R+1):
+        normal_values_u = [0.6*np.random.normal(0, best_u**2) for best_u in u_B]
+        normal_values_v = [0.6*np.random.normal(0, best_u**2) for best_u in u_B]
+        u_0.append([a + b for a, b in zip(u_B, normal_values_u)]+[0])
+        v_0.append([a + b for a, b in zip(v_B, normal_values_v)]+[0])
+    
+    return u_0, v_0
+
+
+
 def main():
     print("Starting program\n")
-    tr = tracker.SummaryTracker()
-    tr.print_diff() 
-    # --------------------------
-    # School Instances
-    # --------------------------
-    school = "CEC"
-           
-    #----------------------------
-    # Starting QAOA
-    #----------------------------
-    initial_G, students_list = first_example()
-    #initial_G, num_colors = create_full_graph(tr)
-    
-    num_colors = 6        # CEC example colors
-    color_graph_from_coloring(initial_G, [0,3,1,4,2,5])
-    G = nx.Graph()
-    G.add_nodes_from(initial_G)
-    G.add_edges_from(initial_G.edges)
-    initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
-    color_graph_from_coloring(G, initial_coloring)
-    
-    num_nodes = G.number_of_nodes()
-    number_of_qubits = num_nodes*num_colors+num_nodes
-    print("Necessary number of qubits: ", number_of_qubits)
 
-    print("----------------------------")
-    print("Running QAOA")
-    # QAOA parameter
-    p = int(sys.argv[1])
+    local_optima_u = [random.uniform(0, np.pi)]
+    local_optima_v = [random.uniform(0, np.pi)]
+    best_optima_u = [random.uniform(0, np.pi)]
+    best_optima_v = [random.uniform(0, np.pi)]
 
+    print("Local u", local_optima_u) 
+    print("Local v", local_optima_v) 
+    print("Best u", best_optima_u) 
+    print("Best v", best_optima_v) 
+
+    new_u = [local_optima_u+[0]]
+    new_v = [local_optima_v+[0]]
+    
+    u_0, v_0 = fourier_ps(best_optima_u, best_optima_v, R=10)
+    new_u = new_u+u_0
+    new_v = new_v+v_0
+
+    print("Initial values of u_p")
+    pp.pprint(new_u)
+    print("Initial values of v_p")
+    pp.pprint(new_v)
+
+    p=2
+    all_gamma = []
+    all_beta = []
+    for u,v in zip(new_u, new_v):
+        gamma = [0]*p
+        beta = [0]*p
+        for i in range(p):
+            for k in range(p):
+                gamma[i] += u[k]*np.sin( ( (k-(1/2)+1) * (i-(1/2)+1) * (np.pi/p)) )
+                beta[i]  += v[k]*np.cos( ( (k-(1/2)+1) * (i-(1/2)+1) * (np.pi/p)) )
+        all_gamma.append(gamma)
+        all_beta.append(beta)
+    
+    print("Values for gamma")
+    pp.pprint(all_gamma)
+    print("Values for beta")
+    pp.pprint(all_beta)
+
+    '''
     gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-    beta0 = random.uniform(0, np.pi)
     beta  = [random.uniform(0, np.pi) for _ in range(p)]
-    s = [beta0]+gamma+beta
-    tr.print_diff() 
-    for i in range(10):
-        print("Iteration:", i)
-        print("Memory Usage before qaoa call", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-        print("Muppy all objects", len(muppy.get_objects()))
-        tr.print_diff()
-        print("Garbage counter", len(gc.garbage))
-        print()
-        #ev = qaoa(s, p, G, num_colors, tr)
-        ev = qaoa(s, p, G, num_colors, students_list, tr)
-        print("Memory Usage after qaoa call", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-        print("Muppy all objects", len(muppy.get_objects()))
-        tr.print_diff() 
-        print("Garbage counter", len(gc.garbage))
-        print("-------------------")
-    print("Memory Usage after gc", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
-    print("Muppy all objects", len(muppy.get_objects()))
-    tr.print_diff() 
-    print("Garbage counter", len(gc.get_objects()))
+    local_optima_param = [beta0]+gamma+beta
+
+    
+    while p <= 4:
+        print("p", p)
+        
+        beta0 = local_optima_param[0]
+        new_local_optima_param = np.delete(local_optima_param, 0)
+        middle = int(len(local_optima_param)/2)
+        p_gamma = new_local_optima_param[:middle] # Previous gamma
+        p_beta = new_local_optima_param[middle:]  # Previous beta
+
+        print("previous gamma", p_gamma) 
+        print("previous beta", p_beta) 
+        # Parameter setting strategy
+        gamma, beta = parameter_setting(p_gamma, p_beta, p)
+   
+        local_optima_param = [beta0]+gamma+beta
+        print("Local optima params", local_optima_param)
+        p = p*2
+    ''' 
 
 if __name__ == '__main__':
     main()
