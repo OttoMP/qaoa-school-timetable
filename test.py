@@ -687,7 +687,30 @@ def fourier_ps(u_B, v_B, R):
     
     return u_0, v_0
 
+def remove_aux_fix_coloring(G, coloring, num_colors):
+    # Remove Auxiliar Nodes 
+    aux_colors = [5,6]
+    for i, color in enumerate(coloring):
+        if color == aux_colors[0]:
+            coloring[i] = coloring[-2]
+        if color == aux_colors[1]:
+            coloring[i] = coloring[-1]
 
+    coloring[-2] = aux_colors[0]
+    coloring[-1] = aux_colors[1]
+
+    # Fix Coloring
+    for i, node in enumerate(G.nodes):
+        if coloring[i] == aux_colors[0] or coloring[i] == aux_colors[1]:
+            not_allowed_color = {G.nodes[neighbour]['color'] for neighbour in G[node]}
+            if len(not_allowed_color) == num_colors:
+                break
+            color_index = 0
+            while color_index in not_allowed_color:
+                color_index = (color_index+1)%num_colors
+            coloring[i] = color_index
+
+    color_graph_from_coloring(G, coloring)
 
 def main():
     print("Starting program\n")
@@ -714,6 +737,8 @@ def main():
     print("Initial values of v_p")
     pp.pprint(new_v)
 
+    # TODO Values current reach negatives values
+    # needs reworking
     p=2
     all_gamma = []
     all_beta = []
@@ -731,31 +756,6 @@ def main():
     pp.pprint(all_gamma)
     print("Values for beta")
     pp.pprint(all_beta)
-
-    '''
-    gamma = [random.uniform(0, 2*np.pi) for _ in range(p)]
-    beta  = [random.uniform(0, np.pi) for _ in range(p)]
-    local_optima_param = [beta0]+gamma+beta
-
-    
-    while p <= 4:
-        print("p", p)
-        
-        beta0 = local_optima_param[0]
-        new_local_optima_param = np.delete(local_optima_param, 0)
-        middle = int(len(local_optima_param)/2)
-        p_gamma = new_local_optima_param[:middle] # Previous gamma
-        p_beta = new_local_optima_param[middle:]  # Previous beta
-
-        print("previous gamma", p_gamma) 
-        print("previous beta", p_beta) 
-        # Parameter setting strategy
-        gamma, beta = parameter_setting(p_gamma, p_beta, p)
-   
-        local_optima_param = [beta0]+gamma+beta
-        print("Local optima params", local_optima_param)
-        p = p*2
-    ''' 
 
 if __name__ == '__main__':
     main()
