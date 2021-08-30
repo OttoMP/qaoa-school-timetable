@@ -26,7 +26,7 @@ def save_csv(data, nome_csv):
 
 def cost_function_min(G):
     C = 0
-    
+        
     if G.nodes["Event1"]['color'] != 1:
         C += 1
     if G.nodes["Event2"]['color'] != 2:
@@ -129,6 +129,35 @@ def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
+def remove_aux_fix_coloring(G, coloring, num_colors):
+    # Remove Auxiliar Nodes 
+    aux_colors = [5,6]
+    for i, color in enumerate(coloring):
+        if color == aux_colors[0]:
+            coloring[i] = coloring[-2]
+        if color == aux_colors[1]:
+            coloring[i] = coloring[-1]
+
+    coloring[-2] = aux_colors[0]
+    coloring[-1] = aux_colors[1]
+    color_graph_from_coloring(G, coloring)
+
+    # Fix Coloring
+    for i, node in enumerate(G.nodes):
+        if coloring[i] == aux_colors[0] or coloring[i] == aux_colors[1]:
+            not_allowed_color = {G.nodes[neighbour]['color'] for neighbour in G[node]}
+            if len(not_allowed_color) == num_colors:
+                break
+            color_index = 0
+            while color_index in not_allowed_color:
+                color_index = (color_index+1)%num_colors
+            coloring[i] = color_index
+
+    coloring[-2] = aux_colors[0]
+    coloring[-1] = aux_colors[1]
+    color_graph_from_coloring(G, coloring)
+
+
 def qaoa(par, p, initial_G, num_colors):
     # --------------------------
     # Unpacking QAOA parameters
@@ -186,6 +215,7 @@ def qaoa(par, p, initial_G, num_colors):
                         coloring.append(pos)
             color_graph_from_coloring(G, coloring)
 
+            remove_aux_fix_coloring(G, coloring, num_colors)
             fx = cost_function_min(G)
 
             # compute the expectation value and energy distribution
@@ -246,9 +276,12 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
                 # Parameter setting strategy
                 gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
             else:
-                beta0 = random.uniform(0, np.pi)
-                gamma = [random.uniform(0, 2*np.pi)]
-                beta  = [random.uniform(0, np.pi)]
+                beta0 = 1.709940630910423
+                gamma = [1.4388523550444037]
+                beta  = [1.009163817225765]
+                #beta0 = random.uniform(0, np.pi)
+                #gamma = [random.uniform(0, 2*np.pi)]
+                #beta  = [random.uniform(0, np.pi)]
             print("Using Following parameters:")
             print("Beta0:", beta0)
             print("Gamma:", gamma)
@@ -528,6 +561,7 @@ def main():
     # --------------------------
     # Minimal example Coloring
     color_graph_from_coloring(G, [0,1,2,3,4,5,6])
+    #color_graph_from_coloring(G, [6,1,2,3,0,5,5])
     
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     num_colors = len(set(coloring))
@@ -563,7 +597,7 @@ def main():
 
     # Minimizing Example DEN
     minimization_process_cobyla(goal_p, G, num_colors, school)
-    minimization_process_cma(goal_p, G, num_colors, school)
+    #minimization_process_cma(goal_p, G, num_colors, school)
     
     print("Program End")
     print("----------------------------")
