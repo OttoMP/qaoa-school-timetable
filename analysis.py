@@ -618,7 +618,6 @@ def show_results_cobyla(school, p, initial_G, num_colors):
     G = nx.Graph()
     G.add_nodes_from(initial_G)
     G.add_edges_from(initial_G.edges)
-    color_graph_from_coloring(G, initial_coloring)
     
     result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
     
@@ -834,7 +833,6 @@ def show_results_cma(school, p, initial_G, num_colors):
     G = nx.Graph()
     G.add_nodes_from(initial_G)
     G.add_edges_from(initial_G.edges)
-    color_graph_from_coloring(G, initial_coloring)
     
     result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
     
@@ -1010,11 +1008,11 @@ def show_results_manual(school, p, initial_G, num_colors):
     #----------------------------
     # Loading QAOA parameters 
     #----------------------------
-    print("\nMin Expected Value: ", 22.0)
+    print("\nMin Expected Value: ", 4.913618777995681)
     
-    beta0 = 2.65589313
-    gamma = [3.20952357, 3.20952357, 3.20952357, 3.20952357]
-    beta = [1.27138231, 1.27138231, 1.27138231, 1.27138231]
+    beta0 = 2.74996353
+    gamma = [3.50873324, 2.38362654, 2.13341919, 2.00831552, 2.00831552, 1.63300597, 1.88321234, 1.50790279]
+    beta = [1.9130512, 1.91309058, 1.91282658, 1.91269457, 1.91269457, 1.91237205, 1.91258707, 1.91226454]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -1033,7 +1031,6 @@ def show_results_manual(school, p, initial_G, num_colors):
     G = nx.Graph()
     G.add_nodes_from(initial_G)
     G.add_edges_from(initial_G.edges)
-    color_graph_from_coloring(G, initial_coloring)
     
     result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
     
@@ -1052,7 +1049,8 @@ def show_results_manual(school, p, initial_G, num_colors):
     print("Number of States", len(counts))
     #pp.pprint(counts)
 
-    # ------------------------- Evaluate the data from the simulator
+    # ------------------------- 
+    # Evaluate the data from the simulator
     # --------------------------
     print('\n --- SIMULATION RESULTS ---')
     avr_function_value = 0
@@ -1081,6 +1079,7 @@ def show_results_manual(school, p, initial_G, num_colors):
                 fx = cost_function_den_25pts(G)
                 #fx = cost_function_den_4pts(G)
             elif school == "Min":
+                remove_aux_fix_coloring(G, coloring, num_colors)
                 fx = cost_function_min(G)
 
             # compute the expectation value and energy distribution
@@ -1099,7 +1098,7 @@ def show_results_manual(school, p, initial_G, num_colors):
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
-    
+    ''' 
     # -----------------------------------------------------
     # Evaluate the data from limited number of Measurements
     # -----------------------------------------------------
@@ -1143,7 +1142,7 @@ def show_results_manual(school, p, initial_G, num_colors):
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
-        
+    '''
     # -----------------------------------------------------
     print('--------------------------')
     print('--- Individual States  ---\n')
@@ -1160,6 +1159,7 @@ def show_results_manual(school, p, initial_G, num_colors):
                 # color = pos
                 best_coloring.append(pos)
 
+    remove_aux_fix_coloring(G, best_coloring, num_colors)
     print("Best Coloring",best_coloring)
     #print("Best Coloring Qudits values")
     #for i in range(len(G)):
@@ -1177,6 +1177,7 @@ def show_results_manual(school, p, initial_G, num_colors):
         for pos, char in enumerate(max_counts[i*num_colors:(i*num_colors+num_colors)]):
             if int(char):
                 coloring.append(pos)
+    
     color_graph_from_coloring(G, coloring)
 
     if school == "CEC":
@@ -1188,6 +1189,7 @@ def show_results_manual(school, p, initial_G, num_colors):
         common_value = cost_function_den_25pts(G)
         #common_value = cost_function_den_4pts(G)
     elif school == "Min":
+        remove_aux_fix_coloring(G, coloring, num_colors)
         common_value = cost_function_min(G)
     print("Objective function value: ", common_value)
 
@@ -1227,15 +1229,44 @@ def print_graph_info(initial_G):
         for pair in color_and_neighbour:
             print(pair)
 
+def remove_aux_fix_coloring(G, coloring, num_colors):
+    # Remove Auxiliar Nodes 
+    aux_colors = [5,6]
+    for i, color in enumerate(coloring):
+        if color == aux_colors[0]:
+            coloring[i] = coloring[-2]
+        if color == aux_colors[1]:
+            coloring[i] = coloring[-1]
+
+    coloring[-2] = aux_colors[0]
+    coloring[-1] = aux_colors[1]
+    color_graph_from_coloring(G, coloring)
+
+    # Fix Coloring
+    for i, node in enumerate(G.nodes):
+        if coloring[i] == aux_colors[0] or coloring[i] == aux_colors[1]:
+            not_allowed_color = {G.nodes[neighbour]['color'] for neighbour in G[node]}
+            if len(not_allowed_color) == num_colors:
+                break
+            color_index = 0
+            while color_index in not_allowed_color:
+                color_index = (color_index+1)%num_colors
+            coloring[i] = color_index
+
+    coloring[-2] = aux_colors[0]
+    coloring[-1] = aux_colors[1]
+    color_graph_from_coloring(G, coloring)
+
+
 def main():
     print("Starting program\n")
 
     # QAOA parameter
     p = int(sys.argv[1])
 
-    school = "Den4"
+    #school = "Den4"
     #school = "Den5"
-    #school = "Min"
+    school = "Min"
     #school = "CEC"
     print("Analysing instance: ", school)
 
@@ -1246,11 +1277,17 @@ def main():
     elif school == "Den5":
         initial_G = instance_den4()
     elif school == "Min":
-        initial_G = instance_min
+        initial_G = instance_min()
 
     print_graph_info(initial_G) 
 
-    show_results_manual()
+    num_nodes = initial_G.number_of_nodes()
+    coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+    num_colors = len(set(coloring))
+    number_of_qubits = num_nodes*num_colors+num_nodes
+    print("Necessary number of qubits: ", number_of_qubits)
+
+    show_results_manual(school, p, initial_G, num_colors)
     #show_results_cma()
     #show_results_cobyla() 
 
