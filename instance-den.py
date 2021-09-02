@@ -308,8 +308,8 @@ def qaoa(par, p, initial_G, num_colors):
                 print("Qubits values", x)
             color_graph_from_coloring(G, coloring)
 
-            fx = cost_function_den_25pts(G)
-            #fx = cost_function_den_4pts(G)
+            #fx = cost_function_den_25pts(G)
+            fx = cost_function_den_4pts(G)
 
             # compute the expectation value and energy distribution
             avr_function_value = avr_function_value + counts[sample]*fx
@@ -344,7 +344,7 @@ def parameter_setting(gamma, beta, p):
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school):
-    iterations = 1 # Number of independent runs
+    iterations = 20 # Number of independent runs
     
     local_optima_param = []
     # --------------------------
@@ -372,12 +372,11 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
                 beta0 = random.uniform(0, np.pi)
                 gamma = [random.uniform(0, 2*np.pi)]
                 beta  = [random.uniform(0, np.pi)]
-            print("Using Following parameters:")
-            print("Beta0:", beta0)
-            print("Gamma:", gamma)
-            print("Beta:", beta)
+            #print("Using Following parameters:")
+            #print("Beta0:", beta0)
+            #print("Gamma:", gamma)
+            #print("Beta:", beta)
             qaoa_par = [beta0]+gamma+beta
-
             
             # Construct parameters bounds in the form of constraints
             beta0_bounds = [[0, np.pi]]
@@ -435,10 +434,10 @@ def minimization_process_cma(goal_p, G, num_colors, school):
             beta0 = random.uniform(0, np.pi)
             gamma = [random.uniform(0, 2*np.pi)]
             beta  = [random.uniform(0, np.pi)]
-        print("Using Following parameters:")
-        print("Beta0:", beta0)
-        print("Gamma:", gamma)
-        print("Beta:", beta)
+        #print("Using Following parameters:")
+        #print("Beta0:", beta0)
+        #print("Gamma:", gamma)
+        #print("Beta:", beta)
         qaoa_par = [beta0]+gamma+beta
 
         # Settings parameters bounds
@@ -447,7 +446,7 @@ def minimization_process_cma(goal_p, G, num_colors, school):
         upper_bounds_gamma = [2*np.pi]*p
         upper_bounds_beta  = [np.pi]*p
         upper_bounds = upper_bounds_beta0+upper_bounds_gamma+upper_bounds_beta 
-        opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 1, } #'maxfevals': 300}
+        opts = {'bounds' : [lower_bounds, upper_bounds], 'maxiter': 300, } #'maxfevals': 300}
         sigma0 = 0.3*(2*np.pi)
         print("Initial Step =", sigma0)
         
@@ -662,17 +661,6 @@ def main():
     # ---------------------------
     # Verifying Graph consistency
     #----------------------------
-    # #Adding Auxiliary nodes for mixing 
-    nodes = [('Aux1', {'color': num_colors+1}),
-             ('Aux2', {'color': num_colors+2}),
-    ]
-    G.add_nodes_from(nodes)
-    
-    for n in G.nodes:
-        if n != 'Aux1' and n != 'Aux2':
-            G.add_edge(n, 'Aux1')
-            G.add_edge(n, 'Aux2')
-
     print("----------------------------")
     print("Verifying Graph consistency")
     for i in G.nodes:
@@ -699,7 +687,7 @@ def main():
 
     # Minimizing Example DEN
     minimization_process_cobyla(goal_p, G, num_colors, school)
-    #minimization_process_cma(goal_p, G, num_colors, school)
+    minimization_process_cma(goal_p, G, num_colors, school)
 
     print("Program End")
     print("----------------------------")
