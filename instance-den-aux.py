@@ -677,7 +677,7 @@ def main():
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
-    num_colors = 5 # Denmark colors
+    #num_colors = 5 # Denmark colors
     #color_graph_from_num(G, num_colors)
 
     # Coloring 23 points 
@@ -685,7 +685,7 @@ def main():
     # Optimal Coloring
     #coloring =  [0, 2, 3, 1, 2, 3, 3, 2, 0, 1, 0, 3, 2, 1, 0, 2, 3, 0, 2, 1, 3, 3, 0, 3, 1]
     color_graph_from_coloring(G, coloring)
-    #num_colors = len(set(coloring))
+    num_colors = len(set(coloring))
     
     #coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
@@ -726,7 +726,7 @@ def main():
     goal_p = 8
 
     # Minimizing Example DEN
-    #minimization_process_cobyla(goal_p, G, num_colors, school)
+    minimization_process_cobyla(goal_p, G, num_colors, school)
     minimization_process_cma(goal_p, G, num_colors, school)
 
     print("Program End")
