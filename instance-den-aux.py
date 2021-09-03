@@ -428,7 +428,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             print("Current Time:-", datetime.datetime.now())
             #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
             print("Saving Results\n")
-            save_csv([[res['fun'], res['x']]], "results/cobyla/"+school+"p"+str(p)+".csv" )
+            save_csv([[res['fun'], res['x']]], "results/cobyla/Den-4-4-aux/"+school+"p"+str(p)+".csv" )
             local_optima_param = res['x']
             
             # Preparing next p-value
@@ -500,7 +500,7 @@ def minimization_process_cma(goal_p, G, num_colors, school):
         #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
         print("Saving Final Results")
         print("---------------------------\n")
-        save_csv([[res[1], res[0]]], "results/cma/"+school+"p"+str(p)+".csv" )
+        save_csv([[res[1], res[0]]], "results/cma/Den-4-4-aux/"+school+"p"+str(p)+".csv" )
         local_optima_param = res[0]
 
         # Preparing next p-value
@@ -627,8 +627,8 @@ def create_graph_from_events(events):
 
 def add_auxiliary_nodes(G, num_colors):
     #Adding Auxiliary nodes for mixing 
-    nodes = [('Aux1', {'color': num_colors+1}),
-             ('Aux2', {'color': num_colors+2}),
+    nodes = [('Aux1', {'color': num_colors}),
+             ('Aux2', {'color': num_colors+1}),
     ]
     G.add_nodes_from(nodes)
     
