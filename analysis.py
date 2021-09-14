@@ -75,7 +75,6 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
         X(qc[node])
 
 def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
-    #ket_config(precision='double')
     # --------------------------
     # Initializing qubits
     # --------------------------
@@ -239,6 +238,52 @@ def color_graph_from_coloring(graph, coloring):
 
     return
 
+def color_graph_from_num(graph, num_color):
+    color_index = 0
+    node_list = list(graph.nodes)
+    not_allowed_color = []
+
+    # Mark all the vertices as not visited
+    visited = {x: False for x in graph.nodes}
+
+    # Create a queue for BFS
+    queue = []
+
+    # Mark the source node as
+    # visited and enqueue it
+    for u in node_list:
+        success = True
+        queue.append(u)
+        visited[u] = True
+
+        while queue:
+            # Dequeue a vertex from queue and color it
+            source = queue.pop(0)
+            not_allowed_color = {graph.nodes[neighbour]['color'] for neighbour in graph[source]
+                                    if (graph.nodes[neighbour]['color'] != None) }
+            if len(not_allowed_color) == num_color:
+                success = False
+                visited = {x: False for x in graph.nodes}
+                break
+
+            while color_index in not_allowed_color:
+                color_index = (color_index+1)%num_color
+            graph.nodes[source]['color'] = color_index
+            not_allowed_color = set()
+
+            # Get all adjacent vertices of the
+            # dequeued vertex s. If a adjacent
+            # has not been visited, then mark it
+            # visited and enqueue it
+            for i in graph[source]:
+                if visited[i] == False:
+                    queue.append(i)
+                    visited[i] = True
+        if success:
+            break
+
+    return
+
 def create_graph_from_events(events):
     G = nx.Graph()
     G.add_nodes_from([(event['Id'], {'color' : None}) for event in events])
@@ -289,7 +334,7 @@ def instance_den4():
     print("\nInitial Function Value Max 4", initial_function_value)
 
     # Adding extras nodes to allow mixing
-    #add_auxiliary_nodes(initial_G, 4)
+    add_auxiliary_nodes(initial_G, 4)
 
     return initial_G
 
@@ -315,10 +360,10 @@ def instance_den5():
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
-    #num_colors = 5 
-    #color_graph_from_num(initial_G, num_colors)
-    initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
-    color_graph_from_coloring(initial_G, initial_coloring)
+    num_colors = 5 
+    color_graph_from_num(initial_G, num_colors)
+    #initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    #color_graph_from_coloring(initial_G, initial_coloring)
     
     initial_function_value = cost_function_den_25pts(initial_G)
     print("\nInitial Function Value Max 25", initial_function_value)
@@ -327,15 +372,26 @@ def instance_den5():
 
     return initial_G
 
+def coloring_is_invalid(G):
+    #----------------------------
+    # Verifying Graph consistency
+    #---------------------------
+    for e,i in enumerate(G.nodes):
+        color = G.nodes[i]['color']
+        neighbour_colors = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+        if color in neighbour_colors:
+            return True
+    return False
+
 def show_results_manual(school, p, initial_G, num_colors):
     #----------------------------
     # Loading QAOA parameters 
     #----------------------------
-    print("\nMin Expected Value: ", 22)
+    print("\nMin Expected Value: ", 3.5)
     
-    beta0 = 2.50885865
-    gamma = [5.01571288]
-    beta =  [1.41854713]
+    beta0 = 1.17814704
+    gamma = [4.87014693]
+    beta =  [2.3562754]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -392,14 +448,17 @@ def show_results_manual(school, p, initial_G, num_colors):
                     if int(char):
                         coloring.append(pos)
             color_graph_from_coloring(G, coloring)
-
+            
             if  school == "Den4":
-                #remove_aux_fix_coloring(G, coloring, num_colors)
+                remove_aux_fix_coloring(G, coloring, num_colors)
+                if coloring_is_invalid(G):
+                    print("Invalid coloring", coloring)
+                    print("Probability", counts[sample])
                 #fx = cost_function_den_25pts(G)
                 fx = cost_function_den_4pts(G)
             elif school == "Den5":
-                fx = cost_function_den_25pts(G)
-                #fx = cost_function_den_4pts(G)
+                #fx = cost_function_den_25pts(G)
+                fx = cost_function_den_4pts(G)
 
             # compute the expectation value and energy distribution
             avr_function_value = avr_function_value + counts[sample]*fx
@@ -440,13 +499,17 @@ def show_results_manual(school, p, initial_G, num_colors):
                     coloring.append(pos)
         color_graph_from_coloring(G, coloring)
 
+        if coloring_is_invalid(G):
+            print("Invalid coloring", coloring)
+            print("Probability", counts[sample])
+
         if  school == "Den4":
-            #remove_aux_fix_coloring(G, coloring, num_colors)
+            remove_aux_fix_coloring(G, coloring, num_colors)
             #fx = cost_function_den_25pts(G)
             fx = cost_function_den_4pts(G)
         elif school == "Den5":
-            fx = cost_function_den_25pts(G)
-            #fx = cost_function_den_4pts(G)
+            #fx = cost_function_den_25pts(G)
+            fx = cost_function_den_4pts(G)
 
         # compute the expectation value and energy distribution
         avr_function_value = avr_function_value + analysis[sample]*fx
@@ -475,7 +538,7 @@ def show_results_manual(school, p, initial_G, num_colors):
                 # color = pos
                 best_coloring.append(pos)
 
-    #remove_aux_fix_coloring(G, best_coloring, num_colors)
+    remove_aux_fix_coloring(G, best_coloring, num_colors)
     print("Best Coloring",best_coloring)
     #print("Best Coloring Qudits values")
     #for i in range(len(G)):
@@ -497,12 +560,12 @@ def show_results_manual(school, p, initial_G, num_colors):
     color_graph_from_coloring(G, coloring)
 
     if  school == "Den4":
-        #remove_aux_fix_coloring(G, best_coloring, num_colors)
+        remove_aux_fix_coloring(G, best_coloring, num_colors)
         #common_value = cost_function_den_25pts(G)
         common_value = cost_function_den_4pts(G)
     elif school == "Den5":
-        common_value = cost_function_den_25pts(G)
-        #common_value = cost_function_den_4pts(G)
+        #common_value = cost_function_den_25pts(G)
+        common_value = cost_function_den_4pts(G)
     
     print("Objective function value: ", common_value)
 
@@ -550,17 +613,17 @@ def remove_aux_fix_coloring(G, coloring, num_colors):
             coloring[i] = coloring[-2]
         if color == aux_colors[1]:
             coloring[i] = coloring[-1]
-
+    
     coloring[-2] = aux_colors[0]
     coloring[-1] = aux_colors[1]
     color_graph_from_coloring(G, coloring)
-
+    
     # Fix Coloring
     for i, node in enumerate(G.nodes):
         if coloring[i] == aux_colors[0] or coloring[i] == aux_colors[1]:
             not_allowed_color = {G.nodes[neighbour]['color'] for neighbour in G[node]}
-            if len(not_allowed_color) == num_colors:
-                break
+            if len(not_allowed_color) >= num_colors:
+                continue
             color_index = 0
             while color_index in not_allowed_color:
                 color_index = (color_index+1)%num_colors
@@ -570,16 +633,15 @@ def remove_aux_fix_coloring(G, coloring, num_colors):
     coloring[-1] = aux_colors[1]
     color_graph_from_coloring(G, coloring)
 
+
 def main():
     print("Starting program\n")
 
     # QAOA parameter
     p = int(sys.argv[1])
 
-    #school = "Den4"
-    school = "Den5"
-    #school = "Min"
-    #school = "CEC"
+    school = "Den4"
+    #school = "Den5"
     print("Analysing instance: ", school)
 
     if  school == "Den4":
@@ -596,6 +658,8 @@ def main():
 
     num_nodes = initial_G.number_of_nodes()
     number_of_qubits = num_nodes*num_colors+num_nodes
+    print("Number of Nodes", num_nodes)
+    print("Number of colors", num_colors)
     print("Necessary number of qubits: ", number_of_qubits)
 
     show_results_manual(school, p, initial_G, num_colors)
