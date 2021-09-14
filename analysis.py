@@ -75,6 +75,7 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
         X(qc[node])
 
 def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
+    ket_config(precision='double')
     # --------------------------
     # Initializing qubits
     # --------------------------
@@ -500,6 +501,18 @@ def instance_cec():
     
     return initial_G, students_list
 
+def add_auxiliary_nodes(G, num_colors):
+    #Adding Auxiliary nodes for mixing 
+    nodes = [('Aux1', {'color': num_colors}),
+             ('Aux2', {'color': num_colors+1}),
+    ]
+    G.add_nodes_from(nodes)
+    
+    for n in G.nodes:
+        if n != 'Aux1' and n != 'Aux2':
+            G.add_edge(n, 'Aux1')
+            G.add_edge(n, 'Aux2')
+
 def instance_den4():
     # --------------------------
     # Parse XML file
@@ -523,6 +536,9 @@ def instance_den4():
     print("\nInitial Function Value Max 25", initial_function_value)
     initial_function_value = cost_function_den_4pts(initial_G)
     print("\nInitial Function Value Max 4", initial_function_value)
+
+    # Adding extras nodes to allow mixing
+    #add_auxiliary_nodes(initial_G, 4)
 
     return initial_G
 
@@ -548,8 +564,10 @@ def instance_den5():
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
-    num_colors = 5 
-    color_graph_from_num(G, num_colors)
+    #num_colors = 5 
+    #color_graph_from_num(initial_G, num_colors)
+    initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    color_graph_from_coloring(initial_G, initial_coloring)
     
     initial_function_value = cost_function_den_25pts(initial_G)
     print("\nInitial Function Value Max 25", initial_function_value)
@@ -660,11 +678,11 @@ def show_results_cobyla(school, p, initial_G, num_colors):
             if school == "CEC":
                 fx = cost_function_timetable(G, num_colors, students_list)
             elif school == "Den4":
-                fx = cost_function_den_25pts(G)
-                #fx = cost_function_den_4pts(G)
+                #fx = cost_function_den_25pts(G)
+                fx = cost_function_den_4pts(G)
             elif school == "Den5":
-                fx = cost_function_den_25pts(G)
-                #fx = cost_function_den_4pts(G)
+                #fx = cost_function_den_25pts(G)
+                fx = cost_function_den_4pts(G)
             elif school == "Min":
                 fx = cost_function_min(G)
 
@@ -710,11 +728,11 @@ def show_results_cobyla(school, p, initial_G, num_colors):
         if school == "CEC":
             fx = cost_function_timetable(G, num_colors, students_list)
         elif school == "Den4":
-            fx = cost_function_den_25pts(G)
-            #fx = cost_function_den_4pts(G)
+            #fx = cost_function_den_25pts(G)
+            fx = cost_function_den_4pts(G)
         elif school == "Den5":
-            fx = cost_function_den_25pts(G)
-            #fx = cost_function_den_4pts(G)
+            #fx = cost_function_den_25pts(G)
+            fx = cost_function_den_4pts(G)
         elif school == "Min":
             fx = cost_function_min(G)
 
@@ -767,11 +785,11 @@ def show_results_cobyla(school, p, initial_G, num_colors):
     if school == "CEC":
         common_value = cost_function_timetable(G, num_colors, students_list)
     elif school == "Den4":
-        common_value = cost_function_den_25pts(G)
-        #common_value = cost_function_den_4pts(G)
+        #common_value = cost_function_den_25pts(G)
+        common_value = cost_function_den_4pts(G)
     elif school == "Den5":
-        common_value = cost_function_den_25pts(G)
-        #common_value = cost_function_den_4pts(G)
+        #common_value = cost_function_den_25pts(G)
+        common_value = cost_function_den_4pts(G)
     elif school == "Min":
         common_value = cost_function_min(G)
     print("Objective function value: ", common_value)
@@ -875,11 +893,11 @@ def show_results_cma(school, p, initial_G, num_colors):
             if school == "CEC":
                 fx = cost_function_timetable(G, num_colors, students_list)
             elif school == "Den4":
-                fx = cost_function_den_25pts(G)
-                #fx = cost_function_den_4pts(G)
+                #fx = cost_function_den_25pts(G)
+                fx = cost_function_den_4pts(G)
             elif school == "Den5":
-                fx = cost_function_den_25pts(G)
-                #fx = cost_function_den_4pts(G)
+                #fx = cost_function_den_25pts(G)
+                fx = cost_function_den_4pts(G)
             elif school == "Min":
                 fx = cost_function_min(G)
 
@@ -925,11 +943,11 @@ def show_results_cma(school, p, initial_G, num_colors):
         if school == "CEC":
             fx = cost_function_timetable(G, num_colors, students_list)
         elif school == "Den4":
-            fx = cost_function_den_25pts(G)
-            #fx = cost_function_den_4pts(G)
+            #fx = cost_function_den_25pts(G)
+            fx = cost_function_den_4pts(G)
         elif school == "Den5":
-            fx = cost_function_den_25pts(G)
-            #fx = cost_function_den_4pts(G)
+            #fx = cost_function_den_25pts(G)
+            fx = cost_function_den_4pts(G)
         elif school == "Min":
             fx = cost_function_min(G)
 
@@ -982,11 +1000,11 @@ def show_results_cma(school, p, initial_G, num_colors):
     if school == "CEC":
         common_value = cost_function_timetable(G, num_colors, students_list)
     elif school == "Den4":
-        common_value = cost_function_den_25pts(G)
-        #common_value = cost_function_den_4pts(G)
+        #common_value = cost_function_den_25pts(G)
+        common_value = cost_function_den_4pts(G)
     elif school == "Den5":
-        common_value = cost_function_den_25pts(G)
-        #common_value = cost_function_den_4pts(G)
+        #common_value = cost_function_den_25pts(G)
+        common_value = cost_function_den_4pts(G)
     elif school == "Min":
         common_value = cost_function_min(G)
     print("Objective function value: ", common_value)
@@ -1008,11 +1026,11 @@ def show_results_manual(school, p, initial_G, num_colors):
     #----------------------------
     # Loading QAOA parameters 
     #----------------------------
-    print("\nMin Expected Value: ", 4.913618777995681)
+    print("\nMin Expected Value: ", 22)
     
-    beta0 = 2.74996353
-    gamma = [3.50873324, 2.38362654, 2.13341919, 2.00831552, 2.00831552, 1.63300597, 1.88321234, 1.50790279]
-    beta = [1.9130512, 1.91309058, 1.91282658, 1.91269457, 1.91269457, 1.91237205, 1.91258707, 1.91226454]
+    beta0 = 2.50885865
+    gamma = [5.01571288, 5.01571288]
+    beta =  [1.41854713, 1.41854713]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -1073,8 +1091,9 @@ def show_results_manual(school, p, initial_G, num_colors):
             if school == "CEC":
                 fx = cost_function_timetable(G, num_colors, students_list)
             elif school == "Den4":
-                fx = cost_function_den_25pts(G)
-                #fx = cost_function_den_4pts(G)
+                #remove_aux_fix_coloring(G, coloring, num_colors)
+                #fx = cost_function_den_25pts(G)
+                fx = cost_function_den_4pts(G)
             elif school == "Den5":
                 fx = cost_function_den_25pts(G)
                 #fx = cost_function_den_4pts(G)
@@ -1098,7 +1117,7 @@ def show_results_manual(school, p, initial_G, num_colors):
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
-    ''' 
+
     # -----------------------------------------------------
     # Evaluate the data from limited number of Measurements
     # -----------------------------------------------------
@@ -1124,8 +1143,9 @@ def show_results_manual(school, p, initial_G, num_colors):
         if school == "CEC":
             fx = cost_function_timetable(G, num_colors, students_list)
         elif school == "Den4":
-            fx = cost_function_den_25pts(G)
-            #fx = cost_function_den_4pts(G)
+            #remove_aux_fix_coloring(G, coloring, num_colors)
+            #fx = cost_function_den_25pts(G)
+            fx = cost_function_den_4pts(G)
         elif school == "Den5":
             fx = cost_function_den_25pts(G)
             #fx = cost_function_den_4pts(G)
@@ -1142,7 +1162,7 @@ def show_results_manual(school, p, initial_G, num_colors):
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
-    '''
+    
     # -----------------------------------------------------
     print('--------------------------')
     print('--- Individual States  ---\n')
@@ -1159,7 +1179,7 @@ def show_results_manual(school, p, initial_G, num_colors):
                 # color = pos
                 best_coloring.append(pos)
 
-    remove_aux_fix_coloring(G, best_coloring, num_colors)
+    #remove_aux_fix_coloring(G, best_coloring, num_colors)
     print("Best Coloring",best_coloring)
     #print("Best Coloring Qudits values")
     #for i in range(len(G)):
@@ -1183,8 +1203,9 @@ def show_results_manual(school, p, initial_G, num_colors):
     if school == "CEC":
         common_value = cost_function_timetable(G, num_colors, students_list)
     elif school == "Den4":
-        common_value = cost_function_den_25pts(G)
-        #common_value = cost_function_den_4pts(G)
+        #remove_aux_fix_coloring(G, best_coloring, num_colors)
+        #common_value = cost_function_den_25pts(G)
+        common_value = cost_function_den_4pts(G)
     elif school == "Den5":
         common_value = cost_function_den_25pts(G)
         #common_value = cost_function_den_4pts(G)
@@ -1201,7 +1222,7 @@ def show_results_manual(school, p, initial_G, num_colors):
                 # color = pos
                 common_coloring.append(pos)
 
-    print("\nMost Common Coloring",common_coloring)
+    print("Most Common Coloring",common_coloring)
     #print("\nMost Common Coloring Qudits values")
     #for i in range(len(G)):
     #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
@@ -1231,7 +1252,7 @@ def print_graph_info(initial_G):
 
 def remove_aux_fix_coloring(G, coloring, num_colors):
     # Remove Auxiliar Nodes 
-    aux_colors = [5,6]
+    aux_colors = [4,5]
     for i, color in enumerate(coloring):
         if color == aux_colors[0]:
             coloring[i] = coloring[-2]
@@ -1257,7 +1278,6 @@ def remove_aux_fix_coloring(G, coloring, num_colors):
     coloring[-1] = aux_colors[1]
     color_graph_from_coloring(G, coloring)
 
-
 def main():
     print("Starting program\n")
 
@@ -1265,25 +1285,32 @@ def main():
     p = int(sys.argv[1])
 
     #school = "Den4"
-    #school = "Den5"
-    school = "Min"
+    school = "Den5"
+    #school = "Min"
     #school = "CEC"
     print("Analysing instance: ", school)
 
     if school == "CEC":
         initial_G, students_list = instance_cec()
+        coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+        num_colors = len(set(coloring))
     elif school == "Den4":
         initial_G = instance_den4()
+        coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+        num_colors = len(set(coloring))
     elif school == "Den5":
-        initial_G = instance_den4()
+        initial_G = instance_den5()
+        coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+        #num_colors = len(set(coloring))
+        num_colors = 5
     elif school == "Min":
         initial_G = instance_min()
+        coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
+        num_colors = len(set(coloring))
 
     print_graph_info(initial_G) 
 
     num_nodes = initial_G.number_of_nodes()
-    coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
-    num_colors = len(set(coloring))
     number_of_qubits = num_nodes*num_colors+num_nodes
     print("Necessary number of qubits: ", number_of_qubits)
 
