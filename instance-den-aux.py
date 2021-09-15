@@ -8,6 +8,7 @@ import numpy as np
 
 # We import the tools to handle general Graphs
 import networkx as nx
+import matplotlib.pyplot as plt
 
 # Import miscellaneous tools
 from scipy.optimize import minimize
@@ -19,7 +20,7 @@ import pprint as pp
 import pandas as pd
 
 def save_csv(data, nome_csv):
-    data_points = pd.DataFrame(data, columns=['Expected Value', 'Beta0|Gamma|Beta'])
+    data_points = pd.DataFrame(data, columns=['Expected Value', 'nfev', 'Beta0|Gamma|Beta'])
     data_points.to_csv(nome_csv, mode='a', header=False)
 
     return
@@ -277,6 +278,17 @@ def remove_aux_fix_coloring(G, coloring, num_colors):
     coloring[-1] = aux_colors[1]
     color_graph_from_coloring(G, coloring)
 
+def coloring_is_invalid(G):
+    #----------------------------
+    # Verifying Graph consistency
+    #---------------------------
+    for e,i in enumerate(G.nodes):
+        color = G.nodes[i]['color']
+        neighbour_colors = [G.nodes[neighbour]['color'] for neighbour in G[i]]
+        if color in neighbour_colors:
+            return True
+    return False
+
 def qaoa(par, p, initial_G, num_colors):
     # --------------------------
     # Unpacking QAOA parameters
@@ -318,6 +330,8 @@ def qaoa(par, p, initial_G, num_colors):
     # --------------------------
     avr_function_value = 0
     min_function_value = [0, np.inf]
+    valid_solutions = {}
+    invalid_solutions = {}
 
     for sample in list(counts.keys()):
         if counts[sample] > 0:
@@ -334,6 +348,12 @@ def qaoa(par, p, initial_G, num_colors):
 
 
             remove_aux_fix_coloring(G, coloring, num_colors)
+            if coloring_is_invalid(G):
+                invalid_solutions[sample] = counts[sample]
+                continue
+            else:
+                valid_solutions[sample] = counts[sample]
+
             #fx = cost_function_den_25pts(G)
             fx = cost_function_den_4pts(G)
 
@@ -345,9 +365,11 @@ def qaoa(par, p, initial_G, num_colors):
                 min_function_value[0] = sample
                 min_function_value[1] = fx
 
-    expected_value = avr_function_value/sum(counts.values())
+    #expected_value = avr_function_value/sum(counts.values())
+    expected_valid = avr_function_value/sum(valid_solutions.values())
+
     # Return expected value
-    return expected_value
+    return expected_valid
 
 def parameter_setting(gamma, beta, p):
     # -------------
@@ -370,7 +392,7 @@ def parameter_setting(gamma, beta, p):
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school):
-    iterations = 20 # Number of independent runs
+    iterations = 5 # Number of independent runs
     
     local_optima_param = []
     # --------------------------
@@ -428,7 +450,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             print("Current Time:-", datetime.datetime.now())
             #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
             print("Saving Results\n")
-            save_csv([[res['fun'], res['x']]], "results/cobyla/Den-4-4-aux/"+school+"p"+str(p)+".csv" )
+            save_csv([[res['fun'], res['nfev'], res['x']]], "results/new-results/Den-4-4-aux/"+school+"p"+str(p)+".csv" )
             local_optima_param = res['x']
             
             # Preparing next p-value
@@ -727,7 +749,10 @@ def main():
 
     # Minimizing Example DEN
     minimization_process_cobyla(goal_p, G, num_colors, school)
-    minimization_process_cma(goal_p, G, num_colors, school)
+    #minimization_process_cma(goal_p, G, num_colors, school)
+
+    #nx.draw(G, with_labels=True, font_weight='bold')
+    #plt.show()
 
     print("Program End")
     print("----------------------------")

@@ -389,9 +389,9 @@ def show_results_manual(school, p, initial_G, num_colors):
     #----------------------------
     print("\nMin Expected Value: ", 3.5)
     
-    beta0 = 1.17814704
-    gamma = [4.87014693]
-    beta =  [2.3562754]
+    beta0 = 1.17789855
+    gamma = [4.74504906, 4.8700613 , 4.87008576, 4.87009799, 4.87009799, 4.87013469, 4.87011023, 4.87014693]
+    beta =  [2.35599563, 2.35621637, 2.35626165, 2.35628428, 2.35628428, 2.35627762, 2.35628206, 2.3562754]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -435,6 +435,8 @@ def show_results_manual(school, p, initial_G, num_colors):
     avr_function_value = 0
     min_function_value = [0, np.inf]
     hist        = {}
+    valid_solutions = {}
+    invalid_solutions = {}
 
     for sample in list(counts.keys()):
         if counts[sample] > 0:
@@ -454,6 +456,10 @@ def show_results_manual(school, p, initial_G, num_colors):
                 if coloring_is_invalid(G):
                     print("Invalid coloring", coloring)
                     print("Probability", counts[sample])
+                    invalid_solutions[sample] = counts[sample]
+                    continue
+                else:
+                    valid_solutions[sample] = counts[sample]
                 #fx = cost_function_den_25pts(G)
                 fx = cost_function_den_4pts(G)
             elif school == "Den5":
@@ -471,12 +477,19 @@ def show_results_manual(school, p, initial_G, num_colors):
 
     print('\n--- Function Distribution  ---')
     total_counts = sum(counts.values())
+    total_valid = sum(valid_solutions.values())
+    total_invalid = sum(invalid_solutions.values())
     print("Total Number of Measurements", total_counts)
+    print("Total Number of Valid Solutions", total_valid)
+    print("Total Number of Invalid Solutions", total_invalid)
     expected_value = avr_function_value/total_counts
-    print("Expected Value = ", expected_value)
+    expected_valid = avr_function_value/total_valid
+    print("Control = ", expected_value)
+    print("Expected Value = ", expected_valid)
     print("Objective Function Distribution")
     pp.pprint(hist)
 
+    '''
     # -----------------------------------------------------
     # Evaluate the data from limited number of Measurements
     # -----------------------------------------------------
@@ -521,7 +534,7 @@ def show_results_manual(school, p, initial_G, num_colors):
     print("Expected Value = ", expected_value)
     print("Objective Function Distribution")
     pp.pprint(hist)
-    
+    '''
     # -----------------------------------------------------
     print('--------------------------')
     print('--- Individual States  ---\n')

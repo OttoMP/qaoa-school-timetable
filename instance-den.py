@@ -8,6 +8,7 @@ import numpy as np
 
 # We import the tools to handle general Graphs
 import networkx as nx
+import matplotlib.pyplot as plt
 
 # Import miscellaneous tools
 from scipy.optimize import minimize
@@ -19,7 +20,7 @@ import pprint as pp
 import pandas as pd
 
 def save_csv(data, nome_csv):
-    data_points = pd.DataFrame(data, columns=['Expected Value', 'Beta0|Gamma|Beta'])
+    data_points = pd.DataFrame(data, columns=['Expected Value', 'nfev', 'Beta0|Gamma|Beta'])
     data_points.to_csv(nome_csv, mode='a', header=False)
 
     return
@@ -344,7 +345,7 @@ def parameter_setting(gamma, beta, p):
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school):
-    iterations = 20 # Number of independent runs
+    iterations = 5 # Number of independent runs
     
     local_optima_param = []
     # --------------------------
@@ -402,7 +403,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             print("Current Time:-", datetime.datetime.now())
             #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
             print("Saving Results\n")
-            save_csv([[res['fun'], res['x']]], "results/cobyla/Den-4-4/"+school+"p"+str(p)+".csv" )
+            save_csv([[res['fun'], res['nfev'], res['x']]], "results/new-results/Den-5-4/"+school+"p"+str(p)+".csv" )
             local_optima_param = res['x']
             
             # Preparing next p-value
@@ -677,7 +678,8 @@ def main():
     print("Running QAOA")
     num_nodes = G.number_of_nodes()
     coloring = [G.nodes[node]['color'] for node in G.nodes]
-    num_colors = len(set(coloring))
+    #num_colors = len(set(coloring))
+    num_colors = 5
     
     number_of_qubits = num_nodes*num_colors+num_nodes
     print("Necessary number of qubits: ", number_of_qubits)
@@ -686,8 +688,8 @@ def main():
     goal_p = 8
 
     # Minimizing Example DEN
-    minimization_process_cobyla(goal_p, G, num_colors, school)
-    minimization_process_cma(goal_p, G, num_colors, school)
+    #minimization_process_cobyla(goal_p, G, num_colors, school)
+    #minimization_process_cma(goal_p, G, num_colors, school)
 
     print("Program End")
     print("----------------------------")
