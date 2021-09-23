@@ -98,32 +98,33 @@ def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
     # --------------------------
     # Measurement
     # --------------------------
-    #result = measure(qc).get()
-    return dump(qc)
+    result = measure(qc).get()
+    #return dump(qc)
+    return result
 
 def cost_function_den_25pts(G):
     C = 0
     
-    if G.nodes["Event1"]['color'] != 0:
-        C += 1
-    if G.nodes["Event2"]['color'] != 2:
-        C += 1
-    if G.nodes["Event3"]['color'] != 3:
-        C += 1
-    if G.nodes["Event4"]['color'] != 1:
-        C += 1
+    #if G.nodes["Event1"]['color'] != 0:
+        #C += 1
+    #if G.nodes["Event2"]['color'] != 2:
+        #C += 1
+    #if G.nodes["Event3"]['color'] != 3:
+        #C += 1
+    #if G.nodes["Event4"]['color'] != 1:
+        #C += 1
     if G.nodes["Event5"]['color'] != 2:
         C += 1
     if G.nodes["Event6"]['color'] != 3:
         C += 1
-    if G.nodes["Event7"]['color'] != 3:
-        C += 1
-    if G.nodes["Event8"]['color'] != 2:
-        C += 1
-    if G.nodes["Event9"]['color'] != 0:
-        C += 1
-    if G.nodes["Event10"]['color'] != 1:
-        C += 1
+    #if G.nodes["Event7"]['color'] != 3:
+        #C += 1
+    #if G.nodes["Event8"]['color'] != 2:
+        #C += 1
+    #if G.nodes["Event9"]['color'] != 0:
+        #C += 1
+    #if G.nodes["Event10"]['color'] != 1:
+        #C += 1
     if G.nodes["Event11"]['color'] != 0:
         C += 1
     if G.nodes["Event12"]['color'] != 3:
@@ -132,20 +133,20 @@ def cost_function_den_25pts(G):
         C += 1
     if G.nodes["Event14"]['color'] != 1:
         C += 1
-    if G.nodes["Event15"]['color'] != 0:
-        C += 1
-    if G.nodes["Event16"]['color'] != 2:
-        C += 1
-    if G.nodes["Event17"]['color'] != 3:
-        C += 1
+    #if G.nodes["Event15"]['color'] != 0:
+        #C += 1
+    #if G.nodes["Event16"]['color'] != 2:
+        #C += 1
+    #if G.nodes["Event17"]['color'] != 3:
+        #C += 1
     if G.nodes["Event22"]['color'] != 3:
         C += 1
-    if G.nodes["Event23"]['color'] != 0:
-        C += 1
-    if G.nodes["Event24"]['color'] != 3:
-        C += 1
-    if G.nodes["Event25"]['color'] != 1:
-        C += 1
+    #if G.nodes["Event23"]['color'] != 0:
+        #C += 1
+    #if G.nodes["Event24"]['color'] != 3:
+        #C += 1
+    #if G.nodes["Event25"]['color'] != 1:
+        #C += 1
     
     #PreferTimes_3
     if G.nodes["Event18"]['color'] != 0:
@@ -360,10 +361,10 @@ def instance_den5():
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
-    num_colors = 5 
-    color_graph_from_num(initial_G, num_colors)
-    #initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
-    #color_graph_from_coloring(initial_G, initial_coloring)
+    #num_colors = 5 
+    #color_graph_from_num(initial_G, num_colors)
+    initial_coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
+    color_graph_from_coloring(initial_G, initial_coloring)
     
     initial_function_value = cost_function_den_25pts(initial_G)
     print("\nInitial Function Value Max 25", initial_function_value)
@@ -387,11 +388,11 @@ def show_results_manual(school, p, initial_G, num_colors):
     #----------------------------
     # Loading QAOA parameters 
     #----------------------------
-    print("\nMin Expected Value: ", 3.5)
+    print("\nMin Expected Value: ", 2.955345752)
     
-    beta0 = 1.17789855
-    gamma = [4.74504906, 4.8700613 , 4.87008576, 4.87009799, 4.87009799, 4.87013469, 4.87011023, 4.87014693]
-    beta =  [2.35599563, 2.35621637, 2.35626165, 2.35628428, 2.35628428, 2.35627762, 2.35628206, 2.3562754]
+    beta0 = 2.73561855
+    gamma = [1.7516068, 1.75356001]
+    beta =  [1.18983775, 1.1900463]
     print("Using Following parameters:")
     print("Beta0:", beta0)
     print("Gamma:", gamma)
@@ -411,19 +412,28 @@ def show_results_manual(school, p, initial_G, num_colors):
     G.add_nodes_from(initial_G)
     G.add_edges_from(initial_G.edges)
     
-    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
+    #result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
     
+    for measurement in range(10000):
+        print("Measuring circuit:", measurement)
+        result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
+        binary = f'{result:0{(num_nodes*num_colors)+num_nodes}b}'
+        print("Result", result)
+        if binary in counts:
+            counts[binary] += 1
+        else:
+            counts[binary] = 1
     # --------------------------
     # Counting resulting states
     # --------------------------
     counts = {} # Dictionary for keeping the results of the simulation
-    states = []
-    probabilities = []
-    for i in result.states:
-        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
-        counts[binary] = int((2**20)*result.probability(i))
-        states.append(binary)
-        probabilities.append(result.probability(i))
+    #states = []
+    #probabilities = []
+    #for i in result.states:
+        #binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
+        #counts[binary] = int((2**20)*result.probability(i))
+        #states.append(binary)
+        #probabilities.append(result.probability(i))
 
     print("Number of States", len(counts))
     #pp.pprint(counts)
@@ -454,8 +464,8 @@ def show_results_manual(school, p, initial_G, num_colors):
             if  school == "Den4":
                 remove_aux_fix_coloring(G, coloring, num_colors)
                 if coloring_is_invalid(G):
-                    print("Invalid coloring", coloring)
-                    print("Probability", counts[sample])
+                    #print("Invalid coloring", coloring)
+                    #print("Probability", counts[sample])
                     invalid_solutions[sample] = counts[sample]
                     continue
                 else:
@@ -482,9 +492,9 @@ def show_results_manual(school, p, initial_G, num_colors):
     print("Total Number of Measurements", total_counts)
     print("Total Number of Valid Solutions", total_valid)
     print("Total Number of Invalid Solutions", total_invalid)
-    expected_value = avr_function_value/total_counts
+    #expected_value = avr_function_value/total_counts
+    #print("Expected Value = ", expected_value)
     expected_valid = avr_function_value/total_valid
-    print("Control = ", expected_value)
     print("Expected Value = ", expected_valid)
     print("Objective Function Distribution")
     pp.pprint(hist)
@@ -540,7 +550,8 @@ def show_results_manual(school, p, initial_G, num_colors):
     print('--- Individual States  ---\n')
     print("Best result found: ", min_function_value[0])
     print("Number of times result showed: ", counts[min_function_value[0]])
-    print("Percentage of times result showed: ", (counts[min_function_value[0]]/total_counts)*100)
+    #print("Percentage of times result showed: ", (counts[min_function_value[0]]/total_counts)*100)
+    print("Percentage of times result showed: ", (counts[min_function_value[0]]/total_valid)*100)
     print("Objective function value: ", min_function_value[1])
 
     list_qubits = min_function_value[0]
@@ -557,12 +568,14 @@ def show_results_manual(school, p, initial_G, num_colors):
     #for i in range(len(G)):
     #    print(list_qubits[i*num_colors:(i*num_colors+num_colors)])
     print('\n')
-    
     #-----------------------------
     max_counts = max(counts, key=lambda key: counts[key])
+    #max_counts = max(valid_solutions, key=lambda key: valid_solutions[key])
     print("Most commom result found: ", max_counts)
-    print("Number of times result showed: ", counts[max_counts])
-    print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
+    #print("Number of times result showed: ", counts[max_counts])
+    #print("Percentage of times result showed: ", (counts[max_counts]/total_counts)*100)
+    print("Number of times result showed: ", valid_solutions[max_counts])
+    print("Percentage of times result showed: ", (valid_solutions[max_counts]/total_valid)*100)
     # Coloring Graph with max_counts
     coloring = []
     for i in range(len(G)):
@@ -645,7 +658,6 @@ def remove_aux_fix_coloring(G, coloring, num_colors):
     coloring[-2] = aux_colors[0]
     coloring[-1] = aux_colors[1]
     color_graph_from_coloring(G, coloring)
-
 
 def main():
     print("Starting program\n")
