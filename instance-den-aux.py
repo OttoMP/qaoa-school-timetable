@@ -329,7 +329,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             print("Minimizing function using COBYLA")
             print("Current Time:-", datetime.datetime.now())
             res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
-                    constraints=cons, options={'disp': False, 'maxiter': 300})
+                    constraints=cons, options={'disp': False, 'maxiter': maxfev})
             print(res)
             print("Current Time:-", datetime.datetime.now())
             #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
