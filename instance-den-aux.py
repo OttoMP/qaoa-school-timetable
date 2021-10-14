@@ -25,67 +25,6 @@ def save_csv(data, nome_csv):
 
     return
 
-def cost_function_den_25pts(G):
-    C = 0
-    
-    if G.nodes["Event1"]['color'] != 0:
-        C += 1
-    if G.nodes["Event2"]['color'] != 2:
-        C += 1
-    if G.nodes["Event3"]['color'] != 3:
-        C += 1
-    if G.nodes["Event4"]['color'] != 1:
-        C += 1
-    if G.nodes["Event5"]['color'] != 2:
-        C += 1
-    if G.nodes["Event6"]['color'] != 3:
-        C += 1
-    if G.nodes["Event7"]['color'] != 3:
-        C += 1
-    if G.nodes["Event8"]['color'] != 2:
-        C += 1
-    if G.nodes["Event9"]['color'] != 0:
-        C += 1
-    if G.nodes["Event10"]['color'] != 1:
-        C += 1
-    if G.nodes["Event11"]['color'] != 0:
-        C += 1
-    if G.nodes["Event12"]['color'] != 3:
-        C += 1
-    if G.nodes["Event13"]['color'] != 2:
-        C += 1
-    if G.nodes["Event14"]['color'] != 1:
-        C += 1
-    if G.nodes["Event15"]['color'] != 0:
-        C += 1
-    if G.nodes["Event16"]['color'] != 2:
-        C += 1
-    if G.nodes["Event17"]['color'] != 3:
-        C += 1
-    if G.nodes["Event22"]['color'] != 3:
-        C += 1
-    if G.nodes["Event23"]['color'] != 0:
-        C += 1
-    if G.nodes["Event24"]['color'] != 3:
-        C += 1
-    if G.nodes["Event25"]['color'] != 1:
-        C += 1
-    
-    #PreferTimes_3
-    if G.nodes["Event18"]['color'] != 0:
-        C += 1
-    #PreferTimes_4
-    if G.nodes["Event19"]['color'] != 2:
-        C += 1
-    #PreferTimes_5
-    if G.nodes["Event20"]['color'] != 1:
-        C += 1
-    #PreferTimes_6
-    if G.nodes["Event21"]['color'] != 3:
-        C += 1
-
-    return C
-
 def cost_function_den_4pts(G):
     C = 0
     #PreferTimes_3
@@ -150,65 +89,7 @@ def mixer(qc, G, beta, num_nodes, num_colors):
                             qc[i+(num_colors*u)]|qc[j+(num_colors*u)],
                             beta)
 
-def phase_separator_ad_hoc(qc, gamma, num_nodes, num_colors):
-    #if G.nodes["Event1"]['color'] != 0:
-    RZ(2*gamma, qc[(num_colors*0)+0])
-    #if G.nodes["Event2"]['color'] != 2:
-    RZ(2*gamma, qc[(num_colors*1)+2])
-    #if G.nodes["Event3"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*2)+3])
-    #if G.nodes["Event4"]['color'] != 1:
-    RZ(2*gamma, qc[(num_colors*3)+1])
-    #if G.nodes["Event5"]['color'] != 2:
-    RZ(2*gamma, qc[(num_colors*4)+2])
-    #if G.nodes["Event6"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*5)+3])
-    #if G.nodes["Event7"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*6)+3])
-    #if G.nodes["Event8"]['color'] != 2:
-    RZ(2*gamma, qc[(num_colors*7)+2])
-    #if G.nodes["Event9"]['color'] != 0:
-    RZ(2*gamma, qc[(num_colors*8)+0])
-    #if G.nodes["Event10"]['color'] != 1:
-    RZ(2*gamma, qc[(num_colors*9)+1])
-    #if G.nodes["Event11"]['color'] != 0:
-    RZ(2*gamma, qc[(num_colors*10)+0])
-    #if G.nodes["Event12"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*11)+3])
-    #if G.nodes["Event13"]['color'] != 2:
-    RZ(2*gamma, qc[(num_colors*12)+2])
-    #if G.nodes["Event14"]['color'] != 1:
-    RZ(2*gamma, qc[(num_colors*13)+1])
-    #if G.nodes["Event15"]['color'] != 0:
-    RZ(2*gamma, qc[(num_colors*14)+0])
-    #if G.nodes["Event16"]['color'] != 2:
-    RZ(2*gamma, qc[(num_colors*15)+2])
-    #if G.nodes["Event17"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*16)+3])
-    #if G.nodes["Event22"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*21)+3])
-    #if G.nodes["Event23"]['color'] != 0:
-    RZ(2*gamma, qc[(num_colors*22)+0])
-    #if G.nodes["Event24"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*23)+3])
-    #if G.nodes["Event25"]['color'] != 1:
-    RZ(2*gamma, qc[(num_colors*24)+1])
-    
-    #PreferTimes_3
-    #if G.nodes["Event18"]['color'] != 0:
-    RZ(2*gamma, qc[(num_colors*17)+0])
-    #PreferTimes_4
-    #if G.nodes["Event19"]['color'] != 2:
-    RZ(2*gamma, qc[(num_colors*18)+2])
-    #PreferTimes_5
-    #if G.nodes["Event20"]['color'] != 1:
-    RZ(2*gamma, qc[(num_colors*19)+1])
-    #PreferTimes_6
-    #if G.nodes["Event21"]['color'] != 3:
-    RZ(2*gamma, qc[(num_colors*20)+3])
-
 def phase_separator(qc, gamma, num_nodes, num_colors):
-    #qubits2color(qc, num_nodes, num_colors)
     for node in range(num_colors*num_nodes):
         X(qc[node])
     for k in range(num_colors):
@@ -220,9 +101,10 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
         ctrl(control, RZ, 2*gamma, target)
     for node in range(num_colors*num_nodes):
         X(qc[node])
-    #color2qubits(qc, num_nodes, num_colors)
 
-def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
+def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta, epsilon):
+    #ket_config(backend='cpu')
+    ket_config(epsilon=epsilon) 
     # --------------------------
     # Initializing qubits
     # --------------------------
@@ -241,7 +123,6 @@ def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
     mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
     for step in range(p):
         phase_separator(qc, gamma[step], num_nodes, num_colors)
-        #phase_separator_ad_hoc(qc, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
 
     # --------------------------
@@ -289,7 +170,7 @@ def coloring_is_invalid(G):
             return True
     return False
 
-def qaoa(par, p, initial_G, num_colors):
+def qaoa(par, p, initial_G, num_colors, epsilon):
     # --------------------------
     # Unpacking QAOA parameters
     # --------------------------
@@ -302,7 +183,7 @@ def qaoa(par, p, initial_G, num_colors):
     # --------------------------
     # Verifying Parameters
     # --------------------------
-    #print("Using Following parameters:\nBeta0:", beta0, "\nGamma:", gamma, "\nBeta:", beta)
+    #print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta, "Epsilon:", epsilon)
 
     # --------------------------
     # Running QAOA on simulator
@@ -313,7 +194,7 @@ def qaoa(par, p, initial_G, num_colors):
     initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
     color_graph_from_coloring(G, initial_coloring)
     
-    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
+    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta, epsilon)
     
     #print("Number of States", len(result.get_states()))
     #print("State Vector", result.show('b6:b6:b6:b6:b6:b6'))
@@ -354,7 +235,6 @@ def qaoa(par, p, initial_G, num_colors):
             else:
                 valid_solutions[sample] = counts[sample]
 
-            #fx = cost_function_den_25pts(G)
             fx = cost_function_den_4pts(G)
 
             # compute the expectation value and energy distribution
@@ -365,7 +245,6 @@ def qaoa(par, p, initial_G, num_colors):
                 min_function_value[0] = sample
                 min_function_value[1] = fx
 
-    #expected_value = avr_function_value/sum(counts.values())
     expected_valid = avr_function_value/sum(valid_solutions.values())
 
     # Return expected value
@@ -392,16 +271,19 @@ def parameter_setting(gamma, beta, p):
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school):
-    iterations = 5 # Number of independent runs
-    
+    iterations = 10 # Number of independent runs
     local_optima_param = []
+    
     # --------------------------
     # COBYLA Optimization
     # --------------------------
     for i in range(iterations):
         p = 1          # Start value of p
-        qaoa_args = p, G, num_colors
         while p <= goal_p:
+            epsilon = 1e-6
+            if p == 8:
+                epsilon = 1e-4
+            qaoa_args = p, G, num_colors, epsilon
             print("Running minimization process with p-value", p)
             # --------------------------
             # Initializing QAOA Parameters 
@@ -445,12 +327,12 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             print("Minimizing function using COBYLA")
             print("Current Time:-", datetime.datetime.now())
             res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
-                    constraints=cons, options={'disp': False})
+                    constraints=cons, options={'disp': False, 'maxiter': 300})
             print(res)
             print("Current Time:-", datetime.datetime.now())
             #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
             print("Saving Results\n")
-            save_csv([[res['fun'], res['nfev'], res['x']]], "results/new-results/Den-4-4-aux/"+school+"p"+str(p)+".csv" )
+            save_csv([[res['fun'], res['nfev'], res['x']]], "results/"+school+"4p"+str(p)+".csv" )
             local_optima_param = res['x']
             
             # Preparing next p-value
@@ -690,7 +572,6 @@ def main():
     # --------------------------
     #  Coloring Conflict Graph
     # --------------------------
-    
     # Greedy coloring to be used in cases where a trivial coloring cannot be
     # found
     # -----------------------------------------------------------------
@@ -713,13 +594,14 @@ def main():
     print("\nInitial coloring", coloring)
     print("\nNumber of colors", num_colors)
 
-    initial_function_value = cost_function_den_25pts(G)
-    print("\nInitial Function Value Max 25", initial_function_value)
     initial_function_value = cost_function_den_4pts(G)
     print("\nInitial Function Value Max 4", initial_function_value)
 
+    # ---------------------------
     # Adding extras nodes to allow mixing
+    # ---------------------------
     add_auxiliary_nodes(G, num_colors)
+    
     # ---------------------------
     # Verifying Graph consistency
     #----------------------------
@@ -750,9 +632,6 @@ def main():
     # Minimizing Example DEN
     minimization_process_cobyla(goal_p, G, num_colors, school)
     #minimization_process_cma(goal_p, G, num_colors, school)
-
-    #nx.draw(G, with_labels=True, font_weight='bold')
-    #plt.show()
 
     print("Program End")
     print("----------------------------")
