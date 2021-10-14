@@ -146,7 +146,9 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
         X(qc[node])
     #color2qubits(qc, num_nodes, num_colors)
 
-def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
+def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta, epsilon):
+    #ket_config(backend='cpu')
+    ket_config(epsilon=epsilon) 
     # --------------------------
     # Initializing qubits
     # --------------------------
@@ -172,21 +174,20 @@ def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta):
     #result = measure(qc).get()
     return dump(qc)
 
-def qaoa(par, p, initial_G, num_colors):
+def qaoa(par, p, initial_G, num_colors, epsilon):
     # --------------------------
     # Unpacking QAOA parameters
     # --------------------------
     beta0 = par[0]
-    new_par = np.delete(par, 0)
     middle = int(len(par)/2)
-    gamma = new_par[:middle]
-    beta = new_par[middle:]
+    gamma = par[1:middle+1]
+    beta = par[middle+1:]
     num_nodes = initial_G.number_of_nodes()
 
     # --------------------------
     # Verifying Parameters
     # --------------------------
-    #print("Using Following parameters:\nBeta0:", beta0, "\nGamma:", gamma, "\nBeta:", beta)
+    #print("Using Following parameters: Beta0:", beta0, "Gamma:", gamma, "Beta:", beta, "Epsilon:", epsilon)
 
     # --------------------------
     # Running QAOA on simulator
@@ -197,7 +198,8 @@ def qaoa(par, p, initial_G, num_colors):
     initial_coloring = [initial_G.nodes[node]['color'] for node in initial_G.nodes]
     color_graph_from_coloring(G, initial_coloring)
     
-    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta)
+    result = qaoa_min_graph_coloring(p, initial_G, num_nodes, num_colors, beta0, gamma, beta, epsilon)
+    
     #print("Number of States", len(result.get_states()))
     #print("State Vector", result.show('b6:b6:b6:b6:b6:b6'))
 
@@ -205,10 +207,9 @@ def qaoa(par, p, initial_G, num_colors):
     # Counting resulting states
     # --------------------------
     counts = {} # Dictionary for keeping the results of the simulation
-    for i in result.get_states():
-        binary = np.binary_repr(i, width=(num_nodes*num_colors)+num_nodes)
+    for i in result.states:
+        binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
         counts[binary] = int(2**20*result.probability(i))
-
     # --------------------------
     # Evaluate the data from the simulator
     # --------------------------
@@ -226,8 +227,14 @@ def qaoa(par, p, initial_G, num_colors):
                 for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
                     if int(char):
                         coloring.append(pos)
+            
+            # Verifying presence of invalid colorings
+            if len(coloring) < num_nodes:
+                print("Probability", counts[sample])
+                print("Coloring", coloring)
+                print("Qubits values", x)
+            
             color_graph_from_coloring(G, coloring)
-
             fx = cost_function_bra(G)
 
             # compute the expectation value and energy distribution
@@ -263,7 +270,7 @@ def parameter_setting(gamma, beta, p):
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school):
-    iterations = 50 # Number of independent runs
+    iterations = 10 # Number of independent runs
     
     local_optima_param = []
     # --------------------------
@@ -271,8 +278,11 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
     # --------------------------
     for i in range(iterations):
         p = 1          # Start value of p
-        qaoa_args = p, G, num_colors
         while p <= goal_p:
+            epsilon = 1e-6
+            if p == 8:
+                epsilon = 1e-4
+            qaoa_args = p, G, num_colors, epsilon
             print("Running minimization process with p-value", p)
             # --------------------------
             # Initializing QAOA Parameters 
@@ -296,7 +306,6 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             #print("Gamma:", gamma)
             #print("Beta:", beta)
             qaoa_par = [beta0]+gamma+beta
-
             
             # Construct parameters bounds in the form of constraints
             beta0_bounds = [[0, np.pi]]
@@ -317,12 +326,12 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             print("Minimizing function using COBYLA")
             print("Current Time:-", datetime.datetime.now())
             res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
-                    constraints=cons, options={'disp': False})
+                    constraints=cons, options={'disp': False, 'maxiter': 300})
             print(res)
             print("Current Time:-", datetime.datetime.now())
             #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
             print("Saving Results\n")
-            save_csv([[res['fun'], res['x']]], "results/cobyla/"+school+"p"+str(p)+".csv" )
+            save_csv([[res['fun'], res['nfev'], res['x']]], "results/"+school+"p"+str(p)+".csv" )
             local_optima_param = res['x']
             
             # Preparing next p-value
@@ -631,11 +640,11 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    goal_p = 8
+    goal_p = 1
 
     # Minimizing Example Bra
     minimization_process_cobyla(goal_p, G, num_colors, school)
-    minimization_process_cma(goal_p, G, num_colors, school)
+    #minimization_process_cma(goal_p, G, num_colors, school)
 
     print("Program End")
     print("----------------------------")

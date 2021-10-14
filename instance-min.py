@@ -258,8 +258,8 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
     # --------------------------
     for i in range(iterations):
         p = 1          # Start value of p
-        qaoa_args = p, G, num_colors
         while p <= goal_p:
+            qaoa_args = p, G, num_colors
             print("Running minimization process with p-value", p)
             # --------------------------
             # Initializing QAOA Parameters 
@@ -275,16 +275,13 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
                 # Parameter setting strategy
                 gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
             else:
-                beta0 = 1.709940630910423
-                gamma = [1.4388523550444037]
-                beta  = [1.009163817225765]
-                #beta0 = random.uniform(0, np.pi)
-                #gamma = [random.uniform(0, 2*np.pi)]
-                #beta  = [random.uniform(0, np.pi)]
-            print("Using Following parameters:")
-            print("Beta0:", beta0)
-            print("Gamma:", gamma)
-            print("Beta:", beta)
+                beta0 = random.uniform(0, np.pi)
+                gamma = [random.uniform(0, 2*np.pi)]
+                beta  = [random.uniform(0, np.pi)]
+            #print("Using Following parameters:")
+            #print("Beta0:", beta0)
+            #print("Gamma:", gamma)
+            #print("Beta:", beta)
             qaoa_par = [beta0]+gamma+beta
 
             
@@ -592,11 +589,11 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    goal_p = 8
+    goal_p = 1
 
     # Minimizing Example DEN
-    #minimization_process_cobyla(goal_p, G, num_colors, school)
-    minimization_process_cma(goal_p, G, num_colors, school)
+    minimization_process_cobyla(goal_p, G, num_colors, school)
+    #minimization_process_cma(goal_p, G, num_colors, school)
     
     print("Program End")
     print("----------------------------")
