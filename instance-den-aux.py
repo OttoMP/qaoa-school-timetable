@@ -280,9 +280,11 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
     for i in range(iterations):
         p = 1          # Start value of p
         while p <= goal_p:
+            maxfev = 100
             epsilon = 1e-6
             if p == 8:
                 epsilon = 1e-4
+                maxfev = 50
             qaoa_args = p, G, num_colors, epsilon
             print("Running minimization process with p-value", p)
             # --------------------------
@@ -627,7 +629,7 @@ def main():
     print("Necessary number of qubits: ", number_of_qubits)
 
     # QAOA parameter
-    goal_p = 8
+    goal_p = 2
 
     # Minimizing Example DEN
     minimization_process_cobyla(goal_p, G, num_colors, school)

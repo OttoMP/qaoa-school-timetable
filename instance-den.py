@@ -254,8 +254,10 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
         p = 1          # Start value of p
         while p <= goal_p:
             epsilon = 1e-6
+            maxfev = 100
             if p == 8:
                 epsilon = 1e-4
+                maxfev = 50
             qaoa_args = p, G, num_colors, epsilon
             print("Running minimization process with p-value", p)
             # --------------------------
@@ -300,7 +302,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school):
             print("Minimizing function using COBYLA")
             print("Current Time:-", datetime.datetime.now())
             res = minimize(qaoa, qaoa_par, args=qaoa_args, method='COBYLA',
-                    constraints=cons, options={'disp': False, 'maxiter': 300})
+                    constraints=cons, options={'disp': False, 'maxiter': maxfev})
             print(res)
             print("Current Time:-", datetime.datetime.now())
             #print("Memory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
