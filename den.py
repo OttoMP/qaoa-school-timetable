@@ -59,12 +59,13 @@ def main():
     #num_colors = 5 # Denmark colors
     #color_graph_from_num(G, num_colors)
 
+    # If a initial state was chosen in advance use color_graph_from_coloring
+    # ----------------------------------------------------------------------
     # Coloring 23 points 
     coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
     # Optimal Coloring
     #coloring =  [0, 2, 3, 1, 2, 3, 3, 2, 0, 1, 0, 3, 2, 1, 0, 2, 3, 0, 2, 1, 3, 3, 0, 3, 1]
     color_graph_from_coloring(G, coloring)
-    num_colors = len(set(coloring))
     
     #coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
@@ -102,7 +103,6 @@ def main():
 
     # Minimizing Example DEN
     minimization_process_cobyla(goal_p, G, num_colors, school, cost_function_den_4pts)
-    #minimization_process_cma(goal_p, G, num_colors, school)
 
     print("Program End")
     print("----------------------------")
