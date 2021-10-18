@@ -56,7 +56,6 @@ def mixer(qc, G, beta, num_nodes, num_colors):
                             beta)
 
 def phase_separator(qc, gamma, num_nodes, num_colors):
-    #qubits2color(qc, num_nodes, num_colors)
     for node in range(num_colors*num_nodes):
         X(qc[node])
     for k in range(num_colors):
@@ -68,7 +67,6 @@ def phase_separator(qc, gamma, num_nodes, num_colors):
         ctrl(control, RZ, 2*gamma, target)
     for node in range(num_colors*num_nodes):
         X(qc[node])
-    #color2qubits(qc, num_nodes, num_colors)
 
 def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta, epsilon):
     #ket_config(backend='cpu')
@@ -91,7 +89,6 @@ def qaoa_min_graph_coloring(p, G, num_nodes, num_colors, beta0, gamma, beta, eps
     mixer(qc, G, beta0, num_nodes, num_colors) # Mixer 0
     for step in range(p):
         phase_separator(qc, gamma[step], num_nodes, num_colors)
-        #phase_separator_ad_hoc(qc, gamma[step], num_nodes, num_colors)
         mixer(qc, G, beta[step], num_nodes, num_colors)
 
     # --------------------------
@@ -137,46 +134,40 @@ def qaoa(par, p, initial_G, num_colors, epsilon, cost_function, school, it_num):
     for i in result.states:
         binary = f'{i:0{(num_nodes*num_colors)+num_nodes}b}'
         counts[binary] = int(2**20*result.probability(i))
+
     # --------------------------
     # Evaluate the data from the simulator
     # --------------------------
     avr_function_value = 0
-    min_function_value = [0, np.inf]
-
     for sample in list(counts.keys()):
         if counts[sample] > 0:
-            # use sampled bit string x to compute f(x)
+            # extracting x to compute f(x)
+            # ----------------------------
             x       = [int(num) for num in list(sample)]
             
             # Coloring Graph with counts[sample]
+            # ----------------------------------
             coloring = []
             for i in range(len(G)):
                 for pos, char in enumerate(x[i*num_colors:(i*num_colors+num_colors)]):
                     if int(char):
                         coloring.append(pos)
-            
-            # Verifying presence of invalid colorings
-            if len(coloring) < num_nodes:
-                print("Probability", counts[sample])
-                print("Coloring", coloring)
-                print("Qubits values", x)
-            
             color_graph_from_coloring(G, coloring)
+
+            # Computing fx
+            # ------------
             fx = cost_function(G)
 
-            # compute the expectation value and energy distribution
+            # Compute the expectation value and energy distribution
+            # -----------------------------------------------------
             avr_function_value = avr_function_value + counts[sample]*fx
 
-            # save best bit string
-            if( min_function_value[1] > fx):
-                min_function_value[0] = sample
-                min_function_value[1] = fx
-
-    expected_value = avr_function_value/sum(counts.values())
     # Return expected value
+    expected_value = avr_function_value/sum(counts.values())
     with open(f'timing/{school}_{p}_{it_num}.txt', 'a') as file:
         exec_time = ctx.get_return('exec_time')
         file.write(f'{exec_time}, ')
+    
     return expected_value
 
 def color_graph_from_coloring(graph, coloring):
