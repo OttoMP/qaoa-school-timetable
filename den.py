@@ -34,10 +34,10 @@ def main():
     #  Preparing Conflict Graph
     # --------------------------
     G = create_graph_from_events(events)
-    
+
     print("--------------------------")
     print("Graph information\n")
-    
+
     print("Nodes = ", G.nodes)
     coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nPre-coloring", coloring)
@@ -52,7 +52,7 @@ def main():
     # found
     # -----------------------------------------------------------------
     #color_graph_greedy(G)
-    
+
     # If a suitable coloring can be found without the greedy method use
     # the color_graph_num method
     # -----------------------------------------------------------------
@@ -61,19 +61,19 @@ def main():
 
     # If a initial state was chosen in advance use color_graph_from_coloring
     # ----------------------------------------------------------------------
-    # Coloring 23 points 
+    # Coloring 23 points
     coloring =  [1, 0, 2, 3, 1, 2, 1, 2, 3, 0, 0, 2, 0, 3, 1, 3, 0, 1, 0, 3, 2, 2, 1, 2, 3]
     # Optimal Coloring
     #coloring =  [0, 2, 3, 1, 2, 3, 3, 2, 0, 1, 0, 3, 2, 1, 0, 2, 3, 0, 2, 1, 3, 3, 0, 3, 1]
     color_graph_from_coloring(G, coloring)
-    
+
     #coloring = [G.nodes[node]['color'] for node in G.nodes]
     print("\nInitial coloring", coloring)
 
     #num_colors = len(set(coloring))
     num_colors = 5
     print("\nNumber of colors", num_colors)
-    
+
     initial_function_value = cost_function_den_4pts(G)
     print("\nInitial Function Value Max 4", initial_function_value)
 
@@ -88,7 +88,7 @@ def main():
         print("Neighbours | Color")
         for pair in color_and_neighbour:
             print(pair)
-            
+
     #----------------------------
     # Starting QAOA
     #----------------------------

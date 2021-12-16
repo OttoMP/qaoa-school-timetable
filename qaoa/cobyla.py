@@ -23,11 +23,11 @@ def save_csv(data, nome_csv):
 
 def parameter_setting(gamma, beta, p):
     # -------------
-    # Interpolation 
+    # Interpolation
     # -------------
     next_gamma = [0]*(2*p)
     next_beta = [0]*(2*p)
-    
+
     next_gamma[0] = gamma[0]
     next_beta[0] = beta[0]
     next_gamma[-1] = gamma[-1]
@@ -38,12 +38,12 @@ def parameter_setting(gamma, beta, p):
             next_gamma[i+1] = (ceil(i/2)/p) * gamma[int(i/2)]   + (floor(p-(i/2))/p) * gamma[int(i/2)+1]
             next_beta[i]    = (ceil(i/2)/p) * beta[int(i/2)+1]  + (floor(p-(i/2))/p) * beta[int(i/2)]
             next_beta[i+1]  = (ceil(i/2)/p) * beta[int(i/2)]    + (floor(p-(i/2))/p) * beta[int(i/2)+1]
-    
+
     return next_gamma, next_beta
 
 def minimization_process_cobyla(goal_p, G, num_colors, school, cost_function):
     iterations = 10 # Number of independent runs
-    
+
     local_optima_param = []
     # --------------------------
     # COBYLA Optimization
@@ -61,7 +61,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school, cost_function):
             qaoa_args = p, G, num_colors, epsilon, cost_function, school, i
             print("Running minimization process with p-value", p)
             # --------------------------
-            # Initializing QAOA Parameters 
+            # Initializing QAOA Parameters
             # --------------------------
             if p > 1:
                 # Extracting previous local optima
@@ -70,7 +70,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school, cost_function):
                 middle = int(len(local_optima_param)/2)
                 p_gamma = new_local_optima_param[:middle] # Previous gamma
                 p_beta = new_local_optima_param[middle:]  # Previous beta
-                
+
                 # Parameter setting strategy
                 gamma, beta = parameter_setting(p_gamma, p_beta, int(p/2))
             else:
@@ -82,7 +82,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school, cost_function):
             #print("Gamma:", gamma)
             #print("Beta:", beta)
             qaoa_par = [beta0]+gamma+beta
-            
+
             # Construct parameters bounds in the form of constraints
             beta0_bounds = [[0, np.pi]]
             beta_bounds = [[0, np.pi]]*p
@@ -97,7 +97,7 @@ def minimization_process_cobyla(goal_p, G, num_colors, school, cost_function):
                     'fun': lambda x, ub=upper, i=factor: ub - x[i]}
                 cons.append(l)
                 cons.append(u)
-            
+
             #print("\nMemory Usage", psutil.Process(os.getpid()).memory_info().rss / 1024 ** 2)
             print("Minimizing function using COBYLA")
             print("Current Time:-", datetime.datetime.now())
@@ -109,6 +109,6 @@ def minimization_process_cobyla(goal_p, G, num_colors, school, cost_function):
             print("Saving Results\n")
             save_csv([[res['fun'], res['nfev'], res['x']]], f"results/{school}_{p}_{i}.csv" )
             local_optima_param = res['x']
-            
+
             # Preparing next p-value
             p = p*2
