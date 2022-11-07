@@ -1,2 +1,7 @@
-# school-timetable
+# A quantum heuristic for the school timetabling problem
 
+Work first published at https://ieeexplore.ieee.org/document/9504701 and later expanded in https://repositorio.ufsc.br/handle/123456789/231060
+
+**Abstract:** School timetabling is a variation of the Timetabling problem that searches for a periodic scheduling of lessons for classes and teachers of a school, that must meet a set of hard and soft constraints. Timetabling is an NP-Hard problem and because of its difficulty, the use of heuristics to address it is a common practice. When only the hard constraints are considered, the timetabling problem can be reduced to graph vertex coloring and the similarity between both problems has motivated the use of graph coloring heuristics as a means to tackle the timetabling problem. We propose to tackle the school timetabling problem by applying a Two-stage optimization, where in the first stage we reduce it to a graph coloring problem and use the Quantum Approximate Optimization Algorithm (QAOA) quantum circuit for solving the chromatic number problem to address the hard constraints and on the second stage we address the soft constraints of the timetabling problem by using the classical optimization process of QAOA. We tested our heuristic using benchmark instances from the XHSTT dataset and we simulated quantum circuits up to 189 qubits in a noiseless environment. We consider this research and its findings a seminal work in using QAOA as a heuristic for the timetabling problem.
+
+**Keywords:** qaoa, quantum computing, school timetabling, timetabling problem
