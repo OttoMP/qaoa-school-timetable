@@ -641,16 +641,22 @@
 <Name>Air-Karin,Johanne M,Jurgen,Alma,Jens,Lisbeth,Dorie</Name>
 </Course>
 <Course Id="gr_Sangteknik-Anna-Maria,Astrid,Bjorn,Sigurdur,Erik,Lis H">
-<Name>Sangteknik-Anna-Maria,Astrid,Bjorn,Sigurdur,Erik,Lis H</Name>
+<Name>
+Sangteknik-Anna-Maria,Astrid,Bjorn,Sigurdur,Erik,Lis H
+</Name>
 </Course>
 <Course Id="gr_Vokal een-Mia,Annika,Johanne U,Jens,Torben">
 <Name>Vokal een-Mia,Annika,Johanne U,Jens,Torben</Name>
 </Course>
 <Course Id="gr_Bologna-Lene,Helga,Morten,Marta,Jakob F,Amanda,Torben">
-<Name>Bologna-Lene,Helga,Morten,Marta,Jakob F,Amanda,Torben</Name>
+<Name>
+Bologna-Lene,Helga,Morten,Marta,Jakob F,Amanda,Torben
+</Name>
 </Course>
 <Course Id="gr_Venedig-Tore,Hanne S,Grethe,Lene,Ingeborg,Magdalena,Amanda,Nanna,Karen M,Ernst,Christine">
-<Name>Venedig-Tore,Hanne S,Grethe,Lene,Ingeborg,Magdalena,Amanda,Nanna,Karen M,Ernst,Christine</Name>
+<Name>
+Venedig-Tore,Hanne S,Grethe,Lene,Ingeborg,Magdalena,Amanda,Nanna,Karen M,Ernst,Christine
+</Name>
 </Course>
 <Course Id="gr_Fl. komsammen-Filippa,Aase,Anna L,Joan">
 <Name>Fl. komsammen-Filippa,Aase,Anna L,Joan</Name>
@@ -662,10 +668,14 @@
 <Name>CCR-Anna L,Dorte,Britta,Stine</Name>
 </Course>
 <Course Id="gr_Tyskland-Hanne S,Wolfgang,Laurie,Helga,Dorte,Lis Aa,Karen M,Mats">
-<Name>Tyskland-Hanne S,Wolfgang,Laurie,Helga,Dorte,Lis Aa,Karen M,Mats</Name>
+<Name>
+Tyskland-Hanne S,Wolfgang,Laurie,Helga,Dorte,Lis Aa,Karen M,Mats
+</Name>
 </Course>
 <Course Id="gr_Sevilla-Tore,Jakob C-D,Ingeborg,Morten,Marta,Johanne U,Jakob F">
-<Name>Sevilla-Tore,Jakob C-D,Ingeborg,Morten,Marta,Johanne U,Jakob F</Name>
+<Name>
+Sevilla-Tore,Jakob C-D,Ingeborg,Morten,Marta,Johanne U,Jakob F
+</Name>
 </Course>
 <Course Id="gr_Improvisation-Solvejg,Helge,Inger,Elisabeth">
 <Name>Improvisation-Solvejg,Helge,Inger,Elisabeth</Name>
@@ -674,19 +684,25 @@
 <Name>Vokal een-Hanna,Nanna,Britta,Michael F,Bjorn</Name>
 </Course>
 <Course Id="gr_Dans-Katharina,Tine,Elisabeth,Johanne M,Karen P,Anna-Maria,Helge,Lisbeth">
-<Name>Dans-Katharina,Tine,Elisabeth,Johanne M,Karen P,Anna-Maria,Helge,Lisbeth</Name>
+<Name>
+Dans-Katharina,Tine,Elisabeth,Johanne M,Karen P,Anna-Maria,Helge,Lisbeth
+</Name>
 </Course>
 <Course Id="gr_Wien-Grethe,Sven,Inger,Astrid,Ernst,Mats">
 <Name>Wien-Grethe,Sven,Inger,Astrid,Ernst,Mats</Name>
 </Course>
 <Course Id="gr_Oxford-Filippa,Solvejg,Laurie,Aase,Joan,Christine,Bodil,Sine,Elisabet">
-<Name>Oxford-Filippa,Solvejg,Laurie,Aase,Joan,Christine,Bodil,Sine,Elisabet</Name>
+<Name>
+Oxford-Filippa,Solvejg,Laurie,Aase,Joan,Christine,Bodil,Sine,Elisabet
+</Name>
 </Course>
 <Course Id="gr_Beg. Blaes-Helle">
 <Name>Beg. Blaes-Helle</Name>
 </Course>
 <Course Id="gr_Gambe-Gesa,Elisabeth,Eva,Lis Aa,Kirsten,Inger Marie">
-<Name>Gambe-Gesa,Elisabeth,Eva,Lis Aa,Kirsten,Inger Marie</Name>
+<Name>
+Gambe-Gesa,Elisabeth,Eva,Lis Aa,Kirsten,Inger Marie
+</Name>
 </Course>
 <Course Id="gr_Gambe-Tine,Marie-Louise D">
 <Name>Gambe-Tine,Marie-Louise D</Name>
@@ -701,7 +717,9 @@
 <Name>Lut-Marie-Louise D,Eva,Sigrid,Marie-Louise R</Name>
 </Course>
 <Course Id="gr_Vokal flere-Bodil,Lis H,Sine,Helle,Hanne B,Jens,Erik,Wolfgang,Sigurdur">
-<Name>Vokal flere-Bodil,Lis H,Sine,Helle,Hanne B,Jens,Erik,Wolfgang,Sigurdur</Name>
+<Name>
+Vokal flere-Bodil,Lis H,Sine,Helle,Hanne B,Jens,Erik,Wolfgang,Sigurdur
+</Name>
 </Course>
 <Course Id="gr_Vokal een-Nina,Dorie,Johanne U,Michael S,Torben">
 <Name>Vokal een-Nina,Dorie,Johanne U,Michael S,Torben</Name>
@@ -751,7 +769,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event3">
-<Name>Sangteknik-Anna-Maria,Astrid,Bjorn,Sigurdur,Erik,Lis H</Name>
+<Name>
+Sangteknik-Anna-Maria,Astrid,Bjorn,Sigurdur,Erik,Lis H
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Sangteknik-Anna-Maria,Astrid,Bjorn,Sigurdur,Erik,Lis H"/>
 <Resources>
@@ -789,7 +809,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event5">
-<Name>Bologna-Lene,Helga,Morten,Marta,Jakob F,Amanda,Torben</Name>
+<Name>
+Bologna-Lene,Helga,Morten,Marta,Jakob F,Amanda,Torben
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Bologna-Lene,Helga,Morten,Marta,Jakob F,Amanda,Torben"/>
 <Resources>
@@ -811,7 +833,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event6">
-<Name>Venedig-Tore,Hanne S,Grethe,Lene,Ingeborg,Magdalena,Amanda,Nanna,Karen M,Ernst,Christine</Name>
+<Name>
+Venedig-Tore,Hanne S,Grethe,Lene,Ingeborg,Magdalena,Amanda,Nanna,Karen M,Ernst,Christine
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Venedig-Tore,Hanne S,Grethe,Lene,Ingeborg,Magdalena,Amanda,Nanna,Karen M,Ernst,Christine"/>
 <Resources>
@@ -894,7 +918,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event10">
-<Name>Tyskland-Hanne S,Wolfgang,Laurie,Helga,Dorte,Lis Aa,Karen M,Mats</Name>
+<Name>
+Tyskland-Hanne S,Wolfgang,Laurie,Helga,Dorte,Lis Aa,Karen M,Mats
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Tyskland-Hanne S,Wolfgang,Laurie,Helga,Dorte,Lis Aa,Karen M,Mats"/>
 <Resources>
@@ -917,7 +943,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event11">
-<Name>Sevilla-Tore,Jakob C-D,Ingeborg,Morten,Marta,Johanne U,Jakob F</Name>
+<Name>
+Sevilla-Tore,Jakob C-D,Ingeborg,Morten,Marta,Johanne U,Jakob F
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Sevilla-Tore,Jakob C-D,Ingeborg,Morten,Marta,Johanne U,Jakob F"/>
 <Resources>
@@ -978,7 +1006,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event14">
-<Name>Dans-Katharina,Tine,Elisabeth,Johanne M,Karen P,Anna-Maria,Helge,Lisbeth</Name>
+<Name>
+Dans-Katharina,Tine,Elisabeth,Johanne M,Karen P,Anna-Maria,Helge,Lisbeth
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Dans-Katharina,Tine,Elisabeth,Johanne M,Karen P,Anna-Maria,Helge,Lisbeth"/>
 <Resources>
@@ -1022,7 +1052,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event16">
-<Name>Oxford-Filippa,Solvejg,Laurie,Aase,Joan,Christine,Bodil,Sine,Elisabet</Name>
+<Name>
+Oxford-Filippa,Solvejg,Laurie,Aase,Joan,Christine,Bodil,Sine,Elisabet
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Oxford-Filippa,Solvejg,Laurie,Aase,Joan,Christine,Bodil,Sine,Elisabet"/>
 <Resources>
@@ -1062,7 +1094,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event18">
-<Name>Gambe-Gesa,Elisabeth,Eva,Lis Aa,Kirsten,Inger Marie</Name>
+<Name>
+Gambe-Gesa,Elisabeth,Eva,Lis Aa,Kirsten,Inger Marie
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Gambe-Gesa,Elisabeth,Eva,Lis Aa,Kirsten,Inger Marie"/>
 <Resources>
@@ -1158,7 +1192,9 @@
 </EventGroups>
 </Event>
 <Event Id="Event23">
-<Name>Vokal flere-Bodil,Lis H,Sine,Helle,Hanne B,Jens,Erik,Wolfgang,Sigurdur</Name>
+<Name>
+Vokal flere-Bodil,Lis H,Sine,Helle,Hanne B,Jens,Erik,Wolfgang,Sigurdur
+</Name>
 <Duration>1</Duration>
 <Course Reference="gr_Vokal flere-Bodil,Lis H,Sine,Helle,Hanne B,Jens,Erik,Wolfgang,Sigurdur"/>
 <Resources>
