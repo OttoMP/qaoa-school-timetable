@@ -71,12 +71,15 @@ def xhstt_to_qubo(instance):
                     for target in constraint.applies_to[group]:
                         print("Target", target)
                         print("Target found", instance.events.event[target].name.strip())
-                        if instance.events.event[target].name.strip() in all_events_as_variables:
-                            print("Variable Found")
-                    for time in constraint.times:
-                        index = available_times.index(time)
-                        #exp = NotConst(a, bin(index), constraint.name)
-                        print(f"Index time {bin(index)}") 
+                        for variable in all_events_as_variables:
+                            if instance.events.event[target].name.strip() == variable.label:
+                                print("Variable Found")
+                                for time in constraint.times:
+                                    index = available_times.index(time)
+                                    print(f"Index time {bin(index)}") 
+                                    exp = NotConst(variable, index, constraint.name)
+                                    print("Constraint", exp)
+                                    H += constraint.weight*exp
                     pass
                 elif group == "resource_groups":
                     pass
