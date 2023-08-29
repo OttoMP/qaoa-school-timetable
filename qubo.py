@@ -110,6 +110,5 @@ def xhstt_to_qubo(instance):
 
     print("\n---------------------\n")
     model = H.compile()
-
-    qubo, offset = model.to_qubo()
-    return qubo, offset
+    
+    return model

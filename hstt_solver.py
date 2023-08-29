@@ -2,6 +2,7 @@ import os, sys
 from xhsttparser import XHSTT
 from qubo import xhstt_to_qubo
 from pprint import pprint
+from qat.core import Observable, Term
 
 def main():
     print("Starting program\n")
@@ -31,21 +32,39 @@ def main():
     #  Preparing Problem Formulation
     # ------------------------------
 
-    qubo, offset = xhstt_to_qubo(instance)
-    pprint(qubo)
-    pprint(offset)
+    model = xhstt_to_qubo(instance)
+    qubo, offset = model.to_qubo()
+    #pprint(qubo)
+    #pprint(offset)
 
     #----------------------------
     # Starting QAOA
     #----------------------------
     print("----------------------------")
     print("Running QAOA")
-    #number_of_qubits = num_nodes*num_colors+num_nodes
-    number_of_qubits = len(qubo)
+    number_of_qubits = len(model.variables)
     print(f"Necessary number of qubits: {number_of_qubits}")
     # QAOA parameter
     final_depth = 8
     print(f"Final value of p reached: {final_depth}")
+
+    single_values = {}
+    multiple_values = {}
+    indexes = model.variables[::-1]
+    for k,v in qubo.items():
+        if k[0] == k[1]:
+            single_values[indexes.index(k[0])] = v
+        else:
+            multiple_values[indexes.index(k[0]), indexes.index(k[1])] = v
+
+    hamiltonian_qubo = Observable(number_of_qubits,
+                            pauli_terms=
+                            [Term(single_values[x], "Z", [x]) for x in single_values]+
+                            [Term(multiple_values[x], "ZZ", [x[0],x[1]]) for x in multiple_values],
+                            constant_coeff=offset
+                            )
+
+    print(hamiltonian_qubo)
 
     # Minimizing Example DEN
     #minimization_process_cobyla(goal_p, G, num_colors, school, cost_function_den_4pts)
