@@ -1,4 +1,6 @@
 import os, sys
+import neal
+#from dwave.samplers import DWaveSampler
 from xhsttparser import XHSTT
 from qubo import xhstt_to_qubo
 from pprint import pprint
@@ -46,7 +48,7 @@ def main():
     print(f"Necessary number of qubits: {number_of_qubits}")
     # QAOA parameter
     final_depth = 8
-    print(f"Final value of p reached: {final_depth}")
+    #print(f"Final value of p reached: {final_depth}")
 
     single_values = {}
     multiple_values = {}
@@ -66,6 +68,20 @@ def main():
 
     print(hamiltonian_qubo)
 
+
+    sampler = neal.SimulatedAnnealingSampler()
+    bqm = model.to_bqm()
+    sampleset = sampler.sample(bqm, num_reads=10)
+    decoded_samples = model.decode_sampleset(sampleset)
+    best_sample = min(decoded_samples, key=lambda x: x.energy)
+    pprint(best_sample.sample)
+    
+    '''
+    bqm = model.to_bqm()
+    sa = ExactSolver()
+    sampleset = sa.sample(bqm)
+    sampleset.to_pandas_dataframe().sort_values("energy")
+    '''
     # Minimizing Example DEN
     #minimization_process_cobyla(goal_p, G, num_colors, school, cost_function_den_4pts)
 

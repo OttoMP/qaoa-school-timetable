@@ -13,9 +13,9 @@ def xhstt_to_qubo(instance):
             #print(f"Time {time}")
     
     existing_timeslots = len(available_times)
-    print(f"Existing Timeslots {existing_timeslots}")
-    print(f"Available Times {available_times}")
-    print("\n---------------------\n")
+    #print(f"Existing Timeslots {existing_timeslots}")
+    #print(f"Available Times {available_times}")
+    #print("\n---------------------\n")
 
     all_events_as_variables = []
     #pprint(f"Instance Events {instance.events}")
@@ -26,8 +26,8 @@ def xhstt_to_qubo(instance):
         all_events_as_variables.append(LogEncInteger(event.name.strip(), (0, existing_timeslots-1)))
         #print("---------------------")
     
-    print("All Events", all_events_as_variables)
-    print("\n---------------------\n")
+    #print("All Events", all_events_as_variables)
+    #print("\n---------------------\n")
 
     H = 0
     for constraint in instance.constraints:
@@ -50,7 +50,7 @@ def xhstt_to_qubo(instance):
                     pass
                 elif group == "resource_groups":
                     pass
-            print("-------------")
+            #print("-------------")
 
         elif type(constraint) == xhsttparser.PreferTimesConstraint:
             #print("Element", constraint.element)
@@ -81,7 +81,7 @@ def xhstt_to_qubo(instance):
                                     H += constraint.weight*exp
                 elif group == "resource_groups":
                     pass
-            print("-------------")
+            #print("-------------")
 
         elif type(constraint) == xhsttparser.AvoidClashesConstraint:
             #print("Element", constraint.element)
@@ -106,9 +106,9 @@ def xhstt_to_qubo(instance):
                     exp = XorConst(variables[0], variables[1], 1, constraint.name)
                     H += exp
 
-            print("-------------")
+            #print("-------------")
 
-    print("\n---------------------\n")
+    #print("\n---------------------\n")
     model = H.compile()
     
     return model
