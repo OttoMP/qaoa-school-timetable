@@ -80,7 +80,7 @@ def xhstt_to_qubo(instance):
                                     #print(f"Index {bin(index)}")
                                     exp = (variable - index)**2
                                     #print(f"{exp=}")
-                                    H += 5*constraint.weight*exp
+                                    #H += 5*constraint.weight*exp
                 elif group == "resource_groups":
                     pass
         #print("-------------")
@@ -110,18 +110,19 @@ def xhstt_to_qubo(instance):
                     pair_names = [event.name.strip() for event in pair]
                     print(f"{pair_names=}\n")
                     variables = [v for v in all_events_as_variables if v.label in pair_names]
-                    print(f"{variables=}\n")
+                    #print(f"{variables=}\n")
                     #print("Clashing Resource")
                     #print(variables)
                     #partials = [XorConst(a, b, 0, f'xor_{a}_{b}') for a, b in zip(variables[0], variables[1])]
                     #print(f"{partials=}\n")
+                    exp = sum([1-Xor(a,b) for a, b in zip(variables[0].array, variables[1].array)])-4
                     #exp = reduce(lambda a, b : AndConst(a, b, 1, constraint.name), [(XorConst(a, b, 0, 'xor_partial')) for a, b in zip(variables[0].array, variables[1].array)])
                     #exp += AndConst(partials[0], partials[1], 1, constraint.name)
                     #exp = Constraint((variables[0] - variables[1])**2, f"Clash_{pair_names[0]}_{pair_names[1]}", condition=lambda x: x!=10.0)
-                    exp = (variables[0] - variables[1])**2
-                    print(f"{exp=}\n")
+                    #exp = ((variables[0] + variables[1])/2) - variables[1]
+                    #print(f"{exp=}\n")
                     #exp = - weight*((variables[0] - variables[1])**2)
-                    H += -constraint.weight*exp
+                    H += 5*constraint.weight*exp
         
         #print("-------------")
 
