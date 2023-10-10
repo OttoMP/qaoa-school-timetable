@@ -1,7 +1,8 @@
 import xhsttparser
 import itertools
+from math import prod
 from functools import reduce
-from pyqubo import And, Xor, Not, OneHotEncInteger, LogEncInteger, NotConst, XorConst, OrConst, AndConst
+from pyqubo import And, Xor, Not, OneHotEncInteger, LogEncInteger, NotConst, XorConst, OrConst, AndConst, Constraint
 from pprint import pprint
 
 def xhstt_to_qubo(instance):
@@ -33,7 +34,7 @@ def xhstt_to_qubo(instance):
     H = 0
     for constraint in instance.constraints:
         if type(constraint) == xhsttparser.AssignTimeConstraint:
-            #H = constraint.weight*sum(all_events_as_variables)
+            H = constraint.weight*sum(all_events_as_variables)
             #print("Element", constraint.element)
             #print("Id", constraint.id)
             #print("Name", constraint.name)
@@ -79,13 +80,12 @@ def xhstt_to_qubo(instance):
                                     #print(f"Index {bin(index)}")
                                     exp = (variable - index)**2
                                     #print(f"{exp=}")
-                                    H += constraint.weight*exp
+                                    H += 5*constraint.weight*exp
                 elif group == "resource_groups":
                     pass
         #print("-------------")
         
         elif type(constraint) == xhsttparser.AvoidClashesConstraint:
-            weight = constraint.weight
             #print("Element", constraint.element)
             #print("Id", constraint.id)
             #print("Name", constraint.name)
@@ -108,15 +108,20 @@ def xhstt_to_qubo(instance):
                 #print(f"{conflict=}")
                 if conflict:
                     pair_names = [event.name.strip() for event in pair]
-                    print(f"{pair_names=}")
+                    print(f"{pair_names=}\n")
                     variables = [v for v in all_events_as_variables if v.label in pair_names]
-                    print(f"{variables=}")
+                    print(f"{variables=}\n")
                     #print("Clashing Resource")
                     #print(variables)
-                    exp = reduce(lambda a, b : AndConst(a, b, 1, constraint.name), [(XorConst(a, b, 0, 'xor_partial')) for a, b in zip(variables[0].array, variables[1].array)])
-                    print(f"{exp=}")
+                    #partials = [XorConst(a, b, 0, f'xor_{a}_{b}') for a, b in zip(variables[0], variables[1])]
+                    #print(f"{partials=}\n")
+                    #exp = reduce(lambda a, b : AndConst(a, b, 1, constraint.name), [(XorConst(a, b, 0, 'xor_partial')) for a, b in zip(variables[0].array, variables[1].array)])
+                    #exp += AndConst(partials[0], partials[1], 1, constraint.name)
+                    #exp = Constraint((variables[0] - variables[1])**2, f"Clash_{pair_names[0]}_{pair_names[1]}", condition=lambda x: x!=10.0)
+                    exp = (variables[0] - variables[1])**2
+                    print(f"{exp=}\n")
                     #exp = - weight*((variables[0] - variables[1])**2)
-                    H += exp
+                    H += -constraint.weight*exp
         
         #print("-------------")
 
