@@ -1,6 +1,7 @@
 import xhsttparser
 import itertools
-from pyqubo import OneHotEncInteger, LogEncInteger, NotConst, XorConst
+from functools import reduce
+from pyqubo import And, Xor, Not, OneHotEncInteger, LogEncInteger, NotConst, XorConst, OrConst, AndConst
 from pprint import pprint
 
 def xhstt_to_qubo(instance):
@@ -32,7 +33,7 @@ def xhstt_to_qubo(instance):
     H = 0
     for constraint in instance.constraints:
         if type(constraint) == xhsttparser.AssignTimeConstraint:
-            H = constraint.weight*sum(all_events_as_variables)
+            #H = constraint.weight*sum(all_events_as_variables)
             #print("Element", constraint.element)
             #print("Id", constraint.id)
             #print("Name", constraint.name)
@@ -51,7 +52,7 @@ def xhstt_to_qubo(instance):
                 elif group == "resource_groups":
                     pass
             #print("-------------")
-
+        
         elif type(constraint) == xhsttparser.PreferTimesConstraint:
             #print("Element", constraint.element)
             #print("Id", constraint.id)
@@ -68,22 +69,23 @@ def xhstt_to_qubo(instance):
                     pass
                 elif group == "events":
                     for target in constraint.applies_to[group]:
-                        #print("Target", target)
-                        #print("Target found", instance.events.event[target].name.strip())
+                        #print(f"{target=}")
+                        #print(f"Found {instance.events.event[target].name.strip()}")
                         for variable in all_events_as_variables:
                             if instance.events.event[target].name.strip() == variable.label:
-                                #print("Variable Found")
                                 for time in constraint.times:
+                                    #print(f"{time=}")
                                     index = available_times.index(time)
-                                    #print(f"Index time {bin(index)}") 
-                                    exp = NotConst(variable, index, constraint.name)
-                                    #print("Constraint", exp)
+                                    #print(f"Index {bin(index)}")
+                                    exp = (variable - index)**2
+                                    #print(f"{exp=}")
                                     H += constraint.weight*exp
                 elif group == "resource_groups":
                     pass
-            #print("-------------")
-
+        #print("-------------")
+        
         elif type(constraint) == xhsttparser.AvoidClashesConstraint:
+            weight = constraint.weight
             #print("Element", constraint.element)
             #print("Id", constraint.id)
             #print("Name", constraint.name)
@@ -95,18 +97,28 @@ def xhstt_to_qubo(instance):
             pair_order_list = itertools.combinations(instance.events.event_groups["gr_AllEvents"],2)
 
             for pair in pair_order_list:
-                resources0 = pair[0].resources
-                resources1 = pair[1].resources
-                conflict = set(resources0+resources1)
+                resources0 = [res.element.attrib["Reference"] for res in pair[0].resources]
+                resources1 = [res.element.attrib["Reference"] for res in pair[1].resources]
+                conflict = [i for i in resources0 if i in resources1]
+                #conflict = set(resources0+resources1)
+                #print(f"{pair=}")
+                #print("Resources")
+                #print(f"{resources0=}")
+                #print(f"{resources1=}")
+                #print(f"{conflict=}")
                 if conflict:
                     pair_names = [event.name.strip() for event in pair]
+                    print(f"{pair_names=}")
                     variables = [v for v in all_events_as_variables if v.label in pair_names]
+                    print(f"{variables=}")
                     #print("Clashing Resource")
                     #print(variables)
-                    exp = XorConst(variables[0], variables[1], 1, constraint.name)
+                    exp = reduce(lambda a, b : AndConst(a, b, 1, constraint.name), [(XorConst(a, b, 0, 'xor_partial')) for a, b in zip(variables[0].array, variables[1].array)])
+                    print(f"{exp=}")
+                    #exp = - weight*((variables[0] - variables[1])**2)
                     H += exp
-
-            #print("-------------")
+        
+        #print("-------------")
 
     #print("\n---------------------\n")
     model = H.compile()

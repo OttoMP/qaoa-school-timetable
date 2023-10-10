@@ -75,6 +75,7 @@ def main():
     decoded_samples = model.decode_sampleset(sampleset)
     best_sample = min(decoded_samples, key=lambda x: x.energy)
     pprint(best_sample.sample)
+    pprint(best_sample.energy)
     
     '''
     bqm = model.to_bqm()
