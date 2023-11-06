@@ -2,7 +2,7 @@ import xhsttparser
 import itertools
 from math import prod
 from functools import reduce
-from pyqubo import And, Xor, Not, OneHotEncInteger, LogEncInteger, NotConst, XorConst, OrConst, AndConst, Constraint
+from pyqubo import And, Or, Xor, Not, OneHotEncInteger, LogEncInteger, NotConst, XorConst, OrConst, AndConst, Constraint
 from pprint import pprint
 
 def xhstt_to_qubo(instance):
@@ -34,7 +34,7 @@ def xhstt_to_qubo(instance):
     H = 0
     for constraint in instance.constraints:
         if type(constraint) == xhsttparser.AssignTimeConstraint:
-            H = constraint.weight*sum(all_events_as_variables)
+            #H = constraint.weight*sum(all_events_as_variables)
             #print("Element", constraint.element)
             #print("Id", constraint.id)
             #print("Name", constraint.name)
@@ -80,7 +80,7 @@ def xhstt_to_qubo(instance):
                                     #print(f"Index {bin(index)}")
                                     exp = (variable - index)**2
                                     #print(f"{exp=}")
-                                    #H += 5*constraint.weight*exp
+                                    #H += 2*constraint.weight*exp
                 elif group == "resource_groups":
                     pass
         #print("-------------")
@@ -113,16 +113,29 @@ def xhstt_to_qubo(instance):
                     #print(f"{variables=}\n")
                     #print("Clashing Resource")
                     #print(variables)
-                    #partials = [XorConst(a, b, 0, f'xor_{a}_{b}') for a, b in zip(variables[0], variables[1])]
-                    #print(f"{partials=}\n")
-                    exp = sum([1-Xor(a,b) for a, b in zip(variables[0].array, variables[1].array)])-4
+                    #partials = sum([XorConst(a, b, 0, f'xor_{a}_{b}') for a, b in zip(variables[0].array, variables[1].array)])
+                    #print(f"{partials=}")
+                    # XOR = (A OR B) AND (NOT (A AND B))
+                    #xors = [And(Or(a,b), Not(And(a,b))) for a, b in zip(variables[0].array, variables[1].array)]
+                    xors = [Not(Xor(a,b)) for a, b in zip(variables[0].array, variables[1].array)]
+                    clashs = And(xors[0], xors[1])
+                    #for gate in xors:
+                        #print(f"{gate=}\n")
+                    #factor = len(variables[0].array)
+                    #print(f"{factor=}")
+
+                    exp = NotConst(clashs, 1, f'clash_{pair_names[0]}_{pair_names[1]}')
+                    #exp = AndConst(xors[0], xors[1], 0, f'clash_{pair_names[0]}_{pair_names[1]}')
+                    #exp = (2-sum([Xor(a,b) for a, b in zip(variables[0].array, variables[1].array)]))
+                    #exp = sum([(1-Xor(a,b))**2 for a, b in zip(variables[0].array, variables[1].array)])-2
                     #exp = reduce(lambda a, b : AndConst(a, b, 1, constraint.name), [(XorConst(a, b, 0, 'xor_partial')) for a, b in zip(variables[0].array, variables[1].array)])
-                    #exp += AndConst(partials[0], partials[1], 1, constraint.name)
+                    #exp  = AndConst(partials[0], partials[1], 1, constraint.name)
                     #exp = Constraint((variables[0] - variables[1])**2, f"Clash_{pair_names[0]}_{pair_names[1]}", condition=lambda x: x!=10.0)
-                    #exp = ((variables[0] + variables[1])/2) - variables[1]
-                    #print(f"{exp=}\n")
+                    #exp = sum([(AndConst(a,b,0, f'xor_{a}_{b}')) for a, b in zip(variables[0].array, variables[1].array)])
+                    #exp = AndConst(a, b, 1, f'and {pair_names[0]} {pair_names[1]}')
                     #exp = - weight*((variables[0] - variables[1])**2)
-                    H += 5*constraint.weight*exp
+                    print(f"{exp=}\n")
+                    H += 10*constraint.weight*exp
         
         #print("-------------")
 
