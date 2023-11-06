@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "qaoa-school-timetable"
+version = "0.1.0"
+description = ""
+authors = ["Evandro Chagas Ribeiro da Rosa <evandro@quantuloop.com>"]
+readme = "README.md"
+packages = [{include = "qaoa_school_timetable"}]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.12"
+xhsttparser = {git = "ssh://git@gitlab.com/laqcc-quantuloop/xhsttparser.git"}
+pyqubo = "^1.4.0"
+pandas = "^2.1.2"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.26.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

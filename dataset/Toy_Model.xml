@@ -1,305 +1,305 @@
 <HighSchoolTimetableArchive>
-<Instances>
-<Instance Id="ToyModel_XHSTT">
-<MetaData>
-<Name>Minimal</Name>
-<Contributor>contributor</Contributor>
-<Date>today</Date>
-<Country>no country</Country>
-<Description>no description</Description>
-</MetaData>
-<Times>
-<TimeGroups>
-<Day Id="gr_Daily">
-<Name>Daily</Name>
-</Day>
-</TimeGroups>
-<Time Id="Daily_13.30 - 14.30">
-<Name>Daily_13.30 - 14.30</Name>
-<Day Reference="gr_Daily"/>
-</Time>
-<Time Id="Daily_14.40 - 15.40">
-<Name>Daily_14.40 - 15.40</Name>
-<Day Reference="gr_Daily"/>
-</Time>
-<Time Id="Daily_15.50 - 16.50">
-<Name>Daily_15.50 - 16.50</Name>
-<Day Reference="gr_Daily"/>
-</Time>
-<Time Id="Daily_17.00 - 18.00">
-<Name>Daily_17.00 - 18.00</Name>
-<Day Reference="gr_Daily"/>
-</Time>
-</Times>
-<Resources>
-<ResourceTypes>
-<ResourceType Id="Teacher">
-<Name>Teacher</Name>
-</ResourceType>
-<ResourceType Id="Student">
-<Name>Student</Name>
-</ResourceType>
-</ResourceTypes>
-<ResourceGroups>
-<ResourceGroup Id="gr_Teachers">
-<Name>AllTeachers</Name>
-<ResourceType Reference="Teacher"/>
-</ResourceGroup>
-<ResourceGroup Id="gr_Students">
-<Name>AllStudents</Name>
-<ResourceType Reference="Student"/>
-</ResourceGroup>
-<ResourceGroup Id="c0">
-<Name>Class1</Name>
-<ResourceType Reference="Student"/>
-</ResourceGroup>
-<ResourceGroup Id="c1">
-<Name>Class2</Name>
-<ResourceType Reference="Student"/>
-</ResourceGroup>
-</ResourceGroups>
-<Resource Id="t0">
-<Name>T0</Name>
-<ResourceType Reference="Teacher"/>
-<ResourceGroups>
-<ResourceGroup Reference="gr_Teachers"/>
-</ResourceGroups>
-</Resource>
-<Resource Id="t1">
-<Name>T1</Name>
-<ResourceType Reference="Teacher"/>
-<ResourceGroups>
-<ResourceGroup Reference="gr_Teachers"/>
-</ResourceGroups>
-</Resource>
-<Resource Id="t2">
-<Name>T2</Name>
-<ResourceType Reference="Teacher"/>
-<ResourceGroups>
-<ResourceGroup Reference="gr_Teachers"/>
-</ResourceGroups>
-</Resource>
-<Resource Id="s0">
-<Name>Alma</Name>
-<ResourceType Reference="Student"/>
-<ResourceGroups>
-<ResourceGroup Reference="gr_Students"/>
-<ResourceGroup Reference="c0"/>
-</ResourceGroups>
-</Resource>
-<Resource Id="s1">
-<Name>Amanda</Name>
-<ResourceType Reference="Student"/>
-<ResourceGroups>
-<ResourceGroup Reference="gr_Students"/>
-<ResourceGroup Reference="c1"/>
-</ResourceGroups>
-</Resource>
-</Resources>
-<Events>
-<EventGroups>
-<Course Id="t0-r1-c0">
-<Name>Course0</Name>
-</Course>
-<Course Id="t0-r1-c1">
-<Name>Course1</Name>
-</Course>
-<Course Id="t1-r2-c0">
-<Name>Course2</Name>
-</Course>
-<Course Id="t1-r2-c1">
-<Name>Course3</Name>
-</Course>
-<Course Id="t2-r0-c0">
-<Name>Course4</Name>
-</Course>
-<Course Id="t2-r0-c1">
-<Name>Course5</Name>
-</Course>
-<EventGroup Id="gr_AllEvents">
-<Name>AllEvents</Name>
-</EventGroup>
-</EventGroups>
-<Event Id="Event0">
-<Name>Aula0</Name>
-<Duration>1</Duration>
-<Course Reference="t0-r1-c0"/>
-<Resources>
-<Resource Reference="s0"/>
-<Resource Reference="t0">
-<Role>Teacher</Role>
-<ResourceType Reference="Teacher"/>
-</Resource>
-</Resources>
-<ResourceGroups/>
-<EventGroups>
-<EventGroup Reference="gr_AllEvents"/>
-</EventGroups>
-</Event>
-<Event Id="Event1">
-<Name>Aula1</Name>
-<Duration>1</Duration>
-<Course Reference="t0-r1-c1"/>
-<Resources>
-<Resource Reference="s1"/>
-<Resource Reference="t0">
-<Role>Teacher</Role>
-<ResourceType Reference="Teacher"/>
-</Resource>
-</Resources>
-<ResourceGroups/>
-<EventGroups>
-<EventGroup Reference="gr_AllEvents"/>
-</EventGroups>
-</Event>
-<Event Id="Event2">
-<Name>Aula2</Name>
-<Duration>1</Duration>
-<Course Reference="t1-r2-c0"/>
-<Resources>
-<Resource Reference="s0"/>
-<Resource Reference="t1">
-<Role>Teacher</Role>
-<ResourceType Reference="Teacher"/>
-</Resource>
-</Resources>
-<ResourceGroups/>
-<EventGroups>
-<EventGroup Reference="gr_AllEvents"/>
-</EventGroups>
-</Event>
-<Event Id="Event3">
-<Name>Aula3</Name>
-<Duration>1</Duration>
-<Course Reference="t1-r2-c1"/>
-<Resources>
-<Resource Reference="s1"/>
-<Resource Reference="t1">
-<Role>Teacher</Role>
-<ResourceType Reference="Teacher"/>
-</Resource>
-</Resources>
-<ResourceGroups/>
-<EventGroups>
-<EventGroup Reference="gr_AllEvents"/>
-</EventGroups>
-</Event>
-<Event Id="Event4">
-<Name>Aula4</Name>
-<Duration>1</Duration>
-<Course Reference="t2-r0-c0"/>
-<Resources>
-<Resource Reference="s0"/>
-<Resource Reference="t2">
-<Role>Teacher</Role>
-<ResourceType Reference="Teacher"/>
-</Resource>
-</Resources>
-<ResourceGroups/>
-<EventGroups>
-<EventGroup Reference="gr_AllEvents"/>
-</EventGroups>
-</Event>
-<Event Id="Event5">
-<Name>Aula5</Name>
-<Duration>1</Duration>
-<Course Reference="t2-r0-c1"/>
-<Resources>
-<Resource Reference="s1"/>
-<Resource Reference="t2">
-<Role>Teacher</Role>
-<ResourceType Reference="Teacher"/>
-</Resource>
-</Resources>
-<ResourceGroups/>
-<EventGroups>
-<EventGroup Reference="gr_AllEvents"/>
-</EventGroups>
-</Event>
-</Events>
-<Constraints>
-<AssignTimeConstraint Id="AssignTimes_1">
-<Name>AssignTimes</Name>
-<Required>true</Required>
-<Weight>1</Weight>
-<CostFunction>Linear</CostFunction>
-<AppliesTo>
-<EventGroups>
-<EventGroup Reference="gr_AllEvents"/>
-</EventGroups>
-</AppliesTo>
-</AssignTimeConstraint>
-<PreferTimesConstraint Id="PreferTimes_0">
-<Name>PreferTimes_Event0</Name>
-<Required>false</Required>
-<Weight>1</Weight>
-<CostFunction>Linear</CostFunction>
-<AppliesTo>
-<Events>
-<Event Reference="Event0"/>
-</Events>
-</AppliesTo>
-<Times>
-<Time Reference="Daily_13.30 - 14.30"/>
-</Times>
-</PreferTimesConstraint>
-<PreferTimesConstraint Id="PreferTimes_1">
-<Name>PreferTimes_Event1</Name>
-<Required>false</Required>
-<Weight>1</Weight>
-<CostFunction>Linear</CostFunction>
-<AppliesTo>
-<Events>
-<Event Reference="Event1"/>
-</Events>
-</AppliesTo>
-<Times>
-<Time Reference="Daily_14.40 - 15.40"/>
-</Times>
-</PreferTimesConstraint>
-<PreferTimesConstraint Id="PreferTimes_2">
-<Name>PreferTimes_Event2</Name>
-<Required>false</Required>
-<Weight>1</Weight>
-<CostFunction>Linear</CostFunction>
-<AppliesTo>
-<Events>
-<Event Reference="Event2"/>
-</Events>
-</AppliesTo>
-<Times>
-<Time Reference="Daily_15.50 - 16.50"/>
-</Times>
-</PreferTimesConstraint>
-<PreferTimesConstraint Id="PreferTimes_3">
-<Name>PreferTimes_Event3</Name>
-<Required>false</Required>
-<Weight>1</Weight>
-<CostFunction>Linear</CostFunction>
-<AppliesTo>
-<Events>
-<Event Reference="Event3"/>
-</Events>
-</AppliesTo>
-<Times>
-<Time Reference="Daily_17.00 - 18.00"/>
-</Times>
-</PreferTimesConstraint>
-<AvoidClashesConstraint Id="NoResourceClashes">
-<Name>NoResourceClashes</Name>
-<Required>true</Required>
-<Weight>1</Weight>
-<CostFunction>Linear</CostFunction>
-<AppliesTo>
-<ResourceGroups>
-<ResourceGroup Reference="gr_Students"/>
-<ResourceGroup Reference="gr_Teachers"/>
-</ResourceGroups>
-</AppliesTo>
-</AvoidClashesConstraint>
-</Constraints>
-</Instance>
-</Instances>
-<SolutionGroups>
+    <Instances>
+        <Instance Id="ToyModel_XHSTT">
+            <MetaData>
+                <Name>Minimal</Name>
+                <Contributor>contributor</Contributor>
+                <Date>today</Date>
+                <Country>no country</Country>
+                <Description>no description</Description>
+            </MetaData>
+            <Times>
+                <TimeGroups>
+                    <Day Id="gr_Daily">
+                        <Name>Daily</Name>
+                    </Day>
+                </TimeGroups>
+                <Time Id="Daily_13.30 - 14.30">
+                    <Name>Daily_13.30 - 14.30</Name>
+                    <Day Reference="gr_Daily" />
+                </Time>
+                <Time Id="Daily_14.40 - 15.40">
+                    <Name>Daily_14.40 - 15.40</Name>
+                    <Day Reference="gr_Daily" />
+                </Time>
+                <Time Id="Daily_15.50 - 16.50">
+                    <Name>Daily_15.50 - 16.50</Name>
+                    <Day Reference="gr_Daily" />
+                </Time>
+                <Time Id="Daily_17.00 - 18.00">
+                    <Name>Daily_17.00 - 18.00</Name>
+                    <Day Reference="gr_Daily" />
+                </Time>
+            </Times>
+            <Resources>
+                <ResourceTypes>
+                    <ResourceType Id="Teacher">
+                        <Name>Teacher</Name>
+                    </ResourceType>
+                    <ResourceType Id="Student">
+                        <Name>Student</Name>
+                    </ResourceType>
+                </ResourceTypes>
+                <ResourceGroups>
+                    <ResourceGroup Id="gr_Teachers">
+                        <Name>AllTeachers</Name>
+                        <ResourceType Reference="Teacher" />
+                    </ResourceGroup>
+                    <ResourceGroup Id="gr_Students">
+                        <Name>AllStudents</Name>
+                        <ResourceType Reference="Student" />
+                    </ResourceGroup>
+                    <ResourceGroup Id="c0">
+                        <Name>Class1</Name>
+                        <ResourceType Reference="Student" />
+                    </ResourceGroup>
+                    <ResourceGroup Id="c1">
+                        <Name>Class2</Name>
+                        <ResourceType Reference="Student" />
+                    </ResourceGroup>
+                </ResourceGroups>
+                <Resource Id="t0">
+                    <Name>T0</Name>
+                    <ResourceType Reference="Teacher" />
+                    <ResourceGroups>
+                        <ResourceGroup Reference="gr_Teachers" />
+                    </ResourceGroups>
+                </Resource>
+                <Resource Id="t1">
+                    <Name>T1</Name>
+                    <ResourceType Reference="Teacher" />
+                    <ResourceGroups>
+                        <ResourceGroup Reference="gr_Teachers" />
+                    </ResourceGroups>
+                </Resource>
+                <Resource Id="t2">
+                    <Name>T2</Name>
+                    <ResourceType Reference="Teacher" />
+                    <ResourceGroups>
+                        <ResourceGroup Reference="gr_Teachers" />
+                    </ResourceGroups>
+                </Resource>
+                <Resource Id="s0">
+                    <Name>Alma</Name>
+                    <ResourceType Reference="Student" />
+                    <ResourceGroups>
+                        <ResourceGroup Reference="gr_Students" />
+                        <ResourceGroup Reference="c0" />
+                    </ResourceGroups>
+                </Resource>
+                <Resource Id="s1">
+                    <Name>Amanda</Name>
+                    <ResourceType Reference="Student" />
+                    <ResourceGroups>
+                        <ResourceGroup Reference="gr_Students" />
+                        <ResourceGroup Reference="c1" />
+                    </ResourceGroups>
+                </Resource>
+            </Resources>
+            <Events>
+                <EventGroups>
+                    <Course Id="t0-r1-c0">
+                        <Name>Course0</Name>
+                    </Course>
+                    <Course Id="t0-r1-c1">
+                        <Name>Course1</Name>
+                    </Course>
+                    <Course Id="t1-r2-c0">
+                        <Name>Course2</Name>
+                    </Course>
+                    <Course Id="t1-r2-c1">
+                        <Name>Course3</Name>
+                    </Course>
+                    <Course Id="t2-r0-c0">
+                        <Name>Course4</Name>
+                    </Course>
+                    <Course Id="t2-r0-c1">
+                        <Name>Course5</Name>
+                    </Course>
+                    <EventGroup Id="gr_AllEvents">
+                        <Name>AllEvents</Name>
+                    </EventGroup>
+                </EventGroups>
+                <Event Id="Event0">
+                    <Name>Aula0</Name>
+                    <Duration>1</Duration>
+                    <Course Reference="t0-r1-c0" />
+                    <Resources>
+                        <Resource Reference="s0" />
+                        <Resource Reference="t0">
+                            <Role>Teacher</Role>
+                            <ResourceType Reference="Teacher" />
+                        </Resource>
+                    </Resources>
+                    <ResourceGroups />
+                    <EventGroups>
+                        <EventGroup Reference="gr_AllEvents" />
+                    </EventGroups>
+                </Event>
+                <Event Id="Event1">
+                    <Name>Aula1</Name>
+                    <Duration>1</Duration>
+                    <Course Reference="t0-r1-c1" />
+                    <Resources>
+                        <Resource Reference="s1" />
+                        <Resource Reference="t0">
+                            <Role>Teacher</Role>
+                            <ResourceType Reference="Teacher" />
+                        </Resource>
+                    </Resources>
+                    <ResourceGroups />
+                    <EventGroups>
+                        <EventGroup Reference="gr_AllEvents" />
+                    </EventGroups>
+                </Event>
+                <Event Id="Event2">
+                    <Name>Aula2</Name>
+                    <Duration>1</Duration>
+                    <Course Reference="t1-r2-c0" />
+                    <Resources>
+                        <Resource Reference="s0" />
+                        <Resource Reference="t1">
+                            <Role>Teacher</Role>
+                            <ResourceType Reference="Teacher" />
+                        </Resource>
+                    </Resources>
+                    <ResourceGroups />
+                    <EventGroups>
+                        <EventGroup Reference="gr_AllEvents" />
+                    </EventGroups>
+                </Event>
+                <Event Id="Event3">
+                    <Name>Aula3</Name>
+                    <Duration>1</Duration>
+                    <Course Reference="t1-r2-c1" />
+                    <Resources>
+                        <Resource Reference="s1" />
+                        <Resource Reference="t1">
+                            <Role>Teacher</Role>
+                            <ResourceType Reference="Teacher" />
+                        </Resource>
+                    </Resources>
+                    <ResourceGroups />
+                    <EventGroups>
+                        <EventGroup Reference="gr_AllEvents" />
+                    </EventGroups>
+                </Event>
+                <Event Id="Event4">
+                    <Name>Aula4</Name>
+                    <Duration>1</Duration>
+                    <Course Reference="t2-r0-c0" />
+                    <Resources>
+                        <Resource Reference="s0" />
+                        <Resource Reference="t2">
+                            <Role>Teacher</Role>
+                            <ResourceType Reference="Teacher" />
+                        </Resource>
+                    </Resources>
+                    <ResourceGroups />
+                    <EventGroups>
+                        <EventGroup Reference="gr_AllEvents" />
+                    </EventGroups>
+                </Event>
+                <Event Id="Event5">
+                    <Name>Aula5</Name>
+                    <Duration>1</Duration>
+                    <Course Reference="t2-r0-c1" />
+                    <Resources>
+                        <Resource Reference="s1" />
+                        <Resource Reference="t2">
+                            <Role>Teacher</Role>
+                            <ResourceType Reference="Teacher" />
+                        </Resource>
+                    </Resources>
+                    <ResourceGroups />
+                    <EventGroups>
+                        <EventGroup Reference="gr_AllEvents" />
+                    </EventGroups>
+                </Event>
+            </Events>
+            <Constraints>
+                <AssignTimeConstraint Id="AssignTimes_1">
+                    <Name>AssignTimes</Name>
+                    <Required>true</Required>
+                    <Weight>1</Weight>
+                    <CostFunction>Linear</CostFunction>
+                    <AppliesTo>
+                        <EventGroups>
+                            <EventGroup Reference="gr_AllEvents" />
+                        </EventGroups>
+                    </AppliesTo>
+                </AssignTimeConstraint>
+                <PreferTimesConstraint Id="PreferTimes_0">
+                    <Name>PreferTimes_Event0</Name>
+                    <Required>false</Required>
+                    <Weight>1</Weight>
+                    <CostFunction>Linear</CostFunction>
+                    <AppliesTo>
+                        <Events>
+                            <Event Reference="Event0" />
+                        </Events>
+                    </AppliesTo>
+                    <Times>
+                        <Time Reference="Daily_13.30 - 14.30" />
+                    </Times>
+                </PreferTimesConstraint>
+                <PreferTimesConstraint Id="PreferTimes_1">
+                    <Name>PreferTimes_Event1</Name>
+                    <Required>false</Required>
+                    <Weight>1</Weight>
+                    <CostFunction>Linear</CostFunction>
+                    <AppliesTo>
+                        <Events>
+                            <Event Reference="Event1" />
+                        </Events>
+                    </AppliesTo>
+                    <Times>
+                        <Time Reference="Daily_14.40 - 15.40" />
+                    </Times>
+                </PreferTimesConstraint>
+                <PreferTimesConstraint Id="PreferTimes_2">
+                    <Name>PreferTimes_Event2</Name>
+                    <Required>false</Required>
+                    <Weight>1</Weight>
+                    <CostFunction>Linear</CostFunction>
+                    <AppliesTo>
+                        <Events>
+                            <Event Reference="Event2" />
+                        </Events>
+                    </AppliesTo>
+                    <Times>
+                        <Time Reference="Daily_15.50 - 16.50" />
+                    </Times>
+                </PreferTimesConstraint>
+                <PreferTimesConstraint Id="PreferTimes_3">
+                    <Name>PreferTimes_Event3</Name>
+                    <Required>false</Required>
+                    <Weight>1</Weight>
+                    <CostFunction>Linear</CostFunction>
+                    <AppliesTo>
+                        <Events>
+                            <Event Reference="Event3" />
+                        </Events>
+                    </AppliesTo>
+                    <Times>
+                        <Time Reference="Daily_17.00 - 18.00" />
+                    </Times>
+                </PreferTimesConstraint>
+                <AvoidClashesConstraint Id="NoResourceClashes">
+                    <Name>NoResourceClashes</Name>
+                    <Required>true</Required>
+                    <Weight>1</Weight>
+                    <CostFunction>Linear</CostFunction>
+                    <AppliesTo>
+                        <ResourceGroups>
+                            <ResourceGroup Reference="gr_Students" />
+                            <ResourceGroup Reference="gr_Teachers" />
+                        </ResourceGroups>
+                    </AppliesTo>
+                </AvoidClashesConstraint>
+            </Constraints>
+        </Instance>
+    </Instances>
+    <SolutionGroups>
 </SolutionGroups>
 </HighSchoolTimetableArchive>
