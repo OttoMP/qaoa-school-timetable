@@ -6,6 +6,7 @@ from pyqubo import (
     Xor,
     Not,
     LogEncInteger,
+    OneHotEncInteger,
     NotConst,
 )
 
@@ -28,7 +29,7 @@ class XhsttToQubo:
         self.num_time_slots = len(self.available_times)
 
         self.events_as_variables = {
-            event: LogEncInteger(event, (0, self.num_time_slots - 1))
+            event: OneHotEncInteger(event, (0, self.num_time_slots - 1), 1)
             for event in instance.events.event.keys()
         }
 
@@ -37,7 +38,7 @@ class XhsttToQubo:
         for constraint in self.instance.constraints:
             if isinstance(constraint, xhsttparser.AssignTimeConstraint):
                 h += self.assign_time_constraint(constraint)
-            # elif isinstance(constraint, xhsttparser.PreferTimesConstraint):
+            #elif isinstance(constraint, xhsttparser.PreferTimesConstraint):
             #    h += self.prefer_times_constraint(constraint)
             elif isinstance(constraint, xhsttparser.AvoidClashesConstraint):
                 h += self.avoid_clash_constraint(constraint)
@@ -47,6 +48,7 @@ class XhsttToQubo:
 
     def assign_time_constraint(self, constraint: xhsttparser.AssignTimeConstraint):
         h = 0
+        #h += sum(self.events_as_variables.values())
         return h
 
     def prefer_times_constraint(self, constraint: xhsttparser.PreferTimesConstraint):
@@ -72,6 +74,7 @@ class XhsttToQubo:
             conflict = [i for i in resources_a if i in resources_b]
 
             if len(conflict) != 0:
+                print(f"{event_name_a=} {event_name_b=}")
                 var_a = self.events_as_variables[event_name_a]
                 var_b = self.events_as_variables[event_name_b]
 

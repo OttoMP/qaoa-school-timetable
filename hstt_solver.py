@@ -1,9 +1,9 @@
 import os, sys
 import neal
 
-# from dwave.samplers import DWaveSampler
+from qubo import XhsttToQubo
 from xhsttparser import XHSTT
-from qubo import xhstt_to_qubo
+from dimod import ExactSolver
 from pprint import pprint
 
 # from qat.core import Observable, Term
@@ -24,7 +24,6 @@ def main():
     # --------------------------
     # events = parseXML('dataset/den-smallschool.xml')
     xhstt = XHSTT(path)
-
     instance = next(iter(xhstt.instances.values()))
 
     # print(instance)
@@ -37,8 +36,8 @@ def main():
     #  Preparing Problem Formulation
     # ------------------------------
 
-    model = xhstt_to_qubo(instance)
-    qubo, offset = model.to_qubo()
+    qubo = XhsttToQubo(instance)
+    model = qubo.compile()
     # pprint(qubo)
     # pprint(offset)
 
@@ -70,15 +69,15 @@ def main():
     # )
 
     # print(hamiltonian_qubo)
-
-    sampler = neal.SimulatedAnnealingSampler()
     bqm = model.to_bqm()
-    sampleset = sampler.sample(bqm, num_reads=10)
+    sa = ExactSolver()
+    sampleset = sa.sample(bqm)
     decoded_samples = model.decode_sampleset(sampleset)
     best_sample = min(decoded_samples, key=lambda x: x.energy)
     pprint(best_sample.sample)
     pprint(best_sample.energy)
 
+    print(sampleset.to_pandas_dataframe().sort_values("energy").to_numpy()[:5])
     """
     bqm = model.to_bqm()
     sa = ExactSolver()
