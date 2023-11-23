@@ -8,6 +8,7 @@ from pyqubo import (
     LogEncInteger,
     OneHotEncInteger,
     NotConst,
+    AndConst,
 )
 
 
@@ -26,6 +27,7 @@ class XhsttToQubo:
             )
         }
 
+        self.onehot= OneHotEnc
         self.num_time_slots = len(self.available_times)
 
         if OneHotEnc:
@@ -54,14 +56,20 @@ class XhsttToQubo:
 
     def assign_time_constraint(self, constraint: xhsttparser.AssignTimeConstraint):
         h = 0
-        for key, value in self.events_as_variables.items():
-            h += 1 - sum(value.array)
-            for a,b in itertools.combinations(value.array, 2):
-                h += 2*a*b
+        
+        if self.onehot:
+            for key, value in self.events_as_variables.items():
+                h += 1 - sum(value.array)
+                for a,b in itertools.combinations(value.array, 2):
+                    h += 2*a*b
+        else:
+            h = sum(self.events_as_variables.values())
+
         return h
 
     def prefer_times_constraint(self, constraint: xhsttparser.PreferTimesConstraint):
         h = 0
+
         for target in constraint.applies_to["events"]:
             for time in constraint.times:
                 h += (
@@ -70,6 +78,7 @@ class XhsttToQubo:
                     * (self.events_as_variables[target] - self.available_times[time])
                     ** 2
                 )
+
         return h
 
     def avoid_clash_constraint(self, constraint: xhsttparser.AvoidClashesConstraint):
@@ -87,9 +96,12 @@ class XhsttToQubo:
                 var_a = self.events_as_variables[event_name_a]
                 var_b = self.events_as_variables[event_name_b]
                 
-                for bit_a, bit_b in zip(var_a.array, var_b.array):
-                    h += 5*constraint.weight*(bit_a*bit_b)
-                
-                #h += -((var_a - var_b) ** 2)
+                if self.onehot:
+                    for bit_a, bit_b in zip(var_a.array, var_b.array):
+                        h += 5*constraint.weight*(bit_a*bit_b)
+                else:
+                    xors = [Not(Xor(a,b)) for a, b in zip(var_a.array, var_b.array)]
+                    exp = AndConst(xors[0], xors[1], 0, f'clash_{event_name_a}_{event_name_b}')
+                    h += 5*constraint.weight*exp
 
         return h
