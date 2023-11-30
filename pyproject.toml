@@ -8,7 +8,7 @@ packages = [{ include = "xhstttoqubo.py" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
-xhsttparser = { git = "ssh://git@gitlab.com/laqcc-quantuloop/xhsttparser.git" }
+xhsttparser = { git = "https://gitlab.com/laqcc-quantuloop/xhsttparser.git" }
 pyqubo = "^1.4.0"
 pandas = "^2.1.2"
 

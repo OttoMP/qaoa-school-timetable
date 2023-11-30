@@ -1086,11 +1086,11 @@ develop = false
 
 [package.source]
 type = "git"
-url = "ssh://git@gitlab.com/laqcc-quantuloop/xhsttparser.git"
+url = "https://gitlab.com/laqcc-quantuloop/xhsttparser.git"
 reference = "HEAD"
 resolved_reference = "a4b8d533cf60a6f6e0659b26a8cb42d446e19433"
 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "ed8590506a3919b0f32217bfd19c35045541a6fcd1f0d55db828291cbfe77b88"
+content-hash = "b0176955bce64b38082deaccfed3baea391067bbbefe7f0e79952be793345558"
