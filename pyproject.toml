@@ -4,11 +4,11 @@ version = "0.1.0"
 description = ""
 authors = ["Evandro Chagas Ribeiro da Rosa <evandro@quantuloop.com>"]
 readme = "README.md"
-packages = [{include = "qaoa_school_timetable"}]
+packages = [{ include = "xhstttoqubo.py" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
-xhsttparser = {git = "ssh://git@gitlab.com/laqcc-quantuloop/xhsttparser.git"}
+xhsttparser = { git = "ssh://git@gitlab.com/laqcc-quantuloop/xhsttparser.git" }
 pyqubo = "^1.4.0"
 pandas = "^2.1.2"
 
